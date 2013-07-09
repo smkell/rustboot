@@ -11,9 +11,9 @@ boot:
     ; initialize stack
     mov ax, 0x7bff
     mov sp, ax
-    ; load rust code into 0x7e00 so we can jump to it later
+    ; load rust code into 0x7e00...0xfe00 so we can jump to it later
     mov ah, 2       ; read
-    mov al, 24      ; 24 sectors (12 KiB)
+    mov al, 64      ; 64 sectors (32 KiB)
     mov ch, 0       ; cylinder & 0xff
     mov cl, 2       ; sector | ((cylinder >> 2) & 0xc0)
     mov dh, 0       ; head
