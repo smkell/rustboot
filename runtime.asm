@@ -7,6 +7,7 @@ global memcpy
 global malloc
 global free
 global start
+global upcall_call_shim_on_rust_stack
 
 global _GLOBAL_OFFSET_TABLE_
 _GLOBAL_OFFSET_TABLE_ equ 0
@@ -31,3 +32,14 @@ memcpy:
 malloc:
 free:
     jmp $
+
+upcall_call_shim_on_rust_stack:
+    push ebp
+    mov ebp, esp
+
+    push dword[ebp+8]
+    call dword[ebp+12]
+
+    mov esp, ebp
+    pop ebp
+    ret
