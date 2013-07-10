@@ -1,7 +1,7 @@
-CC=i386-elf-gcc
-LD=i386-elf-ld
+CC=gcc -m32
+LD=ld -melf_i386
 RUSTC=rustc
-NASM=nasm
+ASM=nasm
 CLANG=clang
 QEMU=qemu-system-i386
 
@@ -18,7 +18,7 @@ all: floppy.img
 	$(CLANG) -ffreestanding -fno-builtin -fnostdlib -c main.bc -o $@
 
 .asm.o:
-	$(NASM) -f elf32 -o $@ $<
+	$(ASM) -f elf32 -o $@ $<
 
 main.rs: zero.rs
 
@@ -26,7 +26,7 @@ floppy.img: loader.bin main.bin
 	cat $^ > $@
 
 loader.bin: loader.asm
-	$(NASM) -o $@ -f bin $<
+	$(ASM) -o $@ -f bin $<
 
 main.bin: linker.ld runtime.o main.o
 	$(LD) -o $@ -T $^
@@ -36,3 +36,8 @@ run: floppy.img
 
 clean:
 	rm -f *.bin *.o *.img
+
+debug: linker.ld runtime.o main.o
+	$(LD) -o debug.o -T $^ --oformat=default
+	$(QEMU) -fda floppy.img -m 32 -s -S &
+	gdb -ex 'target remote localhost:1234' -ex 'symbol-file debug.o' -ex 'break main' -ex 'c'
