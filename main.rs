@@ -2,10 +2,12 @@
 #[no_std];
 #[no_core];
 
+use drivers::cga;
 use drivers::keyboard;
 
 pub mod zero;
 mod drivers {
+    pub mod cga;
     pub mod keyboard;
 }
 
@@ -41,40 +43,6 @@ fn idt_entry(proc: u32, sel: u16, flags: u8) -> idt_entry {
         addr_hi: (proc >> 16) as u16
     }
 }
-
-enum Color {
-    Black       = 0,
-    Blue        = 1,
-    Green       = 2,
-    Cyan        = 3,
-    Red         = 4,
-    Pink        = 5,
-    Brown       = 6,
-    LightGray   = 7,
-    DarkGray    = 8,
-    LightBlue   = 9,
-    LightGreen  = 10,
-    LightCyan   = 11,
-    LightRed    = 12,
-    LightPink   = 13,
-    Yellow      = 14,
-    White       = 15,
-}
-
-fn range(lo: uint, hi: uint, it: &fn(uint)) {
-    let mut iter = lo;
-    while iter < hi {
-        it(iter);
-        iter += 1;
-    }
-}
-
-unsafe fn clear_screen(background: Color) {
-    range(0, 80*25, |i| {
-        *((0xb8000 + i * 2) as *mut u16) = (background as u16) << 12;
-    });
-}
-
 
 unsafe fn pic_remap() {
     asm!("
@@ -137,7 +105,6 @@ pub static ascii_table: &'static str = "\
 *\x00 ";
 
 fn keydown(code: u32) {
-    let screen = 0xb8000 as *mut [u16, ..2000];
     // mutable statics are incorrectly dereferenced in PIC!
     static mut pos: u32 = 0;
 
@@ -146,11 +113,11 @@ fn keydown(code: u32) {
             let char = ascii_table[code];
             if char == 8 && pos > 0 {
                 pos -= 1;
-                (*screen)[pos] &= 0xff00;
+                (*cga::screen)[pos] &= 0xff00;
             } else if char == '\n' as u8 {
                 pos += 80 - pos % 80;
             } else {
-                (*screen)[pos] |= char as u16;
+                (*cga::screen)[pos] |= char as u16;
                 pos += 1;
             }
         }
@@ -159,7 +126,7 @@ fn keydown(code: u32) {
 
 #[no_mangle]
 pub unsafe fn main() {
-    clear_screen(LightRed);
+    cga::clear_screen(cga::LightRed);
     // invalid deref when &fn?
     keyboard::callback = keyboard::Some(keydown);
 

@@ -20,7 +20,7 @@ all: floppy.img
 .asm.o:
 	$(ASM) -f elf32 -o $@ $<
 
-main.rs: zero.rs drivers/keyboard.rs
+main.rs: zero.rs drivers/keyboard.rs drivers/cga.rs
 
 floppy.img: loader.bin main.bin
 	cat $^ > $@
