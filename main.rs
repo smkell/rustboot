@@ -79,29 +79,41 @@ unsafe fn clear_screen(background: Color) {
 unsafe fn pic_remap() {
     asm!("
         mov al, 0x11
-        out 0x20, al
-        out 0xa0, al
+        mov dx, 0x20
+        out dx, al
+        mov dx, 0xA0
+        out dx, al
 
         mov al, 0x20
-        out 0x21, al
+        mov dx, 0x21
+        mov bx, 0xA1
+        out dx, al
         mov al, 0x28
-        out 0xa1, al
+        xchg bx, dx
+        out dx, al
 
         mov al, 4
-        out 0x21, al
+        xchg bx, dx
+        out dx, al
         mov al, 2
-        out 0xa1, al
+        xchg bx, dx
+        out dx, al
 
         mov al, 1
-        out 0x21, al
-        out 0xa1, al
+        xchg bx, dx
+        out dx, al
+        xchg bx, dx
+        out dx, al
 
         mov al, 0xff
-        out 0x21, al
-        out 0xa1, al"
-        :::: "intel");
+        xchg bx, dx
+        out dx, al
+        xchg bx, dx
+        out dx, al"
+        ::: "al", "bx", "dx" : "volatile", "intel");
 }
 
+#[inline(never)]
 unsafe fn pic_enable(irq: u8) {
     let port: u16 = if (irq & 0b1000) == 0 { 0x21 } else { 0xa1 };
     let mask: u8 = !(1u8 << (irq & 0b111));
