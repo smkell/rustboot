@@ -2,7 +2,12 @@
 #[no_std];
 #[no_core];
 
-mod zero;
+use drivers::keyboard;
+
+pub mod zero;
+mod drivers {
+    pub mod keyboard;
+}
 
 #[inline]
 pub fn size_of_val<T>(_val: *mut T) -> uint {
@@ -70,7 +75,6 @@ unsafe fn clear_screen(background: Color) {
     });
 }
 
-static KeyboardIRQ: u8 = 0x20 + 1;
 
 unsafe fn pic_remap() {
     asm!("
@@ -113,29 +117,30 @@ unsafe fn pic_enable(irq: u8) {
 #[no_mangle]
 extern "C" fn keyup(code: u32) { }
 
-#[no_mangle]
-extern "C" fn keydown(code: u32) {
-    // wtf?
-    let char: u8 = "\
+pub static ascii_table: &'static str = "\
 \x00\x1B1234567890-=\x08\
 \tqwertyuiop[]\n\
 \x00asdfghjkl;'`\
 \x00\\zxcvbnm,./\x00\
-*\x00 "[code];
+*\x00 ";
 
+fn keydown(code: u32) {
     let screen = 0xb8000 as *mut [u16, ..2000];
-    // mutable statics are incorrectly dereferenced!
-    static mut pos: u32 = 0x10000;
+    // mutable statics are incorrectly dereferenced in PIC!
+    static mut pos: u32 = 0;
 
-    unsafe {
-        if char == 8 && pos > 0 {
-            pos -= 1;
-            (*screen)[pos] &= 0xff00;
-        } else if char == '\n' as u8 {
-            pos += 80 - pos % 80;
-        } else {
-            (*screen)[pos] |= char as u16;
-            pos += 1;
+    if(code & (1 << 7) == 0) {
+        unsafe {
+            let char = ascii_table[code];
+            if char == 8 && pos > 0 {
+                pos -= 1;
+                (*screen)[pos] &= 0xff00;
+            } else if char == '\n' as u8 {
+                pos += 80 - pos % 80;
+            } else {
+                (*screen)[pos] |= char as u16;
+                pos += 1;
+            }
         }
     }
 }
@@ -143,54 +148,12 @@ extern "C" fn keydown(code: u32) {
 #[no_mangle]
 pub unsafe fn main() {
     clear_screen(LightRed);
+    // invalid deref when &fn?
+    keyboard::callback = keyboard::Some(keydown);
 
     let idt = 0x100000 as *mut [idt_entry, ..256];
 
-    let mut ptr: u32 = 0;
-
-    asm!("
-        call n
-    n:  pop eax
-        jmp skip
-
-        push gs
-        push fs
-        push es
-        push ds
-        pusha
-
-        xor eax, eax
-        in al, 60h
-        bt ax, 7
-        jb up
-
-    down:
-        push eax
-        call keydown
-        add esp, 4
-        jmp end
-
-    up:
-        push eax
-        call keyup
-        add esp, 4
-
-    end:
-        mov al, 20h
-        out 0x20, al
-
-        popa
-        pop ds
-        pop es
-        pop fs
-        pop gs
-        iretd
-
-    skip:
-        add eax, 3"
-        : "=A"(ptr) ::: "intel");
-
-    (*idt)[KeyboardIRQ] = idt_entry(ptr, 1 << 3, PM32Bit | Present);
+    (*idt)[keyboard::IRQ] = idt_entry(keyboard::isr_addr(), 1 << 3, PM32Bit | Present);
 
     let idt_table = 0x100800 as *mut idt_reg;
     *idt_table = idt_reg {
@@ -199,7 +162,7 @@ pub unsafe fn main() {
     };
 
     pic_remap();
-    pic_enable(KeyboardIRQ);
+    pic_enable(keyboard::IRQ);
 
     asm!("
         lidt [$0]
