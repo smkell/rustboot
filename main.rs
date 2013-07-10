@@ -4,11 +4,13 @@
 
 use drivers::cga;
 use drivers::keyboard;
+use drivers::pic;
 
 pub mod zero;
 mod drivers {
     pub mod cga;
     pub mod keyboard;
+    pub mod pic;
 }
 
 #[inline]
@@ -42,56 +44,6 @@ fn idt_entry(proc: u32, sel: u16, flags: u8) -> idt_entry {
         flags: flags | 0b110,
         addr_hi: (proc >> 16) as u16
     }
-}
-
-unsafe fn pic_remap() {
-    asm!("
-        mov al, 0x11
-        mov dx, 0x20
-        out dx, al
-        mov dx, 0xA0
-        out dx, al
-
-        mov al, 0x20
-        mov dx, 0x21
-        mov bx, 0xA1
-        out dx, al
-        mov al, 0x28
-        xchg bx, dx
-        out dx, al
-
-        mov al, 4
-        xchg bx, dx
-        out dx, al
-        mov al, 2
-        xchg bx, dx
-        out dx, al
-
-        mov al, 1
-        xchg bx, dx
-        out dx, al
-        xchg bx, dx
-        out dx, al
-
-        mov al, 0xff
-        xchg bx, dx
-        out dx, al
-        xchg bx, dx
-        out dx, al"
-        ::: "al", "bx", "dx" : "volatile", "intel");
-}
-
-#[inline(never)]
-unsafe fn pic_enable(irq: u8) {
-    let port: u16 = if (irq & 0b1000) == 0 { 0x21 } else { 0xa1 };
-    let mask: u8 = !(1u8 << (irq & 0b111));
-
-    asm!("
-        mov dx, $0
-        in al, dx
-        and al, $1
-        out dx, al"
-        :: "r"(port), "r"(mask) : "al", "dx" : "intel")
 }
 
 #[no_mangle]
@@ -140,8 +92,8 @@ pub unsafe fn main() {
         size: size_of_val(idt) as u16
     };
 
-    pic_remap();
-    pic_enable(keyboard::IRQ);
+    pic::remap();
+    pic::enable(keyboard::IRQ);
 
     asm!("
         lidt [$0]
