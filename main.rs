@@ -6,17 +6,20 @@ use drivers::cga;
 use drivers::keyboard;
 use drivers::pic;
 
-pub mod zero;
+use rust::zero;
+use rust::option::*;
+
+pub mod rust {
+    pub mod zero;
+    pub mod option;
+}
+
 mod idt;
+
 mod drivers {
     pub mod cga;
     pub mod keyboard;
     pub mod pic;
-}
-
-#[inline]
-pub fn size_of_val<T>(_val: *mut T) -> uint {
-    unsafe { zero::size_of::<T>() }
 }
 
 #[no_mangle]
@@ -53,7 +56,7 @@ fn keydown(code: u32) {
 pub unsafe fn main() {
     cga::clear_screen(cga::LightRed);
     // invalid deref when &fn?
-    keyboard::callback = keyboard::Some(keydown);
+    keyboard::callback = Some(keydown);
 
     let idt = 0x100000 as *mut idt::table;
     (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM32Bit | idt::Present);
@@ -61,7 +64,7 @@ pub unsafe fn main() {
     let idt_reg = 0x100800 as *mut idt::reg;
     *idt_reg = idt::reg {
         addr: idt,
-        size: size_of_val(idt) as u16
+        size: zero::size_of_val(idt) as u16
     };
 
     pic::remap();

@@ -323,3 +323,7 @@ extern "rust-intrinsic" {
     pub fn size_of<T>() -> uint;
 }
 
+#[inline]
+pub fn size_of_val<T>(_val: *mut T) -> uint {
+    unsafe { size_of::<T>() }
+}
