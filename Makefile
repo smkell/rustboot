@@ -2,6 +2,7 @@ CC=i386-elf-gcc
 LD=i386-elf-ld
 RUSTC=rustc
 NASM=nasm
+CLANG=clang
 QEMU=qemu-system-i386
 
 all: floppy.img
@@ -13,7 +14,8 @@ all: floppy.img
 .PHONY: clean run
 
 .rs.o:
-	$(RUSTC) -O --target i386-intel-linux --lib -o $@ -c $<
+	$(RUSTC) -O --target i386-intel-linux --lib -o main.bc --emit-llvm $<
+	$(CLANG) -ffreestanding -fno-builtin -fnostdlib -c main.bc -o $@
 
 .asm.o:
 	$(NASM) -f elf32 -o $@ $<

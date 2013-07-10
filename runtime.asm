@@ -9,7 +9,6 @@ global free
 global start
 global upcall_call_shim_on_rust_stack
 
-global _GLOBAL_OFFSET_TABLE_
 _GLOBAL_OFFSET_TABLE_ equ 0
 
 extern main
