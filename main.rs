@@ -7,6 +7,7 @@ use drivers::keyboard;
 use drivers::pic;
 
 pub mod zero;
+mod idt;
 mod drivers {
     pub mod cga;
     pub mod keyboard;
@@ -16,34 +17,6 @@ mod drivers {
 #[inline]
 pub fn size_of_val<T>(_val: *mut T) -> uint {
     unsafe { zero::size_of::<T>() }
-}
-
-#[packed]
-struct idt_reg {
-    size: u16,
-    addr: *mut [idt_entry, ..256],
-}
-
-static Present: u8 = 1 << 7;
-static PM32Bit: u8 = 1 << 3;
-
-#[packed]
-struct idt_entry {
-    addr_lo: u16,
-    sel: u16,
-    zero: u8,
-    flags: u8,
-    addr_hi: u16
-}
-
-fn idt_entry(proc: u32, sel: u16, flags: u8) -> idt_entry {
-    idt_entry {
-        addr_lo: (proc & 0xffff) as u16,
-        sel: sel,
-        zero: 0,
-        flags: flags | 0b110,
-        addr_hi: (proc >> 16) as u16
-    }
 }
 
 #[no_mangle]
@@ -82,12 +55,11 @@ pub unsafe fn main() {
     // invalid deref when &fn?
     keyboard::callback = keyboard::Some(keydown);
 
-    let idt = 0x100000 as *mut [idt_entry, ..256];
+    let idt = 0x100000 as *mut idt::table;
+    (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM32Bit | idt::Present);
 
-    (*idt)[keyboard::IRQ] = idt_entry(keyboard::isr_addr(), 1 << 3, PM32Bit | Present);
-
-    let idt_table = 0x100800 as *mut idt_reg;
-    *idt_table = idt_reg {
+    let idt_reg = 0x100800 as *mut idt::reg;
+    *idt_reg = idt::reg {
         addr: idt,
         size: size_of_val(idt) as u16
     };
@@ -98,5 +70,5 @@ pub unsafe fn main() {
     asm!("
         lidt [$0]
         sti"
-        :: "n"(idt_table) :: "intel");
+        :: "n"(idt_reg) :: "intel");
 }
