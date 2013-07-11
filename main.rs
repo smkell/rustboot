@@ -1,3 +1,7 @@
+#[link(name = "rustboot",
+       vers = "0.1",
+       license = "MIT")];
+
 #[allow(ctypes)];
 #[no_std];
 #[no_core];
@@ -22,10 +26,7 @@ mod drivers {
     pub mod pic;
 }
 
-#[no_mangle]
-extern "C" fn keyup(code: u32) { }
-
-pub static ascii_table: &'static str = "\
+pub static ASCII_TABLE: &'static str = "\
 \x00\x1B1234567890-=\x08\
 \tqwertyuiop[]\n\
 \x00asdfghjkl;'`\
@@ -38,14 +39,14 @@ fn keydown(code: u32) {
 
     if(code & (1 << 7) == 0) {
         unsafe {
-            let char = ascii_table[code];
+            let char = ASCII_TABLE[code];
             if char == 8 && pos > 0 {
                 pos -= 1;
-                (*cga::screen)[pos] &= 0xff00;
+                (*cga::SCREEN)[pos] &= 0xff00;
             } else if char == '\n' as u8 {
                 pos += 80 - pos % 80;
             } else {
-                (*cga::screen)[pos] |= char as u16;
+                (*cga::SCREEN)[pos] |= char as u16;
                 pos += 1;
             }
         }
@@ -59,7 +60,7 @@ pub unsafe fn main() {
     keyboard::callback = Some(keydown);
 
     let idt = 0x100000 as *mut idt::table;
-    (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM32Bit | idt::Present);
+    (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM_32 | idt::PRESENT);
 
     let idt_reg = 0x100800 as *mut idt::reg;
     *idt_reg = idt::reg {

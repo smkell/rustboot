@@ -25,10 +25,10 @@ fn range(lo: uint, hi: uint, it: &fn(uint)) {
     }
 }
 
-pub static screen: *mut [u16, ..2000] = 0xb8000 as *mut [u16, ..2000];
+pub static SCREEN: *mut [u16, ..2000] = 0xb8000 as *mut [u16, ..2000];
 
 pub unsafe fn clear_screen(background: Color) {
     range(0, 80*25, |i| {
-        (*screen)[i] = (background as u16) << 12;
+        (*SCREEN)[i] = (background as u16) << 12;
     });
 }

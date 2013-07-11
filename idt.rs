@@ -15,8 +15,8 @@ pub struct entry {
     addr_hi: u16
 }
 
-pub static Present: u8 = 1 << 7;
-pub static PM32Bit: u8 = 1 << 3;
+pub static PRESENT: u8 = 1 << 7;
+pub static PM_32:   u8 = 1 << 3;
 
 pub fn entry(proc: u32, sel: u16, flags: u8) -> entry {
     entry {
