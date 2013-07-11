@@ -4,23 +4,20 @@ RUSTC=rustc
 ASM=nasm
 CLANG=clang
 QEMU=qemu-system-i386
+MODS=$(wildcard */*.rs)
 
 all: floppy.img
 
-.SUFFIXES:
-
-.SUFFIXES: .o .rs .asm
-
 .PHONY: clean run
 
-.rs.o:
-	$(RUSTC) -O --target i386-intel-linux --lib -o main.bc --emit-llvm $<
-	$(CLANG) -ffreestanding -fno-builtin -fnostdlib -c main.bc -o $@
+main.rs: $(MODS)
 
-.asm.o:
+%.o: %.rs
+	$(RUSTC) -O --target i386-intel-linux --lib -o $*.bc --emit-llvm $<
+	$(CLANG) -ffreestanding -c main.bc -o $@ # optimization causes issues!
+
+%.o: %.asm
 	$(ASM) -f elf32 -o $@ $<
-
-main.rs: $(wildcard */*.rs)
 
 floppy.img: loader.bin main.bin
 	cat $^ > $@
