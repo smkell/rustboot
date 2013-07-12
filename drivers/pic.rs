@@ -1,38 +1,27 @@
 pub unsafe fn remap() {
     asm!("
         mov al, 0x11
-        mov dx, 0x20
-        out dx, al
-        mov dx, 0xA0
-        out dx, al
+        outb 0x20
+        outb 0xA0
 
         mov al, 0x20
-        mov dx, 0x21
-        mov bx, 0xA1
-        out dx, al
+        outb 0x21
         mov al, 0x28
-        xchg bx, dx
-        out dx, al
+        outb 0xA1
 
         mov al, 4
-        xchg bx, dx
-        out dx, al
+        outb 0x21
         mov al, 2
-        xchg bx, dx
-        out dx, al
+        outb 0xA1
 
         mov al, 1
-        xchg bx, dx
-        out dx, al
-        xchg bx, dx
-        out dx, al
+        outb 0x21
+        outb 0xA1
 
         mov al, 0xff
-        xchg bx, dx
-        out dx, al
-        xchg bx, dx
-        out dx, al"
-        ::: "al", "bx", "dx" : "volatile", "intel");
+        outb 0x21
+        outb 0xA1"
+        ::: "al" : "volatile", "intel");
 }
 
 #[inline(never)]
