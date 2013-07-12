@@ -64,16 +64,11 @@ pub unsafe fn main() {
     (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM_32 | idt::PRESENT);
 
     let idt_reg = 0x100800 as *mut idt::reg;
-    *idt_reg = idt::reg {
-        addr: idt,
-        size: zero::size_of_val(idt) as u16
-    };
+    *idt_reg = idt::reg::new(idt);
+    idt::load(idt_reg);
 
     pic::remap();
     pic::enable(keyboard::IRQ);
 
-    asm!("
-        lidt [$0]
-        sti"
-        :: "n"(idt_reg) :: "intel");
+    asm!("sti" :::: "intel");
 }
