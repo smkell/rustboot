@@ -53,6 +53,7 @@ fn keydown(code: u32) {
     }
 }
 
+#[lang="start"]
 #[no_mangle]
 pub unsafe fn main() {
     cga::clear_screen(cga::LightRed);

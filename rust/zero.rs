@@ -246,19 +246,6 @@ pub unsafe fn exchange_free(alloc: *i8) {
     free(transmute(alloc))
 }
 
-// Entry point
-
-// TODO(pcwalton): Stash argc and argv somewhere. Probably needs to wait on
-// global variables.
-#[lang="start"]
-pub fn start(main: *u8, _: int, _: **i8, _: *u8) -> int {
-    unsafe {
-        let main: extern "Rust" fn() = transmute(main);
-        main();
-        0
-    }
-}
-
 // The nonexistent garbage collector
 
 #[lang="malloc"]
