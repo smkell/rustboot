@@ -4,17 +4,15 @@ RUSTC=rustc
 ASM=nasm
 CLANG=clang
 QEMU=qemu-system-i386
-MODS=$(wildcard */*.rs)
+MODS=$(wildcard */*.rs) idt.rs
 
 all: floppy.img
 
-.PHONY: clean run
+.PHONY: clean run debug
 
-main.rs: $(MODS)
-
-%.o: %.rs
+%.o: %.rs $(MODS)
 	$(RUSTC) -O --target i386-intel-linux --lib -o $*.bc --emit-llvm $<
-	$(CLANG) -ffreestanding -c main.bc -o $@ # optimization causes issues!
+	$(CLANG) -ffreestanding -c $*.bc -o $@ # optimization causes issues!
 
 %.o: %.asm
 	$(ASM) -f elf32 -o $@ $<
