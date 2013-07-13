@@ -4,7 +4,7 @@ RUSTC=rustc
 ASM=nasm
 CLANG=clang
 QEMU=qemu-system-i386
-MODS=$(wildcard */*.rs) idt.rs
+MODS=$(wildcard */*.rs)
 
 all: floppy.img
 

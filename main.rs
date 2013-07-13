@@ -6,19 +6,20 @@
 #[no_std];
 #[no_core];
 
+use rust::option::*;
+use kernel::idt;
 use drivers::cga;
 use drivers::keyboard;
 use drivers::pic;
 
-use rust::zero;
-use rust::option::*;
-
-pub mod rust {
+mod rust {
     pub mod zero;
     pub mod option;
 }
 
-mod idt;
+mod kernel {
+    pub mod idt;
+}
 
 mod drivers {
     pub mod cga;
