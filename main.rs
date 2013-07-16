@@ -64,6 +64,17 @@ pub unsafe fn main() {
     // invalid deref when &fn?
     keyboard::callback = Some(keydown);
 
+    let vendor = cpu::info();
+    int::range(0, 12, |i| {
+        (*cga::SCREEN)[i].char = vendor[i];
+    });
+
+    let mut i = 80;
+    int::to_str_bytes(cpu::max as int, 10, |n| {
+        (*cga::SCREEN)[i].char = n;
+        i += 1;
+    });
+
     let idt = 0x100000 as *mut idt::table;
     (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM_32 | idt::PRESENT);
 
