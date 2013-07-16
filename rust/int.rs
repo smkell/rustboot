@@ -9,7 +9,7 @@ pub fn range(lo: uint, hi: uint, it: &fn(uint)) {
 #[inline]
 pub fn to_str_bytes(num: int, radix: int, f: &fn(u8)) {
 	let neg = num < 0;
-	let mut deccum = num;
+	let mut deccum = if neg { -num } else { num };
 
     // Radix can be as low as 2, so we need 64 characters for a number
     // near 2^64, plus another one for a possible '-' character.
@@ -17,8 +17,7 @@ pub fn to_str_bytes(num: int, radix: int, f: &fn(u8)) {
     let mut cur = 0;
 
     loop {
-        let digit_signed = deccum % radix;
-        let digit = if digit_signed < 0 { -digit_signed } else { digit_signed };
+        let digit = deccum % radix;
         buf[cur] = match digit as u8 {
             i @ 0..9 => '0' as u8 + i,
             i        => 'a' as u8 + (i-10),
