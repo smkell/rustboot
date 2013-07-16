@@ -22,8 +22,8 @@ impl<T> Option<T> {
     #[inline]
     pub fn get(self) -> T {
         match self {
-          Some(x) => return x,
-          None => unsafe { zero::abort() }
+            Some(x) => return x,
+            None => unsafe { zero::abort() }
         }
     }
 }

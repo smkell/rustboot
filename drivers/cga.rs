@@ -49,6 +49,6 @@ pub unsafe fn cursor_at(pos: uint) {
           mov al, bh
           inc dx
           out dx, al"
-        :: "{bx}"(pos)
+        : : "{bx}"(pos)
         : "al", "dx" : "intel")
 }
