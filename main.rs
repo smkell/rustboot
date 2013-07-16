@@ -8,7 +8,7 @@
 
 use rust::int;
 use rust::option::*;
-use kernel::idt;
+use kernel::*;
 use drivers::*;
 
 mod rust {
@@ -18,6 +18,7 @@ mod rust {
 }
 
 mod kernel {
+    pub mod cpu;
     pub mod idt;
 }
 
