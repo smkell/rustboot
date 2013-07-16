@@ -4,6 +4,7 @@ global __morestack
 global abort
 global memcmp
 global memcpy
+global memset
 global malloc
 global free
 global start
@@ -26,6 +27,35 @@ memcpy:
 malloc:
 free:
     jmp $
+
+memset:
+    push ebp
+    mov ebp, esp
+    push edi
+
+    mov edi, [ebp+8]
+    movzx eax, byte[ebp+12]
+    mov ecx, [ebp+16]
+    cld
+
+    test ecx, 0xFFFFFFF0
+    jz .bytes
+
+    mov ah, al
+    mov edx, eax
+    sal edx, 16
+    or eax, edx
+    shrd edx, ecx, 2
+    shr ecx, 2
+    rep stosd
+    shld ecx, edx, 2
+ .bytes:
+    rep stosb
+
+    mov eax, [ebp+8]
+    pop edi
+    pop ebp
+    ret
 
 upcall_call_shim_on_rust_stack:
     push ebp
