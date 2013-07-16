@@ -19,19 +19,19 @@ pub enum Color {
     White       = 15,
 }
 
-fn range(lo: uint, hi: uint, it: &fn(uint)) {
-    let mut iter = lo;
-    while iter < hi {
-        it(iter);
-        iter += 1;
-    }
+#[packed]
+struct character {
+    char: u8,
+    attr: u8,
 }
 
-pub static SCREEN: *mut [u16, ..2000] = 0xb8000 as *mut [u16, ..2000];
+pub static SCREEN_SIZE: uint = 80*25;
+type screen = [character, ..SCREEN_SIZE];
+pub static SCREEN: *mut screen = 0xb8000 as *mut screen;
 
 pub unsafe fn clear_screen(background: Color) {
     int::range(0, 80*25, |i| {
-        (*SCREEN)[i] = (background as u16) << 12;
+        (*SCREEN)[i].attr = (background as u8) << 4;
     });
 }
 

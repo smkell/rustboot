@@ -9,9 +9,7 @@
 use rust::int;
 use rust::option::*;
 use kernel::idt;
-use drivers::cga;
-use drivers::keyboard;
-use drivers::pic;
+use drivers::*;
 
 mod rust {
     pub mod zero;
@@ -43,13 +41,13 @@ fn keydown(code: u32) {
     if(code & (1 << 7) == 0) {
         unsafe {
             let char = ASCII_TABLE[code];
-            if char == 8 && pos > 0 {
-                pos -= 1;
-                (*cga::SCREEN)[pos] &= 0xff00;
+            if char == 8 {
+                if pos > 0 { pos -= 1; }
+                (*cga::SCREEN)[pos].char = 0;
             } else if char == '\n' as u8 {
                 pos += 80 - pos % 80;
             } else {
-                (*cga::SCREEN)[pos] |= char as u16;
+                (*cga::SCREEN)[pos].char = char;
                 pos += 1;
             }
             cga::cursor_at(pos);
