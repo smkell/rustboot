@@ -36,7 +36,7 @@ pub static ASCII_TABLE: &'static str = "\
 
 fn keydown(code: u32) {
     // mutable statics are incorrectly dereferenced in PIC!
-    static mut pos: u32 = 0;
+    static mut pos: uint = 0;
 
     if(code & (1 << 7) == 0) {
         unsafe {
@@ -50,6 +50,7 @@ fn keydown(code: u32) {
                 (*cga::SCREEN)[pos] |= char as u16;
                 pos += 1;
             }
+            cga::cursor_at(pos);
         }
     }
 }
@@ -58,6 +59,7 @@ fn keydown(code: u32) {
 #[no_mangle]
 pub unsafe fn main() {
     cga::clear_screen(cga::LightRed);
+    cga::cursor_at(0);
     // invalid deref when &fn?
     keyboard::callback = Some(keydown);
 

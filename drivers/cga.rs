@@ -32,3 +32,21 @@ pub unsafe fn clear_screen(background: Color) {
         (*SCREEN)[i] = (background as u16) << 12;
     });
 }
+
+pub unsafe fn cursor_at(pos: uint) {
+    asm!("mov al, 15
+          mov dx, 0x3D4
+          out dx, al
+          mov al, bl
+          inc dx
+          out dx, al
+
+          mov al, 14
+          dec dx
+          out dx, al
+          mov al, bh
+          inc dx
+          out dx, al"
+        :: "{bx}"(pos)
+        : "al", "dx" : "intel")
+}
