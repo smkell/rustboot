@@ -1,3 +1,5 @@
+use rust::int;
+
 pub enum Color {
     Black       = 0,
     Blue        = 1,
@@ -28,7 +30,7 @@ fn range(lo: uint, hi: uint, it: &fn(uint)) {
 pub static SCREEN: *mut [u16, ..2000] = 0xb8000 as *mut [u16, ..2000];
 
 pub unsafe fn clear_screen(background: Color) {
-    range(0, 80*25, |i| {
+    int::range(0, 80*25, |i| {
         (*SCREEN)[i] = (background as u16) << 12;
     });
 }

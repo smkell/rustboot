@@ -6,6 +6,7 @@
 #[no_std];
 #[no_core];
 
+use rust::int;
 use rust::option::*;
 use kernel::idt;
 use drivers::cga;
@@ -14,6 +15,7 @@ use drivers::pic;
 
 mod rust {
     pub mod zero;
+    pub mod int;
     pub mod option;
 }
 
