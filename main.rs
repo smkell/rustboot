@@ -20,6 +20,7 @@ mod rust {
 mod kernel {
     pub mod cpu;
     pub mod idt;
+    pub mod exception;
 }
 
 mod drivers {

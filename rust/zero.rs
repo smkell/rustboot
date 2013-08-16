@@ -204,22 +204,6 @@ pub fn log_type<T>(_: u32, _: &T) {
 #[lang="annihilate"]
 pub unsafe fn annihilate() {}
 
-// Failure
-
-#[lang="fail_"]
-pub fn fail(_: *i8, _: *i8, _: uint) -> ! {
-    unsafe {
-        abort()
-    }
-}
-
-#[lang="fail_bounds_check"]
-pub fn fail_bounds_check(_: *i8, _: uint, _: uint, _: uint) {
-    unsafe {
-        abort()
-    }
-}
-
 // Memory allocation
 
 // FIXME: So grotesquely inefficient.
