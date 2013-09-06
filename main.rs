@@ -21,6 +21,7 @@ mod kernel {
     pub mod cpu;
     pub mod idt;
     pub mod exception;
+    pub mod paging;
 }
 
 mod drivers {
@@ -86,6 +87,9 @@ pub unsafe fn main() {
 
     pic::remap();
     pic::enable(keyboard::IRQ);
+
+    paging::identity();
+    paging::enable();
 
     asm!("sti" :::: "intel");
 }
