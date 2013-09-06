@@ -1,8 +1,16 @@
 use16
 
-org 0x7c00
+global __morestack
+global abort
+global memcmp
+global memcpy
+global malloc
+global free
+global start
 
-boot:
+extern main
+
+start:
     ; initialize segment registers
     xor ax, ax
     mov ds, ax
@@ -61,8 +69,18 @@ protected_mode:
     mov ecx, 80*25*2
     mov al, 0
     rep stosb
+    ; rust functions compare esp against [gs:0x30] as a sort of stack guard thing
+    ; as long as we set [gs:0x30] to dword 0, it should be ok
+    mov [gs:0x30], dword 0
     ; jump into rust
-    jmp 0x7e00
+    call main
+abort:
+__morestack:
+memcmp:
+memcpy:
+malloc:
+free:
+    jmp $
 
 gdtr:
     dw (gdt_end - gdt) + 1  ; size
@@ -94,3 +112,6 @@ gdt_end:
 times 510-($-$$) db 0
 db 0x55
 db 0xaa
+
+%include "runtime/rust.asm"
+%include "runtime/memset.asm"

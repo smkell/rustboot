@@ -17,13 +17,7 @@ all: floppy.img
 %.o: %.asm
 	$(ASM) -f elf32 -o $@ $<
 
-floppy.img: loader.bin main.bin
-	cat $^ > $@
-
-loader.bin: loader.asm
-	$(ASM) -o $@ -f bin $<
-
-main.bin: linker.ld runtime.o main.o
+floppy.img: linker.ld loader.o main.o
 	$(LD) -o $@ -T $^
 
 run: floppy.img
@@ -32,7 +26,7 @@ run: floppy.img
 clean:
 	rm -f *.bin *.o *.img
 
-debug: linker.ld runtime.o main.o
+debug: linker.ld loader.o main.o
 	$(LD) -o debug.o -T $^ --oformat=default
 	$(QEMU) -fda floppy.img -m 32 -s -S &
 	gdb -ex 'target remote localhost:1234' -ex 'symbol-file debug.o' -ex 'break main' -ex 'c'
