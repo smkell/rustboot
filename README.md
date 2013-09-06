@@ -17,6 +17,13 @@ You need a few things to run rustboot:
 3. `nasm`
 4. Rust's `master` branch or 0.7 release.
 
+### Arch Linux
+
+Simply install all dependencies:
+```
+# pacman -S qemu nasm rust
+```
+
 ### OSX
 
 To set things up on OSX, do this:
@@ -55,14 +62,9 @@ Then, just make sure that `~/bin` is in your `PATH`, if you're using a prefix.
 
 ## Running it
 
-To compile, simply
+To compile, simply execute `make` command.
 
-```bash
-$ make
-```
-
-To run,
-
+To run, use:
 ```bash
 $ make run
 ```
