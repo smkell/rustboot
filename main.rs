@@ -30,31 +30,21 @@ mod drivers {
     pub mod pic;
 }
 
-pub static ASCII_TABLE: &'static str = "\
-\x00\x1B1234567890-=\x08\
-\tqwertyuiop[]\n\
-\x00asdfghjkl;'`\
-\x00\\zxcvbnm,./\x00\
-*\x00 ";
-
-fn keydown(code: u32) {
+fn keydown(key: u8) {
     // mutable statics are incorrectly dereferenced in PIC!
     static mut pos: uint = 0;
 
-    if(code & (1 << 7) == 0) {
-        unsafe {
-            let char = ASCII_TABLE[code];
-            if char == 8 {
-                if pos > 0 { pos -= 1; }
-                (*cga::SCREEN)[pos].char = 0;
-            } else if char == '\n' as u8 {
-                pos += 80 - pos % 80;
-            } else {
-                (*cga::SCREEN)[pos].char = char;
-                pos += 1;
-            }
-            cga::cursor_at(pos);
+    unsafe {
+        if key == 8 {
+            if pos > 0 { pos -= 1; }
+            (*cga::SCREEN)[pos].char = 0;
+        } else if key == '\n' as u8 {
+            pos += 80 - pos % 80;
+        } else {
+            (*cga::SCREEN)[pos].char = key;
+            pos += 1;
         }
+        cga::cursor_at(pos);
     }
 }
 
@@ -64,7 +54,7 @@ pub unsafe fn main() {
     cga::clear_screen(cga::LightRed);
     cga::cursor_at(0);
     // invalid deref when &fn?
-    keyboard::callback = Some(keydown);
+    keyboard::keydown = Some(keydown);
 
     let vendor = cpu::info();
     int::range(0, 12, |i| {

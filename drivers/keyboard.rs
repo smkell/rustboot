@@ -2,14 +2,21 @@ use rust::option::*;
 
 pub static IRQ: u8 = 0x20 + 1;
 
-pub static mut callback: Option<extern fn(u32)> = None;
+pub static LAYOUT: &'static str = "\
+\x00\x1B1234567890-=\x08\
+\tqwertyuiop[]\n\
+\x00asdfghjkl;'`\
+\x00\\zxcvbnm,./\x00\
+*\x00 ";
+
+pub static mut keydown: Option<extern fn(u8)> = None;
 
 #[inline(never)]
 #[no_mangle]
 pub extern "C" fn keypress(code: u32) {
     unsafe {
-        if(callback.is_some()) {
-            callback.get()(code);
+        if(code & (1 << 7) == 0 && keydown.is_some()) {
+            keydown.get()(LAYOUT[code]);
         }
     }
 }
