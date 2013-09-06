@@ -78,6 +78,7 @@ pub unsafe fn main() {
 
     let idt = 0x100000 as *mut idt::table;
     (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM_32 | idt::PRESENT);
+    (*idt)[exception::PF] = idt::entry(exception::page_fault(), 1 << 3, idt::PM_32 | idt::PRESENT);
 
     let idt_reg = 0x100800 as *mut idt::reg;
     *idt_reg = idt::reg::new(idt);

@@ -2,66 +2,84 @@ use rust::zero;
 use rust::int;
 use drivers::cga;
 
+pub static PF: u8 = 8;
+pub static DF: u8 = 14;
+
+unsafe fn puts(j: int, buf: *u8) {
+    let mut i = j;
+    let mut curr = buf;
+    while *curr != 0 {
+        (*cga::SCREEN)[i].char = *curr;
+        (*cga::SCREEN)[i].attr = 16;
+        i += 1;
+        curr = (curr as uint + 1) as *u8;
+    }
+}
+
+unsafe fn puti(j: uint, num: int) {
+    let mut i = j;
+    int::to_str_bytes(num, 10, |n| {
+        (*cga::SCREEN)[i].char = n;
+        (*cga::SCREEN)[i].attr = 16;
+        i += 1;
+    });
+}
+
 #[lang="fail_"]
-pub fn fail(expr: *i8, file: *i8, line: uint) -> ! {
+pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
     unsafe {
-        let mut i = 0;
-        let expr_str = expr as *[u8, ..1000];
-        while (*expr_str)[i] != 0 {
-            (*cga::SCREEN)[i].char = (*expr_str)[i];
-            (*cga::SCREEN)[i].attr = 16;
-            i += 1;
-        }
-
-        i = 0;
-        let file_str = file as *[u8, ..1000];
-        while (*file_str)[i] != 0 {
-            (*cga::SCREEN)[80+i].char = (*file_str)[i];
-            (*cga::SCREEN)[80+i].attr = 16;
-            i += 1;
-        }
-
-        i = 80*2;
-        int::to_str_bytes(line as int, 10, |n| {
-            (*cga::SCREEN)[i].char = n;
-            (*cga::SCREEN)[i].attr = 16;
-            i += 1;
-        });
+        puts(0, expr);
+        puts(80, file);
+        puti(80*2, line as int);
 
         zero::abort();
     }
 }
 
 #[lang="fail_bounds_check"]
-pub fn fail_bounds_check(file: *i8, line: uint, index: uint, len: uint) {
+pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
     unsafe {
-        let mut i = 0;
-        let file_str = file as *[u8, ..1000];
-        while (*file_str)[i] != 0 {
-            (*cga::SCREEN)[i].char = (*file_str)[i];
-            (*cga::SCREEN)[i].attr = 16;
-            i += 1;
-        }
-
-        i = 80;
-        int::to_str_bytes(line as int, 10, |n| {
-            (*cga::SCREEN)[i].char = n;
-            (*cga::SCREEN)[i].attr = 16;
-            i += 1;
-        });
-        i = 80*2;
-        int::to_str_bytes(index as int, 10, |n| {
-            (*cga::SCREEN)[i].char = n;
-            (*cga::SCREEN)[i].attr = 16;
-            i += 1;
-        });
-        i = 80*3;
-        int::to_str_bytes(len as int, 10, |n| {
-            (*cga::SCREEN)[i].char = n;
-            (*cga::SCREEN)[i].attr = 16;
-            i += 1;
-        });
+        puts(0, file);
+        puti(80*2, line as int);
+        puti(80*2, index as int);
+        puti(80*3, len as int);
 
         zero::abort();
     }
+}
+
+#[no_mangle]
+#[inline(never)]
+pub unsafe fn ex14() {
+    puti(0, 14);
+}
+
+#[inline(never)]
+pub unsafe fn page_fault() -> u32 {
+    let mut ptr: u32 = 0;
+
+    asm!("call n2
+        n2: pop eax
+          jmp skip2
+
+          .word 0xa80f
+          .word 0xa00f
+          .byte 0x06
+          .byte 0x1e
+          pusha
+
+          call ex14
+          jmp .
+
+          popa
+          .byte 0x1f
+          .byte 0x07
+          .word 0xa10f
+          .word 0xa90f
+          iretd
+      skip2:
+          add eax, 6"
+        : "=A"(ptr) ::: "intel");
+
+    ptr
 }
