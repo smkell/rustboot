@@ -23,6 +23,9 @@ floppy.img: linker.ld loader.o main.o
 run: floppy.img
 	$(QEMU) -fda $<
 
+arm: arch/arm
+	cd arch/arm; make
+
 clean:
 	rm -f *.bin *.o *.img
 
