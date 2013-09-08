@@ -24,6 +24,8 @@ run: floppy.img
 	$(QEMU) -fda $<
 
 arm: arch/arm
+	$(RUSTC) --opt-level=0 --target arm-linux-noeabi --lib -o main.bc --emit-llvm main.rs
+	$(CLANG) -c main.bc -o main.o
 	cd arch/arm; make
 
 clean:

@@ -9,6 +9,7 @@
 use rust::int;
 use rust::option::*;
 use kernel::*;
+#[cfg(target_arch = "x86")]
 use drivers::*;
 
 mod rust {
@@ -17,6 +18,7 @@ mod rust {
     pub mod option;
 }
 
+#[cfg(target_arch = "x86")]
 mod kernel {
     pub mod cpu;
     pub mod idt;
@@ -24,16 +26,24 @@ mod kernel {
     pub mod paging;
 }
 
+#[cfg(target_arch = "x86")]
 mod drivers {
     pub mod cga;
     pub mod keyboard;
     pub mod pic;
 }
 
+#[cfg(target_arch = "arm")]
+#[path = "arch/arm"]
+mod kernel {
+    pub mod interrupt;
+    pub mod io;
+}
 fn keydown(key: u8) {
     // mutable statics are incorrectly dereferenced in PIC!
     static mut pos: uint = 0;
 
+#[cfg(target_arch = "x86")]
     unsafe {
         if key == 8 {
             if pos > 0 { pos -= 1; }
@@ -48,6 +58,7 @@ fn keydown(key: u8) {
     }
 }
 
+#[cfg(target_arch = "x86")]
 #[lang="start"]
 #[no_mangle]
 pub unsafe fn main() {
@@ -82,4 +93,13 @@ pub unsafe fn main() {
     paging::enable();
 
     asm!("sti" :::: "intel");
+}
+
+#[cfg(target_arch = "arm")]
+#[lang="start"]
+#[no_mangle]
+pub unsafe fn main() {
+    io::write_char('a');
+    io::write_char('r');
+    io::write_char('m');
 }
