@@ -102,4 +102,27 @@ pub unsafe fn main() {
     io::write_char('a');
     io::write_char('r');
     io::write_char('m');
+
+    *io::VIC_INTENABLE = 1 << 12;
+    *io::UART0_IMSC = 1 << 4;
+}
+
+extern {
+    static vectors: [u32, ..8];
+}
+
+#[cfg(target_arch = "arm")]
+#[no_mangle]
+pub unsafe fn copy_vectors() {
+    let mut i = 0;
+    while i < 8 {
+        *((i*4) as *mut u32) = vectors[i];
+        i += 1;
+    }
+}
+
+#[cfg(target_arch = "arm")]
+#[no_mangle]
+pub unsafe fn irq() {
+    io::write_char(*io::UART0 as char);
 }

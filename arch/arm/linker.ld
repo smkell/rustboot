@@ -1,19 +1,15 @@
+OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
+OUTPUT_ARCH(arm)
 ENTRY(start)
 
-MEMORY {
-    ram : org = 0x8000, l = 32K
-}
-
 SECTIONS {
-    . = 0x8000;
+    . = 0x10000;
 
     .text : {
-        loader.o(.text)
-        *(.text)
-        *(.data)
-        *(.rodata)
-        *(.bss)
-    } >ram
+       loader.o
+       *(.text .rodata)
+    }
 
-    stack_top = 0x100000;
+    .data : { *(.data) }
+    .bss : { *(.bss) }
 }

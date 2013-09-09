@@ -24,8 +24,11 @@ run: floppy.img
 	$(QEMU) -fda $<
 
 arm: arch/arm
-	$(RUSTC) --opt-level=0 --target arm-linux-noeabi --lib -o main.bc --emit-llvm main.rs
-	$(CLANG) -c main.bc -o main.o
+	$(RUSTC) --opt-level=0 --target arm-linux-noeabi --lib -c main.rs -S -o main.ll --emit-llvm -A unused-imports
+	sed -i 's/fixedstacksegment //g' main.ll
+	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' main.ll
+	llc -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose main.ll -o=main.s
+	sed -i 's/.note.rustc,"aw"/.note.rustc,"a"/g' main.s
 	cd arch/arm; make
 
 clean:
