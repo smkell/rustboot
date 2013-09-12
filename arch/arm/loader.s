@@ -54,6 +54,6 @@ vectors:
     b .
     b .
     b .
-    b [irq_handler]
+    b irq
     b .
 vectors_end:
