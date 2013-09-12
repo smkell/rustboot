@@ -28,7 +28,7 @@ mod kernel {
 
 #[cfg(target_arch = "x86")]
 mod drivers {
-    pub mod cga;
+    pub mod vga;
     pub mod keyboard;
     pub mod pic;
 }
@@ -48,7 +48,7 @@ fn keydown(key: char) {
         } else {
             io::write_char(key);
         }
-        cga::cursor_at(io::pos as uint);
+        vga::cursor_at(io::pos as uint);
     }
 }
 
@@ -56,8 +56,8 @@ fn keydown(key: char) {
 #[lang="start"]
 #[no_mangle]
 pub unsafe fn main() {
-    cga::clear_screen(cga::LightRed);
-    cga::cursor_at(0);
+    vga::clear_screen(vga::LightRed);
+    vga::cursor_at(0);
 
     io::keydown(keydown);
 
