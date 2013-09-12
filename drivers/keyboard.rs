@@ -1,4 +1,6 @@
 use rust::option::*;
+use kernel::interrupt;
+use kernel::idt;
 
 pub static IRQ: u8 = 0x20 + 1;
 
@@ -9,14 +11,14 @@ pub static LAYOUT: &'static str = "\
 \x00\\zxcvbnm,./\x00\
 *\x00 ";
 
-pub static mut keydown: Option<extern fn(u8)> = None;
+pub static mut keydown: Option<extern fn(char)> = None;
 
 #[inline(never)]
 #[no_mangle]
 pub extern "C" fn keypress(code: u32) {
     unsafe {
         if(code & (1 << 7) == 0 && keydown.is_some()) {
-            keydown.get()(LAYOUT[code]);
+            keydown.get()(LAYOUT[code] as char);
         }
     }
 }
@@ -52,9 +54,16 @@ pub unsafe fn isr_addr() -> u32 {
           .word 0xa10f
           .word 0xa90f
           iretd
-      skip:
-          add eax, 6"
+      skip:"
         : "=A"(ptr) ::: "intel");
 
-    ptr
+    ptr + 6
+}
+
+pub unsafe fn enable() {
+    (*interrupt::TABLE)[IRQ] = idt::entry(
+        isr_addr(),
+        1 << 3,
+        idt::PM_32 | idt::PRESENT
+    );
 }

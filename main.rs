@@ -20,10 +20,10 @@ mod rust {
 
 #[cfg(target_arch = "x86")]
 mod kernel {
-    pub mod cpu;
-    pub mod idt;
+    pub mod interrupt;
     pub mod exception;
-    pub mod paging;
+    pub mod idt;
+    pub mod io;
 }
 
 #[cfg(target_arch = "x86")]
@@ -39,22 +39,16 @@ mod kernel {
     pub mod interrupt;
     pub mod io;
 }
-fn keydown(key: u8) {
-    // mutable statics are incorrectly dereferenced in PIC!
-    static mut pos: uint = 0;
 
 #[cfg(target_arch = "x86")]
+fn keydown(key: char) {
     unsafe {
-        if key == 8 {
-            if pos > 0 { pos -= 1; }
-            (*cga::SCREEN)[pos].char = 0;
-        } else if key == '\n' as u8 {
-            pos += 80 - pos % 80;
+        if key == '\n' {
+            io::seek(80 - io::pos % 80);
         } else {
-            (*cga::SCREEN)[pos].char = key;
-            pos += 1;
+            io::write_char(key);
         }
-        cga::cursor_at(pos);
+        cga::cursor_at(io::pos as uint);
     }
 }
 
@@ -64,35 +58,11 @@ fn keydown(key: u8) {
 pub unsafe fn main() {
     cga::clear_screen(cga::LightRed);
     cga::cursor_at(0);
-    // invalid deref when &fn?
-    keyboard::keydown = Some(keydown);
 
-    let vendor = cpu::info();
-    int::range(0, 12, |i| {
-        (*cga::SCREEN)[i].char = vendor[i];
-    });
+    io::keydown(keydown);
 
-    let mut i = 80;
-    int::to_str_bytes(cpu::max as int, 10, |n| {
-        (*cga::SCREEN)[i].char = n;
-        i += 1;
-    });
-
-    let idt = 0x100000 as *mut idt::table;
-    (*idt)[keyboard::IRQ] = idt::entry(keyboard::isr_addr(), 1 << 3, idt::PM_32 | idt::PRESENT);
-    (*idt)[exception::PF] = idt::entry(exception::page_fault(), 1 << 3, idt::PM_32 | idt::PRESENT);
-
-    let idt_reg = 0x100800 as *mut idt::reg;
-    *idt_reg = idt::reg::new(idt);
-    idt::load(idt_reg);
-
-    pic::remap();
-    pic::enable(keyboard::IRQ);
-
-    paging::identity();
-    paging::enable();
-
-    asm!("sti" :::: "intel");
+    keyboard::enable();
+    interrupt::enable();
 }
 
 #[cfg(target_arch = "arm")]
