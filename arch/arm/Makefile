@@ -1,4 +1,3 @@
-ASM=fasmarm
 LD=arm-none-eabi-ld
 CC=arm-none-eabi-gcc
 OBJCOPY=arm-none-eabi-objcopy
@@ -21,5 +20,5 @@ floppy.elf: linker.ld loader.o ../../main.s
 floppy.img: floppy.elf
 	$(OBJCOPY) -O binary $^ $@
 
-%.o: %.asm
-	$(ASM) $< $@
+%.o: %.s
+	$(CC) -c $< -o $@
