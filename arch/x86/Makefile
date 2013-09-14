@@ -14,8 +14,8 @@ all: floppy.img
 
 .PHONY: clean run debug
 
-%.bc: %.rs
-	$(RUSTC) -O --target $(TRIPLE) --lib -o $@ --emit-llvm $<
+%.bc: ../../%.rs
+	cd ../..; $(RUSTC) -O --target $(TRIPLE) --lib --emit-llvm $*.rs -o arch/x86/$@
 
 %.o: %.bc
 	$(CLANG) -ffreestanding -c $^ -o $@ # optimization causes issues!

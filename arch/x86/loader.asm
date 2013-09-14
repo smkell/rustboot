@@ -113,5 +113,5 @@ times 510-($-$$) db 0
 db 0x55
 db 0xaa
 
-%include "runtime/rust.asm"
-%include "runtime/memset.asm"
+%include "rust.asm"
+%include "memset.asm"
