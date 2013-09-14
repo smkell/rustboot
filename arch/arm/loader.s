@@ -1,3 +1,5 @@
+.text
+.code 32
 .syntax unified
 .fpu softvfp
 
@@ -15,8 +17,6 @@
 .global vectors_end
 .global irq_handler
 
-.section .text.start
-.weak start
 .type start, %function
 
 start:
@@ -33,19 +33,22 @@ __modsi3:
 __aeabi_idiv:
     b .
 
-irq_handler:
-.word irq
-
 .type vectors, %object
 .size vectors, .-vectors
 
 vectors:
-    b start
+    ldr pc, start_addr
     b .
     b .
     b .
     b .
     b .
-    b irq
+    ldr pc, irq_handler
     b .
+
+start_addr:
+.word start
+irq_handler:
+.word irq
+
 vectors_end:
