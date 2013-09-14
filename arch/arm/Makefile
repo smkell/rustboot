@@ -34,6 +34,8 @@ run: floppy.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
 debug: floppy.img
-	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S &
-	$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file floppy.elf'
-	pkill $(QEMU)
+	tmux new-session -d -s rustboot
+	tmux new-window -t rustboot:1 "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
+	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file floppy.elf'"
+	tmux a -t rustboot
+	tmux kill-session -t rustboot
