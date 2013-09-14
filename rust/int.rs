@@ -8,8 +8,8 @@ pub fn range(lo: uint, hi: uint, it: &fn(uint)) {
 
 #[inline]
 pub fn to_str_bytes(num: int, radix: int, f: &fn(u8)) {
-	let neg = num < 0;
-	let mut deccum = if neg { -num } else { num };
+    let neg = num < 0;
+    let mut deccum = if neg { -num } else { num };
 
     // Radix can be as low as 2, so we need 64 characters for a number
     // near 2^64, plus another one for a possible '-' character.

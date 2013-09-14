@@ -25,7 +25,7 @@ pub extern "C" fn keypress(code: u32) {
 
 #[inline(never)]
 pub unsafe fn isr_addr() -> u32 {
-	let mut ptr: u32 = 0;
+    let mut ptr: u32 = 0;
 
     asm!("call n
       n:  pop eax
