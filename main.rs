@@ -69,26 +69,18 @@ pub unsafe fn main() {
 #[lang="start"]
 #[no_mangle]
 pub unsafe fn main() {
-    io::write_char('a');
-    io::write_char('r');
-    io::write_char('m');
+    asm!("mov r2, sp
+          mrs r0, cpsr
+          bic r1, r0, #0x1F
+          orr r1, r1, #0x12
+          msr cpsr, r1
+          mov sp, 0x19000
+          bic r0, r0, #0x80
+          msr cpsr, r0
+          mov sp, r2"
+        ::: "r0", "r1", "r2", "cpsr");
 
-    *io::VIC_INTENABLE = 1 << 12;
-    *io::UART0_IMSC = 1 << 4;
-}
-
-extern {
-    static vectors: [u32, ..8];
-}
-
-#[cfg(target_arch = "arm")]
-#[no_mangle]
-pub unsafe fn copy_vectors() {
-    let mut i = 0;
-    while i < 8 {
-        *((i*4) as *mut u32) = vectors[i];
-        i += 1;
-    }
+    interrupt::enable();
 }
 
 #[cfg(target_arch = "arm")]
