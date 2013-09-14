@@ -2,9 +2,11 @@ rustboot
 --------
 A tiny 32 bit kernel written in Rust.
 
-It paints the screen bright red and then displays some CPU information. You can use keyboard. That's it:
+It paints the screen bright red and then displays some information. You can write. That's it:
 
-![](http://i.imgur.com/kdaerct.png)
+![](http://i.imgur.com/XW8PUlM.png)
+
+![](http://i.imgur.com/3cHXx2D.png)
 
 I was inspired to download Rust and try to do this after seeing [zero.rs](https://github.com/pcwalton/zero.rs) - a stub that lets Rust programs run almost freestanding.
 
@@ -13,9 +15,10 @@ I was inspired to download Rust and try to do this after seeing [zero.rs](https:
 You need a few things to run rustboot:
 
 1. `qemu`
-2. a cross-compiler for i386
-3. `nasm`
-4. Rust's `master` branch or 0.7 release.
+2. `nasm`
+3. Rust's `master` branch or 0.7 release
+4. a cross-compiler for i386
+5. optionally, tools for arm-none-eabi
 
 ### Arch Linux
 
@@ -66,5 +69,7 @@ To compile, simply execute `make` command.
 
 To run, use:
 ```bash
-$ make run
+$ make run	# emulate default platform (x86)
+$ make run arch=arm	# run on arm
+$ make debug arch=arm	# debug on arm
 ```
