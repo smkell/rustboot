@@ -288,7 +288,7 @@ pub unsafe fn check_not_borrowed(_: *u8, _: *i8, _: uint) {
 
 extern {
     #[fast_ffi]
-    pub fn malloc(size: uint) -> *u8;
+    fn malloc(size: uint) -> *u8;
     #[fast_ffi]
     pub fn free(ptr: *u8);
     #[fast_ffi]

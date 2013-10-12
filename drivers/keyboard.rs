@@ -59,11 +59,3 @@ pub unsafe fn isr_addr() -> u32 {
 
     ptr + 6
 }
-
-pub unsafe fn enable() {
-    (*interrupt::TABLE)[IRQ] = idt::entry(
-        isr_addr(),
-        1 << 3,
-        idt::PM_32 | idt::PRESENT
-    );
-}

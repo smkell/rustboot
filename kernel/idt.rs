@@ -5,11 +5,11 @@ pub type table = [entry, ..256];
 #[packed]
 pub struct reg {
     size: u16,
-    addr: *mut table,
+    addr: *table,
 }
 
 impl reg {
-    pub unsafe fn new(idt: *mut table) -> reg {
+    pub unsafe fn new(idt: *table) -> reg {
         reg {
             addr: idt,
             size: zero::size_of::<table>() as u16
@@ -33,12 +33,14 @@ pub struct entry {
 pub static PRESENT: u8 = 1 << 7;
 pub static PM_32:   u8 = 1 << 3;
 
-pub fn entry(proc: u32, sel: u16, flags: u8) -> entry {
-    entry {
-        addr_lo: (proc & 0xffff) as u16,
-        sel: sel,
-        zero: 0,
-        flags: flags | 0b110,
-        addr_hi: (proc >> 16) as u16
+impl entry {
+    pub fn new(proc: u32, sel: u16, flags: u8) -> entry {
+        entry {
+            addr_lo: (proc & 0xffff) as u16,
+            sel: sel,
+            zero: 0,
+            flags: flags | 0b110,
+            addr_hi: (proc >> 16) as u16
+        }
     }
 }

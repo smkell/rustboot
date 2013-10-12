@@ -22,6 +22,7 @@ mod kernel {
     pub mod exception;
     pub mod idt;
     pub mod io;
+    pub mod memory;
 }
 
 #[cfg(target_arch = "x86")]
@@ -59,8 +60,9 @@ pub unsafe fn main() {
 
     io::keydown(keydown);
 
-    keyboard::enable();
-    interrupt::enable();
+    let table = interrupt::table::new();
+    table.load();
+    table.enable(keyboard::IRQ, keyboard::isr_addr());
 }
 
 #[cfg(target_arch = "arm")]
