@@ -1,37 +1,17 @@
 use rust::zero;
-use rust::int;
+use kernel::io;
 use drivers::vga;
 
 pub static PF: u8 = 8;
 pub static DF: u8 = 14;
 
-unsafe fn puts(j: int, buf: *u8) {
-    let mut i = j;
-    let mut curr = buf;
-    while *curr != 0 {
-        (*vga::SCREEN)[i].char = *curr;
-        (*vga::SCREEN)[i].attr = 16;
-        i += 1;
-        curr = (curr as uint + 1) as *u8;
-    }
-}
-
-unsafe fn puti(j: uint, num: int) {
-    let mut i = j;
-    int::to_str_bytes(num, 10, |n| {
-        (*vga::SCREEN)[i].char = n;
-        (*vga::SCREEN)[i].attr = 16;
-        i += 1;
-    });
-}
-
 #[lang="fail_"]
 #[fixed_stack_segment]
 pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
     unsafe {
-        puts(0, expr);
-        puts(80, file);
-        puti(80*2, line as int);
+        io::puts(0, expr);
+        io::puts(80, file);
+        io::puti(80*2, line as int);
 
         zero::abort();
     }
@@ -41,10 +21,10 @@ pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
 #[fixed_stack_segment]
 pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
     unsafe {
-        puts(0, file);
-        puti(80*2, line as int);
-        puti(80*2, index as int);
-        puti(80*3, len as int);
+        io::puts(0, file);
+        io::puti(80, line as int);
+        io::puti(80*2, index as int);
+        io::puti(80*3, len as int);
 
         zero::abort();
     }
@@ -53,7 +33,7 @@ pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
 #[no_mangle]
 #[inline(never)]
 pub unsafe fn ex14() {
-    puti(0, 14);
+    io::puti(0, 14);
 }
 
 #[inline(never)]

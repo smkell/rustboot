@@ -1,6 +1,7 @@
 use drivers::vga;
 use drivers::keyboard;
 use rust::option::Some;
+use rust::int;
 
 pub static mut pos: int = 0;
 
@@ -30,4 +31,24 @@ pub unsafe fn write_char(c: char) {
 
 pub unsafe fn keydown(f: extern fn(char)) {
     keyboard::keydown = Some(f);
+}
+
+pub unsafe fn puts(j: int, buf: *u8) {
+    let mut i = j;
+    let mut curr = buf;
+    while *curr != 0 {
+        (*vga::SCREEN)[i].char = *curr;
+        (*vga::SCREEN)[i].attr = 16;
+        i += 1;
+        curr = (curr as uint + 1) as *u8;
+    }
+}
+
+pub unsafe fn puti(j: uint, num: int) {
+    let mut i = j;
+    int::to_str_bytes(num, 10, |n| {
+        (*vga::SCREEN)[i].char = n;
+        (*vga::SCREEN)[i].attr = 16;
+        i += 1;
+    });
 }
