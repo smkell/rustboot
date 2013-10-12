@@ -12,6 +12,8 @@ all: floppy.img
 
 .PHONY: run debug
 
+.DELETE_ON_ERROR:
+
 %.ll: ../../%.rs
 	cd ../..; $(RUSTC) --opt-level=0 --target arm-linux-noeabi --lib -S --emit-llvm -c $*.rs -o arch/arm/$*.ll
 	sed -i 's/fixedstacksegment //g' $@
