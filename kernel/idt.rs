@@ -9,12 +9,16 @@ pub struct reg {
 }
 
 impl reg {
-    pub fn new(idt: *mut table) -> reg {
+    pub unsafe fn new(idt: *mut table) -> reg {
         reg {
             addr: idt,
-            size: zero::size_of_val(idt) as u16
+            size: zero::size_of::<table>() as u16
         }
     }
+}
+
+pub unsafe fn load(reg: *mut reg) {
+    asm!("lidt [$0]" :: "A"(reg) :: "intel");
 }
 
 #[packed]
@@ -28,10 +32,6 @@ pub struct entry {
 
 pub static PRESENT: u8 = 1 << 7;
 pub static PM_32:   u8 = 1 << 3;
-
-pub unsafe fn load(reg_ptr: *const reg) {
-    asm!("lidt [$0]" :: "n"(reg_ptr) :: "intel");
-}
 
 pub fn entry(proc: u32, sel: u16, flags: u8) -> entry {
     entry {

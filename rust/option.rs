@@ -7,7 +7,7 @@ pub enum Option<T> {
 
 impl<T> Option<T> {
     #[inline(always)]
-    pub fn is_some(&const self) -> bool {
+    pub fn is_some(&self) -> bool {
         match *self {
             Some(_) => true,
             None => false
@@ -15,11 +15,12 @@ impl<T> Option<T> {
     }
 
     #[inline(always)]
-    pub fn is_none(&const self) -> bool {
+    pub fn is_none(&self) -> bool {
         !self.is_some()
     }
 
     #[inline]
+    #[fixed_stack_segment]
     pub fn get(self) -> T {
         match self {
             Some(x) => return x,

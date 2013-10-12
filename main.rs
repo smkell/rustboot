@@ -6,8 +6,6 @@
 #[no_std];
 #[no_core];
 
-use rust::int;
-use rust::option::*;
 use kernel::*;
 #[cfg(target_arch = "x86")]
 use drivers::*;

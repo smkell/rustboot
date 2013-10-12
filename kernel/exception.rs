@@ -26,6 +26,7 @@ unsafe fn puti(j: uint, num: int) {
 }
 
 #[lang="fail_"]
+#[fixed_stack_segment]
 pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
     unsafe {
         puts(0, expr);
@@ -37,6 +38,7 @@ pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
 }
 
 #[lang="fail_bounds_check"]
+#[fixed_stack_segment]
 pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
     unsafe {
         puts(0, file);
