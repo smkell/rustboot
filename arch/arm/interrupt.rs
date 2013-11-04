@@ -1,4 +1,3 @@
-use rust::zero;
 use kernel::io;
 
 extern {
@@ -16,12 +15,16 @@ pub unsafe fn enable() {
     *io::UART0_IMSC = 1 << 4;
 }
 
+/*
 #[lang="fail_"]
+#[fixed_stack_segment]
 pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
     unsafe { zero::abort(); }
 }
 
 #[lang="fail_bounds_check"]
+#[fixed_stack_segment]
 pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
     unsafe { zero::abort(); }
 }
+*/

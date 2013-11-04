@@ -34,7 +34,7 @@ __aeabi_idiv:
     b .
 
 .type vectors, %object
-.size vectors, .-vectors
+.size vectors, vectors_end-vectors
 
 vectors:
     ldr pc, start_addr

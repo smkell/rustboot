@@ -88,5 +88,5 @@ pub unsafe fn main() {
 #[cfg(target_arch = "arm")]
 #[no_mangle]
 pub unsafe fn irq() {
-    io::write_char(*io::UART0 as char);
+    io::write_char(*io::UART0 as u8 as char);
 }

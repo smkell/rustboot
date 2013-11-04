@@ -15,9 +15,10 @@ all: floppy.img
 .DELETE_ON_ERROR:
 
 %.ll: ../../%.rs
-	cd ../..; $(RUSTC) --opt-level=0 --target arm-linux-noeabi --lib -S --emit-llvm -c $*.rs -o arch/arm/$*.ll
+	cd ../..; $(RUSTC) -O --target arm-linux-noeabi --lib -S --emit-llvm -c $*.rs -o arch/arm/$*.ll
 	sed -i 's/fixedstacksegment //g' $@
 	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $@
+	sed -i 's/nocapture read[a-z]*/nocapture/g' $@
 
 %.s: %.ll
 	$(LLC) -mcpu=arm926ej-s --float-abi=hard -asm-verbose $^ -o $@
