@@ -1,12 +1,25 @@
-RUSTC=rustc
-ASM=nasm
-CLANG=clang
-CC=gcc -m32
-LD=ld -melf_i386
-GDB=gdb
-OBJCOPY=objcopy
-QEMU=qemu-system-i386
-TRIPLE=i386-intel-linux
+RUST_ROOT := /usr/local
+LLVM_ROOT := /usr
+GCC_PREFIX := /usr/bin/
+
+TARGET := i386-intel-linux
+
+-include ./config.mk
+
+RUSTC := $(RUST_ROOT)/bin/rustc
+RUSTCFLAGS := -O --target $(TARGET) --lib --emit-llvm
+
+CC := $(LLVM_ROOT)/bin/clang
+CFLAGS := -g -ffreestanding
+
+LD := $(GCC_PREFIX)ld
+LDFLAGS := -melf_i386
+
+GDB := $(GCC_PREFIX)gdb
+ASM := nasm
+OBJCOPY := $(GCC_PREFIX)objcopy
+QEMU := qemu-system-i386
+
 
 MODS=$(wildcard ../../*/*.rs)
 
@@ -17,19 +30,19 @@ all: floppy.img
 .DELETE_ON_ERROR:
 
 %.bc: ../../%.rs $(MODS)
-	cd ../..; $(RUSTC) -O --target $(TRIPLE) --lib --emit-llvm $*.rs -o arch/x86/$@
+	cd ../..; $(RUSTC) $(RUSTCFLAGS) $*.rs -o arch/x86/$@
 
 %.o: %.bc
-	$(CLANG) -ffreestanding -g -c $^ -o $@ # optimization causes issues!
+	$(CC) -c $^ -o $@
 
 %.o: %.asm
 	$(ASM) -g -f elf32 -o $@ $<
 
 floppy.img: linker.ld loader.o main.o
-	$(LD) -o $@ -T $^
+	$(LD) $(LDFLAGS) -o $@ -T $^
 
 floppy.elf: linker.ld loader.o main.o
-	$(LD) -o $@ -T $^ --oformat=default
+	$(LD) $(LDFLAGS) -o $@ -T $^ --oformat=default
 
 run: floppy.img
 	$(QEMU) -fda $<

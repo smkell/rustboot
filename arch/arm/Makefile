@@ -1,12 +1,24 @@
-RUSTC=rustc
-LD=arm-none-eabi-ld
-CC=arm-none-eabi-gcc
-LLC=llc -march=arm
-OBJCOPY=arm-none-eabi-objcopy
-GDB=arm-none-eabi-gdb
-QEMU=qemu-system-arm
+RUST_ROOT := /usr/local
+LLVM_ROOT := /usr
+GCC_PREFIX := /usr/bin/arm-none-eabi-
 
-CFLAGS = -g -ffreestanding -nostdlib -O0 -Wall
+TARGET := arm-linux-noeabi
+
+-include ./config.mk
+
+RUSTC := $(RUST_ROOT)/bin/rustc
+RUSTCFLAGS := -O --target $(TARGET) --lib -S --emit-llvm
+
+CC := $(GCC_PREFIX)gcc
+CFLAGS := -g -ffreestanding -nostdlib -O3 -Wall
+
+LLC := $(LLVM_ROOT)/bin/llc
+LLCFLAGS := -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
+
+GDB := $(GCC_PREFIX)gdb
+OBJCOPY := $(GCC_PREFIX)objcopy
+QEMU := qemu-system-arm
+
 
 all: floppy.img
 
@@ -15,13 +27,13 @@ all: floppy.img
 .DELETE_ON_ERROR:
 
 %.ll: ../../%.rs
-	cd ../..; $(RUSTC) -O --target arm-linux-noeabi --lib -S --emit-llvm -c $*.rs -o arch/arm/$*.ll
+	cd ../..; $(RUSTC) $(RUSTCFLAGS) $*.rs -o arch/arm/$*.ll
 	sed -i 's/fixedstacksegment //g' $@
 	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $@
 	sed -i 's/nocapture read[a-z]*/nocapture/g' $@
 
 %.s: %.ll
-	$(LLC) -mcpu=arm926ej-s --float-abi=hard -asm-verbose $^ -o $@
+	$(LLC) $(LLCFLAGS) $^ -o $@
 	sed -i 's/.note.rustc,"aw"/.note.rustc,"a"/g' $@
 
 %.o: %.s
