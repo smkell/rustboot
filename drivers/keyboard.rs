@@ -1,6 +1,4 @@
-use rust::option::*;
-use kernel::interrupt;
-use kernel::idt;
+use core::option::*;
 
 pub static IRQ: u8 = 0x20 + 1;
 
@@ -13,24 +11,23 @@ pub static LAYOUT: &'static str = "\
 
 pub static mut keydown: Option<extern fn(char)> = None;
 
+#[fixed_stack_segment]
 #[inline(never)]
-#[no_mangle]
-pub extern "C" fn keypress(code: u32) {
-    unsafe {
-        if(code & (1 << 7) == 0 && keydown.is_some()) {
-            keydown.get()(LAYOUT[code] as char);
-        }
+unsafe fn keypress(code: u32) {
+    if(code & (1 << 7) == 0) {
+        keydown.map(|f| {
+            f(LAYOUT[code] as char);
+        });
     }
 }
 
+#[fixed_stack_segment]
 #[inline(never)]
 pub unsafe fn isr_addr() -> u32 {
-    let mut ptr: u32 = 0;
+    let mut code: u32;
 
-    asm!("call n
-      n:  pop eax
-          jmp skip
-
+    asm!("jmp skip_isr_addr
+      isr_addr_asm:
           .word 0xa80f
           .word 0xa00f
           .byte 0x06
@@ -38,11 +35,10 @@ pub unsafe fn isr_addr() -> u32 {
           pusha
 
           xor eax, eax
-          in al, 60h
-
-          push eax
-          call keypress
-          add esp, 4
+          in al, 60h"
+        : "=A"(code) ::: "intel");
+          keypress(code);
+    asm!("
   
           mov dx, 20h
           mov al, dl
@@ -54,8 +50,10 @@ pub unsafe fn isr_addr() -> u32 {
           .word 0xa10f
           .word 0xa90f
           iretd
-      skip:"
-        : "=A"(ptr) ::: "intel");
+      skip_isr_addr:"
+        :::: "intel");
 
-    ptr + 6
+    isr_addr_asm as u32
 }
+
+extern "C" { pub fn isr_addr_asm(); }

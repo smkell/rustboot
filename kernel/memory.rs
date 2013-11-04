@@ -1,7 +1,5 @@
 use rust::int;
-use drivers::vga;
-use rust::zero;
-use kernel::io;
+use core::fail::abort;
 
 pub static UNUSED: uint = 0;
 pub static USED:   uint = 1;
@@ -43,7 +41,6 @@ impl BuddyAlloc {
 
     #[fixed_stack_segment]
     pub unsafe fn alloc(&self, s: uint) -> *u8 {
-        let mut scr = 0;
         let mut size = s;
 
         if size == 0 {
@@ -101,14 +98,14 @@ impl BuddyAlloc {
                 loop {
                     level -= 1;
                     length *= 2;
-                    if index == 0 { zero::abort(); }
+                    if index == 0 { abort(); }
                     index = (index + 1) / 2 - 1;
                     if index & 1 == 1 { index += 1; break; }
                 }
             }
         }
 
-        zero::abort();
+        abort();
     }
 
     pub unsafe fn combine(&self, mut index: uint) {

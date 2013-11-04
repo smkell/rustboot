@@ -1,4 +1,4 @@
-use rust::zero;
+use core::mem::size_of;
 
 pub type table = [entry, ..256];
 
@@ -12,7 +12,7 @@ impl reg {
     pub unsafe fn new(idt: *table) -> reg {
         reg {
             addr: idt,
-            size: zero::size_of::<table>() as u16
+            size: size_of::<table>() as u16
         }
     }
 }
@@ -34,13 +34,13 @@ pub static PRESENT: u8 = 1 << 7;
 pub static PM_32:   u8 = 1 << 3;
 
 impl entry {
-    pub fn new(proc: u32, sel: u16, flags: u8) -> entry {
+    pub fn new(addr: u32, sel: u16, flags: u8) -> entry {
         entry {
-            addr_lo: (proc & 0xffff) as u16,
+            addr_lo: (addr & 0xffff) as u16,
             sel: sel,
             zero: 0,
             flags: flags | 0b110,
-            addr_hi: (proc >> 16) as u16
+            addr_hi: (addr >> 16) as u16
         }
     }
 }

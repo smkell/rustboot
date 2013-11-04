@@ -21,11 +21,22 @@ start:
     mov sp, ax
     ; load rust code into 0x7e00...0xfe00 so we can jump to it later
     mov ah, 2       ; read
-    mov al, 64      ; 64 sectors (32 KiB)
+    mov al, 65      ; 65 sectors (32.5 KiB)
     mov ch, 0       ; cylinder & 0xff
     mov cl, 2       ; sector | ((cylinder >> 2) & 0xc0)
-    mov dh, 0       ; head
+    xor dx, dx      ; head
     mov bx, 0x7e00  ; read buffer
+    int 0x13
+    jc error
+    ; load the rest into segment starting at 0x10000
+    mov ax, 0x1000
+    mov es, ax
+    xor bx, bx
+    mov ah, 2
+    mov al, 128     ; 128 sectors (64 KiB)
+    mov ch, 1       ; cylinder 1 (+1*2*18)
+    mov cl, 13      ; sector +13
+    mov dh, 1       ; track 1 (+1*18)
     int 0x13
     jc error
     ; load protected mode GDT and a null IDT (we don't need interrupts)
@@ -40,6 +51,7 @@ start:
     jmp 0x08:protected_mode
 
 error:
+    mov bx, ax
     mov si, .msg
 .loop:
     lodsb

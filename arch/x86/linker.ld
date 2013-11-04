@@ -2,7 +2,7 @@ ENTRY(start)
 OUTPUT_FORMAT(binary)
 
 MEMORY {
-    ram : org = 0x7c00, l = 34K
+    ram : org = 0x7c00, l = 93K
 }
 
 SECTIONS {

@@ -1,4 +1,3 @@
-use drivers::keyboard;
 use drivers::pic;
 use kernel::exception;
 use kernel::idt;

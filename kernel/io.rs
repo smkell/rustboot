@@ -1,6 +1,6 @@
 use drivers::vga;
 use drivers::keyboard;
-use rust::option::Some;
+use core::option::Some;
 use rust::int;
 
 pub static mut pos: int = 0;

@@ -2,18 +2,20 @@
        vers = "0.1",
        license = "MIT")];
 
-#[allow(ctypes)];
 #[no_std];
-#[no_core];
+#[feature(asm)];
+#[feature(globs)];
+#[feature(macro_rules)];
 
 use kernel::*;
 #[cfg(target_arch = "x86")]
 use drivers::*;
 
+#[path = "rust-core/core/mod.rs"]
+mod core;
+
 mod rust {
-    pub mod zero;
     pub mod int;
-    pub mod option;
 }
 
 #[cfg(target_arch = "x86")]
