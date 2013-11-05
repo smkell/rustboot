@@ -1,3 +1,8 @@
+mod idt;
+pub mod interrupt;
+mod exception;
+mod paging;
+
 pub static mut max: u32 = 0;
 pub static mut features: *mut [u32, ..40] = 0x100810 as *mut [u32, ..40];
 

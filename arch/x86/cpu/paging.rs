@@ -1,4 +1,5 @@
-use rust::int;
+use kernel::memory;
+use kernel::int;
 
 type page_dir = [u32, ..1024];
 pub static PAGE_DIR: *mut page_dir = 0x102000 as *mut page_dir;

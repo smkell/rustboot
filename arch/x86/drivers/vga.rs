@@ -1,4 +1,4 @@
-use rust::int;
+use kernel::int;
 
 pub enum Color {
     Black       = 0,

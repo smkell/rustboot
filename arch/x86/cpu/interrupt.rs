@@ -1,6 +1,6 @@
-use drivers::pic;
-use kernel::exception;
-use kernel::idt;
+use x86::drivers::pic;
+use x86::cpu::idt;
+use x86::cpu::exception;
 use kernel::memory;
 
 struct table {

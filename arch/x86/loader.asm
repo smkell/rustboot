@@ -32,11 +32,19 @@ start:
     mov ax, 0x1000
     mov es, ax
     xor bx, bx
-    mov ah, 2
-    mov al, 128     ; 128 sectors (64 KiB)
+    mov ax, 128 | (2 << 8) ; 128 sectors (64 KiB)
     mov ch, 1       ; cylinder 1 (+1*2*18)
-    mov cl, 13      ; sector +13
+    mov cl, 13      ; sector 13
     mov dh, 1       ; track 1 (+1*18)
+    int 0x13
+    jc error
+    mov ax, 0x2000
+    mov es, ax
+    xor bx, bx
+    mov ax, 128 | (2 << 8) ; 128 sectors (64 KiB)
+    mov ch, 5       ; cylinder 5 (+5*2*18)
+    mov cl, 15      ; sector 15
+    xor dx, dx      ; track 0
     int 0x13
     jc error
     ; load protected mode GDT and a null IDT (we don't need interrupts)

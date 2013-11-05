@@ -1,4 +1,4 @@
-use rust::int;
+use kernel::int;
 use core::fail::abort;
 
 pub static UNUSED: uint = 0;

@@ -1,4 +1,4 @@
-use kernel::io;
+use x86::io;
 
 pub static PF: u8 = 8;
 pub static DF: u8 = 14;

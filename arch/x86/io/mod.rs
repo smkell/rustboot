@@ -1,12 +1,13 @@
-use drivers::vga;
-use drivers::keyboard;
+use x86::drivers::vga;
+use x86::drivers::keyboard;
+use kernel::int;
 use core::option::Some;
-use rust::int;
 
 pub static mut pos: int = 0;
 
 pub unsafe fn seek(offset: int) {
     pos += offset;
+    vga::cursor_at(pos as uint);
 }
 
 pub unsafe fn write_char(c: char) {
@@ -27,6 +28,8 @@ pub unsafe fn write_char(c: char) {
         (*vga::SCREEN)[pos].char = c as u8;
         pos += 1;
     }
+
+    vga::cursor_at(pos as uint);
 }
 
 pub unsafe fn keydown(f: extern fn(char)) {
