@@ -99,9 +99,7 @@ impl Allocator for BuddyAlloc {
         let mut index = 0;
         let mut level = 0;
 
-        while index >= 0 {
-            let mut cont: bool = true;
-
+        loop {
             if size == length {
                 if self.storage.get(index) == UNUSED { // if unused
                     self.storage.set(index, 1); // use
@@ -117,35 +115,36 @@ impl Allocator for BuddyAlloc {
                         index = index * 2 + 1;
                         length /= 2;
                         level += 1;
-                        cont = false;
+                        continue
                     },
                     SPLIT => {
                         index = index * 2 + 1;
                         length /= 2;
                         level += 1;
-                        cont = false;
+                        continue
                     },
                     _ => ()
                 }
             }
 
-            if index & 1 == 1 && cont {
+            if index & 1 == 1 {
                 index += 1;
-                cont = false;
             }
-
-            if cont {
+            else {
                 loop {
                     level -= 1;
                     length *= 2;
+
                     if index == 0 { abort(); }
+
                     index = (index + 1) / 2 - 1;
-                    if index & 1 == 1 { index += 1; break; }
+                    if index & 1 == 1 {
+                        index += 1;
+                        break;
+                    }
                 }
             }
         }
-
-        abort();
     }
 
     #[fixed_stack_segment]
