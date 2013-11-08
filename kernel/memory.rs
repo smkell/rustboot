@@ -1,5 +1,44 @@
-use kernel::int;
 use core::fail::abort;
+use core::mem::Allocator;
+
+extern "C" {
+    pub fn memset(s: *mut u8, c: u8, n: uint);
+}
+
+trait BitvTrait {
+    fn get(&self, i: uint) -> uint;
+    fn set(&self, i: uint, x: uint);
+    fn to_bytes(&self) -> *mut u8;
+    fn size(&self) -> uint;
+}
+
+struct Bitv {
+    storage: *mut [u32, ..2048]
+}
+
+impl BitvTrait for Bitv {
+    #[inline]
+    fn get(&self, i: uint) -> uint {
+        unsafe { 3 & ((*self.storage)[i / 16] as uint >> ((i % 16) * 2)) }
+    }
+
+    #[inline]
+    fn set(&self, i: uint, x: uint) {
+        let w = i / 16;
+        let b = (i % 16) * 2;
+        unsafe { (*self.storage)[w] = (((*self.storage)[w] & !(3 << b)) | (x as u32 << b)); }
+    }
+
+    #[inline]
+    fn to_bytes(&self) -> *mut u8 {
+        self.storage as *mut u8
+    }
+
+    #[inline]
+    fn size(&self) -> uint {
+        2048 * 4
+    }
+}
 
 pub static UNUSED: uint = 0;
 pub static USED:   uint = 1;
@@ -9,38 +48,39 @@ pub static FULL:   uint = 3;
 struct BuddyAlloc {
     base: uint,
     order: uint,
-    storage: *mut [u32, ..2048]
+    storage: Bitv
 }
 
 impl BuddyAlloc {
-    pub unsafe fn new(base: uint, order: uint, storage: *mut [u32, ..2048]) -> BuddyAlloc {
+    #[fixed_stack_segment]
+    pub unsafe fn new(base: uint, order: uint, storage: Bitv) -> BuddyAlloc {
+        memset(storage.to_bytes(), 0, storage.size());
+
         let this = BuddyAlloc {
             base: base,
             order: order,
             storage: storage
         };
 
-        int::range(0, 2048, |i| {
-            this.set(i, 0);
-        });
-
         this
     }
 
-    #[inline]
-    unsafe fn get(&self, i: uint) -> uint {
-        3 & ((*self.storage)[i / 16] as uint >> ((i % 16) * 2))
+    pub unsafe fn combine(&self, mut index: uint) {
+        loop {
+            let buddy = index + (index & 1) * 2;
+            if buddy < 1 || self.storage.get(buddy - 1) != UNUSED {
+                self.storage.set(index, UNUSED);
+                while index >= 1 && self.storage.get(index) == FULL {
+                    index = (index + 1) / 2 - 1;
+                    self.storage.set(index, SPLIT);
+                }
+            }
+        }
     }
+}
 
-    #[inline]
-    unsafe fn set(&self, i: uint, x: uint) {
-        let w = i / 16;
-        let b = (i % 16) * 2;
-        (*self.storage)[w] = (((*self.storage)[w] & !(3 << b)) | (x as u32 << b));
-    }
-
-    #[fixed_stack_segment]
-    pub unsafe fn alloc(&self, s: uint) -> *u8 {
+impl Allocator for BuddyAlloc {
+    fn alloc(&mut self, s: uint) -> (*mut u8, uint) {
         let mut size = s;
 
         if size == 0 {
@@ -63,17 +103,17 @@ impl BuddyAlloc {
             let mut cont: bool = true;
 
             if size == length {
-                if self.get(index) == UNUSED { // if unused
-                    self.set(index, 1); // use
-                    return (self.base + ((index + 1 - (1 << level)) << (self.order - level))) as *u8;
+                if self.storage.get(index) == UNUSED { // if unused
+                    self.storage.set(index, 1); // use
+                    return ((self.base + ((index + 1 - (1 << level)) << (self.order - level))) as *mut u8, size);
                 }
             }
             else {
-                match self.get(index) {
+                match self.storage.get(index) {
                     UNUSED => {
-                        self.set(index, SPLIT);
-                        self.set(index*2 + 1, UNUSED);
-                        self.set(index*2 + 2, UNUSED);
+                        self.storage.set(index, SPLIT);
+                        self.storage.set(index*2 + 1, UNUSED);
+                        self.storage.set(index*2 + 2, UNUSED);
                         index = index * 2 + 1;
                         length /= 2;
                         level += 1;
@@ -108,26 +148,24 @@ impl BuddyAlloc {
         abort();
     }
 
-    pub unsafe fn combine(&self, mut index: uint) {
-        loop {
-            let buddy = index + (index & 1) * 2;
-            if buddy < 1 || self.get(buddy - 1) != UNUSED {
-                self.set(index, UNUSED);
-                while index >= 1 && self.get(index) == FULL {
-                    index = (index + 1) / 2 - 1;
-                    self.set(index, SPLIT);
-                }
-            }
-        }
+    #[fixed_stack_segment]
+    unsafe fn zero_alloc(&mut self, s: uint) -> (*mut u8, uint) {
+        let (ptr, size) = self.alloc(s);
+        memset(ptr, 0, size);
+        (ptr, size)
     }
 
-    pub unsafe fn free(&self, offset: *u8) {
+    fn realloc(&mut self, ptr: *mut u8, size: uint) -> (*mut u8, uint) {
+        abort();
+    }
+
+    unsafe fn free(&mut self, offset: *mut u8) {
         let mut length = 1 << self.order;
         let mut left = 0;
         let mut index = 0;
 
         loop {
-            match self.get(index) {
+            match self.storage.get(index) {
                 USED => {
                     // offset == left
                     self.combine(index);
@@ -149,8 +187,8 @@ impl BuddyAlloc {
     }
 }
 
-pub static mut MM: BuddyAlloc = BuddyAlloc { base: 0x10000, order: 12, storage: 0x105000 as *mut [u32, ..2048] };
-
-pub unsafe fn malloc(size: uint) -> *u8 {
-    MM.alloc(size)
-}
+pub static mut allocator: BuddyAlloc = BuddyAlloc {
+    base: 0x100000,
+    order: 12,
+    storage: Bitv { storage: 0x105000 as *mut [u32, ..2048] }
+};

@@ -2,6 +2,7 @@ use x86::drivers::pic;
 use x86::cpu::idt;
 use x86::cpu::exception;
 use kernel::memory;
+use core::mem::Allocator;
 
 struct table {
     reg: *mut idt::reg,
@@ -10,13 +11,13 @@ struct table {
 
 impl table {
     pub unsafe fn new() -> table {
-        let table = memory::malloc(0x800) as *mut idt::table;
-        let reg = memory::malloc(6) as *mut idt::reg;
-        *reg = idt::reg::new(table as *idt::table);
+        let (table, _) = memory::allocator.alloc(0x800);
+        let (reg, _) = memory::allocator.alloc(6);
+        *(reg as *mut idt::reg) = idt::reg::new(table as *idt::table);
 
         table {
-            reg: reg,
-            table: table
+            reg: reg as *mut idt::reg,
+            table: table as *mut idt::table
         }
     }
 
