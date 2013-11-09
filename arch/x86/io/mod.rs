@@ -11,7 +11,7 @@ pub unsafe fn seek(offset: int) {
 }
 
 pub unsafe fn write_char(c: char) {
-    if c as u8 == 8 {
+    if c == '\x08' {
         if pos > 0 {
             if pos % 80 == 0 {
                 while (*vga::SCREEN)[pos-1].char == 0 {
@@ -23,6 +23,9 @@ pub unsafe fn write_char(c: char) {
                 (*vga::SCREEN)[pos].char = 0;
             }
         }
+    }
+    else if c == '\n' {
+        seek(80 - pos % 80);
     }
     else {
         (*vga::SCREEN)[pos].char = c as u8;

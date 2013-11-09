@@ -43,12 +43,10 @@ vectors:
     b .
     b .
     b .
-    ldr pc, irq_handler
+    b .
     b .
 
 start_addr:
 .word start
-irq_handler:
-.word irq
 
 vectors_end:

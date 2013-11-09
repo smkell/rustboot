@@ -33,47 +33,25 @@ mod x86 {
 mod arm {
     pub mod cpu;
     pub mod io;
+    pub mod drivers;
 }
 
 #[cfg(target_arch = "arm")]
 #[path = "rust-core/support.rs"]
 mod support;
 
-#[cfg(target_arch = "x86")]
 fn keydown(key: char) {
     unsafe {
-        if key == '\n' {
-            io::seek(80 - io::pos % 80);
-        } else {
-            io::write_char(key);
-        }
+        io::write_char(key);
     }
 }
 
-#[cfg(target_arch = "x86")]
 #[lang="start"]
 #[no_mangle]
 pub unsafe fn main() {
-    drivers::init();
-
     io::keydown(keydown);
 
     let table = cpu::interrupt::table::new();
     table.load();
-    table.enable(drivers::keyboard::IRQ, drivers::keyboard::isr_addr());
-}
-
-#[cfg(target_arch = "arm")]
-#[lang="start"]
-#[no_mangle]
-pub unsafe fn main() {
-    let table = cpu::interrupt::table::new();
-    table.load();
-    table.enable(6, irq as u32);
-}
-
-#[cfg(target_arch = "arm")]
-#[no_mangle]
-pub unsafe fn irq() {
-    io::write_char(*io::UART0 as u8 as char);
+    drivers::init(table);
 }
