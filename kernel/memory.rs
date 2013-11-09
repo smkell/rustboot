@@ -2,7 +2,7 @@ use core::fail::abort;
 use core::mem::Allocator;
 
 extern "C" {
-    pub fn memset(s: *mut u8, c: u8, n: uint);
+    pub fn memset(s: *mut u8, c: i32, n: u32);
 }
 
 trait BitvTrait {
@@ -54,7 +54,7 @@ struct BuddyAlloc {
 impl BuddyAlloc {
     #[fixed_stack_segment]
     pub unsafe fn new(base: uint, order: uint, storage: Bitv) -> BuddyAlloc {
-        memset(storage.to_bytes(), 0, storage.size());
+        memset(storage.to_bytes(), 0, storage.size() as u32);
 
         let this = BuddyAlloc {
             base: base,
@@ -150,7 +150,7 @@ impl Allocator for BuddyAlloc {
     #[fixed_stack_segment]
     unsafe fn zero_alloc(&mut self, s: uint) -> (*mut u8, uint) {
         let (ptr, size) = self.alloc(s);
-        memset(ptr, 0, size);
+        memset(ptr, 0, size as u32);
         (ptr, size)
     }
 

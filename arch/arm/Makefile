@@ -19,6 +19,7 @@ GDB := $(GCC_PREFIX)gdb
 OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-arm
 
+MODS=$(wildcard ../../*/*.rs) $(wildcard */*.rs)
 
 all: floppy.img
 
@@ -26,7 +27,7 @@ all: floppy.img
 
 .DELETE_ON_ERROR:
 
-%.ll: ../../%.rs
+%.ll: ../../%.rs $(MODS)
 	cd ../..; $(RUSTC) $(RUSTCFLAGS) $*.rs -o arch/arm/$*.ll
 	sed -i 's/fixedstacksegment //g' $@
 	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $@

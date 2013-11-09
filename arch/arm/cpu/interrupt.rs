@@ -7,9 +7,10 @@ impl table {
         table
     }
 
-    pub unsafe fn enable(&self) {
-        *io::VIC_INTENABLE = 1 << 12;
-        *io::UART0_IMSC = 1 << 4;
+    pub unsafe fn enable(&self, irq: u8, isr: u32) {
+        // b isr
+        *((irq * 4) as *mut u32) =
+            0xea000000 | ((isr - irq as u32 * 4 - 8) >> 2);
     }
 
     pub unsafe fn load(&self) {
@@ -23,6 +24,9 @@ impl table {
           msr cpsr, r0
           mov sp, r2"
         ::: "r0", "r1", "r2", "cpsr");
+
+        *io::VIC_INTENABLE = 1 << 12;
+        *io::UART0_IMSC = 1 << 4;
 
         let mut i = 0;
         while i < 10 {

@@ -35,6 +35,10 @@ mod arm {
     pub mod io;
 }
 
+#[cfg(target_arch = "arm")]
+#[path = "rust-core/support.rs"]
+mod support;
+
 #[cfg(target_arch = "x86")]
 fn keydown(key: char) {
     unsafe {
@@ -65,7 +69,7 @@ pub unsafe fn main() {
 pub unsafe fn main() {
     let table = cpu::interrupt::table::new();
     table.load();
-    table.enable();
+    table.enable(6, irq as u32);
 }
 
 #[cfg(target_arch = "arm")]
