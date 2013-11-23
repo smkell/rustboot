@@ -1,5 +1,5 @@
-use x86::drivers::vga;
-use x86::drivers::keyboard;
+use super::drivers::vga;
+use super::drivers::keyboard;
 use kernel::int;
 use core::option::Some;
 

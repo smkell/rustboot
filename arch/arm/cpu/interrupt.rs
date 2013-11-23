@@ -1,4 +1,5 @@
-use arm::io;
+use platform::io;
+use support::memset;
 
 struct table;
 

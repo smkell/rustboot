@@ -1,6 +1,5 @@
-use x86::drivers::pic;
-use x86::cpu::idt;
-use x86::cpu::exception;
+use platform::drivers::pic;
+use super::{idt, exception};
 use kernel::memory;
 use core::mem::Allocator;
 

@@ -20,8 +20,7 @@ ASM := nasm
 OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-i386
 
-
-MODS=$(wildcard ../../*/*.rs)
+MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
 
 all: floppy.img
 

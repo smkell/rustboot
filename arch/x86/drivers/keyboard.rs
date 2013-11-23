@@ -1,4 +1,5 @@
-use core::option::*;
+use core::option::{Option, None};
+use platform::io;
 
 pub static IRQ: u8 = 0x20 + 1;
 

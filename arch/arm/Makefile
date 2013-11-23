@@ -19,7 +19,7 @@ GDB := $(GCC_PREFIX)gdb
 OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-arm
 
-MODS=$(wildcard ../../*/*.rs) $(wildcard */*.rs)
+MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
 
 all: floppy.img
 

@@ -1,4 +1,4 @@
-use x86::io;
+use platform::io;
 
 pub static PF: u8 = 8;
 pub static DF: u8 = 14;

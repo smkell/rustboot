@@ -3,14 +3,9 @@
        license = "MIT")];
 
 #[no_std];
-#[feature(asm)];
-#[feature(globs)];
-#[feature(macro_rules)];
+#[feature(asm, globs, macro_rules)];
 
-#[cfg(target_arch = "x86")]
-use x86::*;
-#[cfg(target_arch = "arm")]
-use arm::*;
+use platform::*;
 
 #[path = "rust-core/core/mod.rs"]
 mod core;
@@ -22,7 +17,7 @@ mod kernel {
 
 #[cfg(target_arch = "x86")]
 #[path = "arch/x86/"]
-mod x86 {
+mod platform {
     pub mod cpu;
     pub mod io;
     pub mod drivers;
@@ -30,7 +25,7 @@ mod x86 {
 
 #[cfg(target_arch = "arm")]
 #[path = "arch/arm/"]
-mod arm {
+mod platform {
     pub mod cpu;
     pub mod io;
     pub mod drivers;
