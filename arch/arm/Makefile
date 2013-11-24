@@ -21,14 +21,14 @@ QEMU := qemu-system-arm
 
 MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
 
-all: floppy.img
+all: boot/floppy.img
 
 .PHONY: run debug
 
 .DELETE_ON_ERROR:
 
-%.ll: ../../%.rs $(MODS)
-	cd ../..; $(RUSTC) $(RUSTCFLAGS) $*.rs -o arch/arm/$*.ll
+%.ll: ../../../%.rs $(MODS)
+	cd ../..; $(RUSTC) $(RUSTCFLAGS) main.rs -o arch/arm/$*.ll
 	sed -i 's/fixedstacksegment //g' $@
 	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $@
 	sed -i 's/nocapture read[a-z]*/nocapture/g' $@
@@ -40,13 +40,13 @@ all: floppy.img
 %.o: %.s
 	$(CC) -c $< -o $@
 
-floppy.elf: linker.ld loader.o main.o
+boot/floppy.elf: boot/linker.ld boot/loader.o boot/main.o
 	$(CC) $(CFLAGS) -o $@ -T $^
 
-floppy.img: floppy.elf
+boot/floppy.img: boot/floppy.elf
 	$(OBJCOPY) -O binary $^ $@
 
-run: floppy.img
+run: boot/floppy.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
 debug: floppy.img

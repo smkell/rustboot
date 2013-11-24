@@ -9,7 +9,7 @@ SECTIONS {
     . = 0x7c00;
 
     .text : {
-        loader.o(.text)
+        boot/loader.o(.text)
         *(.text*)
         *(.data*)
         *(.rodata*)

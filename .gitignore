@@ -2,3 +2,6 @@
 *.swp
 *.bin
 *.o
+*.elf
+*.efi
+*.bc
