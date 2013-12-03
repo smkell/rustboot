@@ -28,25 +28,27 @@ start:
     mov bx, 0x7e00  ; read buffer
     int 0x13
     jc error
-    ; load the rest into segment starting at 0x10000
-    mov ax, 0x1000
-    mov es, ax
+    ; load the rest into segments starting at 0x10000
+    xor di, di
+    mov si, 67
+.loop:
+    add di, 0x1000  ; destination
+    mov es, di
+    mov ax, si
+    mov bl, 18
+    div bl
     xor bx, bx
+    mov dh, al
+    mov ch, al
+    shr ch, 1
+    and dh, 1
+    mov cl, ah
     mov ax, 128 | (2 << 8) ; 128 sectors (64 KiB)
-    mov ch, 1       ; cylinder 1 (+1*2*18)
-    mov cl, 13      ; sector 13
-    mov dh, 1       ; track 1 (+1*18)
     int 0x13
     jc error
-    mov ax, 0x2000
-    mov es, ax
-    xor bx, bx
-    mov ax, 128 | (2 << 8) ; 128 sectors (64 KiB)
-    mov ch, 5       ; cylinder 5 (+5*2*18)
-    mov cl, 15      ; sector 15
-    xor dx, dx      ; track 0
-    int 0x13
-    jc error
+    add si, 128
+    cmp di, 0x3000
+    jne .loop
     ; load protected mode GDT and a null IDT (we don't need interrupts)
     cli
     lgdt [gdtr]

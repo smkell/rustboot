@@ -9,6 +9,7 @@ TARGET := arm-linux-noeabi
 RUSTC := $(RUST_ROOT)/bin/rustc
 RUSTCFLAGS := -O --target $(TARGET) --lib -S --emit-llvm
 
+AS := $(GCC_PREFIX)as
 CC := $(GCC_PREFIX)gcc
 CFLAGS := -g -ffreestanding -nostdlib -O3 -Wall
 
@@ -38,7 +39,7 @@ all: boot/floppy.img
 	sed -i 's/.note.rustc,"aw"/.note.rustc,"a"/g' $@
 
 %.o: %.s
-	$(CC) -c $< -o $@
+	$(AS) -c $< -o $@
 
 boot/floppy.elf: boot/linker.ld boot/loader.o boot/main.o
 	$(CC) $(CFLAGS) -o $@ -T $^
@@ -49,9 +50,9 @@ boot/floppy.img: boot/floppy.elf
 run: boot/floppy.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
-debug: floppy.img
+debug: boot/floppy.img
 	tmux new-session -d -s rustboot
 	tmux new-window -t rustboot:1 "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
-	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file floppy.elf'"
+	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file boot/floppy.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot

@@ -2,7 +2,7 @@ RUST_ROOT := /usr/local
 LLVM_ROOT := /usr
 GCC_PREFIX := /usr/bin/
 
-TARGET := i386-intel-linux
+TARGET := i686-intel-linux
 
 -include ./config.mk
 
@@ -10,7 +10,7 @@ RUSTC := $(RUST_ROOT)/bin/rustc
 RUSTCFLAGS := -O --target $(TARGET) --lib --emit-llvm
 
 CC := $(LLVM_ROOT)/bin/clang
-CFLAGS := -g -O3 -ffreestanding
+CFLAGS := -g -O3 -ffreestanding -target $(TARGET)
 
 LD := $(GCC_PREFIX)ld
 LDFLAGS := -melf_i386
@@ -40,7 +40,7 @@ all: boot/floppy.img
 boot/floppy.img: boot/linker.ld boot/loader.o boot/main.o
 	$(LD) $(LDFLAGS) -o $@ -T $^
 
-floppy.elf: linker.ld loader.o main.o
+boot/floppy.elf: boot/linker.ld boot/loader.o boot/main.o
 	$(LD) $(LDFLAGS) -o $@ -T $^ --oformat=default
 
 run: boot/floppy.img
@@ -49,8 +49,8 @@ run: boot/floppy.img
 clean:
 	rm -f boot/*.{o,img}
 
-debug: floppy.elf floppy.img
-	tmux new-session -d -s rustboot "$(QEMU) -fda floppy.img -m 32 -s -S"
-	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file floppy.elf'"
+debug: boot/floppy.elf boot/floppy.img
+	tmux new-session -d -s rustboot "$(QEMU) -fda boot/floppy.img -m 32 -s -S"
+	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file boot/floppy.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
