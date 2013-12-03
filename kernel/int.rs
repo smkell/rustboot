@@ -1,4 +1,4 @@
-pub fn range(lo: uint, hi: uint, it: &fn(uint)) {
+pub fn range(lo: uint, hi: uint, it: |uint|) {
     let mut iter = lo;
     while iter < hi {
         it(iter);
@@ -7,7 +7,7 @@ pub fn range(lo: uint, hi: uint, it: &fn(uint)) {
 }
 
 #[inline]
-pub fn to_str_bytes(num: int, radix: int, f: &fn(u8)) {
+pub fn to_str_bytes(num: int, radix: int, f: |u8|) {
     let neg = num < 0;
     let mut deccum = if neg { -num } else { num };
 
