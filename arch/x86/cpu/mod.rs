@@ -25,6 +25,13 @@ macro_rules! cpuid(
     );
 )
 
+pub unsafe fn init() {
+    asm!("mov eax, cr4
+          or eax, 512
+          mov cr4, eax"
+        ::: "eax" : "intel");
+}
+
 pub unsafe fn info() -> [u8, ..12] {
     let mut vendor = [0u8, ..12];
     let ptr = &vendor as *[u8, ..12] as *mut [u32, ..3];
