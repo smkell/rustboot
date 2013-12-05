@@ -13,18 +13,23 @@ It paints the screen bright red and then displays some information. You can writ
 You need a few things to run rustboot:
 
 1. [rust-core](https://github.com/thestinger/rust-core)
-2. qemu
-3. nasm
-4. Rust's `master` branch or 0.9 release
-5. clang
-6. optionally for debugging and ARM
+2. Rust's [`master` branch](https://github.com/mozilla/rust) or 0.9 release
+3. qemu
+4. On x86
+  * clang
+  * nasm
+5. On ARM
+  * binutils for arm-none-eabi
+  * gcc cross-compiler
+6. Optionally for debugging
   * gdb
   * tmux
-  * GNU cross-compiler and tools for arm-none-eabi
 
-Firstly, update rust-core.
+Clone this repository and update rust-core.
 
 ```bash
+$ git clone https://github.com/pczarn/rustboot.git
+$ cd rustboot
 $ git submodule update --init
 ### you can also pull latest rust-core:
 $ git submodule foreach git pull origin master
@@ -43,7 +48,7 @@ $ make && make install
 
 Simply install all dependencies:
 ```
-# pacman -S qemu nasm rust tmux
+# pacman -S qemu nasm rust clang gdb tmux
 # yaourt -S gcc-arm-none-eabi
 ```
 
