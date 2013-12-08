@@ -7,7 +7,7 @@ TARGET := i686-intel-linux
 -include ./config.mk
 
 RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) --lib --emit-llvm
+RUSTCFLAGS := -O --target $(TARGET) --emit-llvm
 
 CC := $(LLVM_ROOT)/bin/clang
 CFLAGS := -g -O3 -ffreestanding -target $(TARGET)
@@ -29,7 +29,7 @@ all: boot/floppy.img
 .DELETE_ON_ERROR:
 
 %.bc: ../../../%.rs $(MODS)
-	cd ../..; $(RUSTC) $(RUSTCFLAGS) main.rs -o arch/x86/$@
+	$(RUSTC) $(RUSTCFLAGS) ../../main.rs --out-dir boot/
 
 %.o: %.bc
 	$(CC) $(CFLAGS) -c $^ -o $@

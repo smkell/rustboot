@@ -7,7 +7,7 @@ TARGET := arm-linux-noeabi
 -include ./config.mk
 
 RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) --lib -S --emit-llvm
+RUSTCFLAGS := -O --target $(TARGET) -S --emit-llvm
 
 AS := $(GCC_PREFIX)as
 CC := $(GCC_PREFIX)gcc
@@ -29,7 +29,7 @@ all: boot/floppy.img
 .DELETE_ON_ERROR:
 
 %.ll: ../../../%.rs $(MODS)
-	cd ../..; $(RUSTC) $(RUSTCFLAGS) main.rs -o arch/arm/$*.ll
+	$(RUSTC) $(RUSTCFLAGS) ../../main.rs --out-dir boot/
 	sed -i 's/fixedstacksegment //g' $@
 	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $@
 	sed -i 's/nocapture read[a-z]*/nocapture/g' $@

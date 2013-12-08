@@ -1,5 +1,4 @@
 use core::option::{Option, None};
-use platform::io;
 
 pub static IRQ: u8 = 0x20 + 1;
 
@@ -12,7 +11,7 @@ pub static LAYOUT: &'static str = "\
 
 pub static mut keydown: Option<extern fn(char)> = None;
 
-#[fixed_stack_segment]
+#[no_split_stack]
 #[inline(never)]
 unsafe fn keypress(code: u32) {
     if(code & (1 << 7) == 0) {
@@ -22,7 +21,7 @@ unsafe fn keypress(code: u32) {
     }
 }
 
-#[fixed_stack_segment]
+#[no_split_stack]
 #[inline(never)]
 pub unsafe fn isr_addr() -> u32 {
     let mut code: u32;

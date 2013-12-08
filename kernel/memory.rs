@@ -52,7 +52,6 @@ struct BuddyAlloc {
 }
 
 impl BuddyAlloc {
-    #[fixed_stack_segment]
     pub unsafe fn new(base: uint, order: uint, storage: Bitv) -> BuddyAlloc {
         memset(storage.to_bytes(), 0, storage.size() as u32);
 
@@ -147,14 +146,13 @@ impl Allocator for BuddyAlloc {
         }
     }
 
-    #[fixed_stack_segment]
     unsafe fn zero_alloc(&mut self, s: uint) -> (*mut u8, uint) {
         let (ptr, size) = self.alloc(s);
         memset(ptr, 0, size as u32);
         (ptr, size)
     }
 
-    fn realloc(&mut self, ptr: *mut u8, size: uint) -> (*mut u8, uint) {
+    fn realloc(&mut self, _: *mut u8, _: uint) -> (*mut u8, uint) {
         abort();
     }
 

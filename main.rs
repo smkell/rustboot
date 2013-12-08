@@ -1,7 +1,8 @@
-#[link(name = "rustboot",
+#[link(name = "main",
+       package_id = "rustboot",
        vers = "0.1",
        license = "MIT")];
-
+#[crate_type = "lib"];
 #[no_std];
 #[feature(asm, globs, macro_rules)];
 
@@ -31,6 +32,7 @@ mod platform {
     pub mod drivers;
 }
 
+// do we already need memset? TODO: own implementation
 #[cfg(target_arch = "arm")]
 #[path = "rust-core/support.rs"]
 mod support;

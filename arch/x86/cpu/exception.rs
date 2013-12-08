@@ -30,13 +30,13 @@ pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
 }
 */
 
-#[fixed_stack_segment]
+#[no_split_stack]
 #[inline(never)]
 unsafe fn ex14() {
     io::puti(0, 14);
 }
 
-#[fixed_stack_segment]
+#[no_split_stack]
 #[inline(never)]
 pub unsafe fn page_fault() -> u32 {
     asm!("jmp skip_page_fault
