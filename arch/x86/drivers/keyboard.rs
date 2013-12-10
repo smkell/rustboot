@@ -23,7 +23,7 @@ unsafe fn keypress(code: u32) {
 
 #[no_split_stack]
 #[inline(never)]
-pub unsafe fn isr_addr() -> u32 {
+pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
     let mut code: u32;
 
     asm!("jmp skip_isr_addr
@@ -38,9 +38,7 @@ pub unsafe fn isr_addr() -> u32 {
           in al, 60h"
         : "=A"(code) ::: "intel");
           keypress(code);
-    asm!("
-  
-          mov dx, 20h
+    asm!("mov dx, 20h
           mov al, dl
           out dx, al
 
@@ -53,7 +51,7 @@ pub unsafe fn isr_addr() -> u32 {
       skip_isr_addr:"
         :::: "intel");
 
-    isr_addr_asm as u32
+    isr_addr_asm
 }
 
 extern "C" { pub fn isr_addr_asm(); }

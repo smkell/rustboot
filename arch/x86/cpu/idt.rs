@@ -17,6 +17,7 @@ impl reg {
     }
 }
 
+#[inline]
 pub unsafe fn load(reg: *mut reg) {
     asm!("lidt [$0]" :: "A"(reg) :: "intel");
 }
@@ -30,17 +31,18 @@ pub struct entry {
     addr_hi: u16
 }
 
-pub static PRESENT: u8 = 1 << 7;
-pub static PM_32:   u8 = 1 << 3;
+pub static PRESENT:   u8 = 1 << 7;
+pub static INTR_GATE: u8 = 0b1110;
 
 impl entry {
-    pub fn new(addr: u32, sel: u16, flags: u8) -> entry {
+    pub fn new(func: extern "C" unsafe fn(), sel: u16, flags: u8) -> entry {
+        let base = func as u32;
         entry {
-            addr_lo: (addr & 0xffff) as u16,
+            addr_lo: (base & 0xffff) as u16,
             sel: sel,
             zero: 0,
-            flags: flags | 0b110,
-            addr_hi: (addr >> 16) as u16
+            flags: flags,
+            addr_hi: (base >> 16) as u16
         }
     }
 }

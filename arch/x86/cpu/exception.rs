@@ -38,7 +38,7 @@ unsafe fn ex14() {
 
 #[no_split_stack]
 #[inline(never)]
-pub unsafe fn page_fault() -> u32 {
+pub unsafe fn page_fault() -> extern "C" unsafe fn() {
     asm!("jmp skip_page_fault
       page_fault_asm:
           .word 0xa80f
@@ -58,7 +58,7 @@ pub unsafe fn page_fault() -> u32 {
       skip_page_fault:"
         :::: "intel");
 
-    page_fault_asm as u32
+    page_fault_asm
 }
 
 extern "C" { pub fn page_fault_asm(); }
