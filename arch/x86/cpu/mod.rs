@@ -1,5 +1,6 @@
 mod idt;
 pub mod interrupt;
+pub mod io;
 mod exception;
 mod paging;
 
@@ -25,11 +26,13 @@ macro_rules! cpuid(
     );
 )
 
-pub unsafe fn init() {
-    asm!("mov eax, cr4
-          or eax, 512
-          mov cr4, eax"
-        ::: "eax" : "intel");
+pub fn init() {
+    unsafe {
+        asm!("mov eax, cr4
+              or eax, 512
+              mov cr4, eax"
+            ::: "eax" : "intel");
+    }
 }
 
 pub unsafe fn info() -> [u8, ..12] {

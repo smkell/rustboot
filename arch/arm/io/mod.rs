@@ -10,6 +10,8 @@ pub unsafe fn write_char(c: char) {
     *UART0 = c as u32;
 }
 
-pub unsafe fn keydown(f: extern fn(char)) {
-    drivers::keydown = Some(f);
+pub fn keydown(f: extern fn(char)) {
+	unsafe {
+    	drivers::keydown = Some(f);
+	}
 }

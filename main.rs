@@ -45,11 +45,13 @@ fn keydown(key: char) {
 
 #[lang="start"]
 #[no_mangle]
-pub unsafe fn main() {
+pub fn main() {
     cpu::init();
     io::keydown(keydown);
 
-    let table = cpu::interrupt::table::new();
-    table.load();
-    drivers::init(table);
+    unsafe {
+        let table = cpu::interrupt::table::new();
+        table.load();
+        drivers::init(table);
+    }
 }

@@ -1,3 +1,5 @@
+use platform::cpu::io;
+
 pub unsafe fn remap() {
     asm!("mov al, 0x11
           outb 0x20
@@ -24,14 +26,9 @@ pub unsafe fn remap() {
 }
 
 #[inline(never)]
-pub unsafe fn enable(irq: u8) {
+pub fn enable(irq: u8) {
     let port: u16 = if (irq & 0b1000) == 0 { 0x21 } else { 0xa1 };
     let mask: u8 = !(1u8 << (irq & 0b111));
 
-    asm!("mov dx, $0
-          in al, dx
-          and al, $1
-          out dx, al"
-        : : "r"(port), "r"(mask)
-        : "al", "dx" : "intel")
+    io::out(port, io::inb(port) & mask);
 }

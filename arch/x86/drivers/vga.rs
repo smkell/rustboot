@@ -1,4 +1,5 @@
 use kernel::int;
+use platform::cpu::io;
 
 pub enum Color {
     Black       = 0,
@@ -20,7 +21,7 @@ pub enum Color {
 }
 
 #[packed]
-struct character {
+pub struct character {
     char: u8,
     attr: u8,
 }
@@ -35,20 +36,9 @@ pub unsafe fn clear_screen(background: Color) {
     });
 }
 
-pub unsafe fn cursor_at(pos: uint) {
-    asm!("mov al, 15
-          mov dx, 0x3D4
-          out dx, al
-          mov al, bl
-          inc dx
-          out dx, al
-
-          mov al, 14
-          dec dx
-          out dx, al
-          mov al, bh
-          inc dx
-          out dx, al"
-        : : "{bx}"(pos)
-        : "al", "dx" : "intel")
+pub fn cursor_at(pos: uint) {
+    io::out(0x3D4, 15);
+    io::out(0x3D5, pos as u8);
+    io::out(0x3D4, 14);
+    io::out(0x3D5, (pos >> 8) as u8);
 }

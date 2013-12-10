@@ -1,4 +1,5 @@
 use core::option::{Option, None};
+use platform::cpu::io;
 
 pub static IRQ: u8 = 0x20 + 1;
 
@@ -24,25 +25,19 @@ unsafe fn keypress(code: u32) {
 #[no_split_stack]
 #[inline(never)]
 pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
-    let mut code: u32;
-
     asm!("jmp skip_isr_addr
       isr_addr_asm:
           .word 0xa80f
           .word 0xa00f
           .byte 0x06
           .byte 0x1e
-          pusha
+          pusha"
+        :::: "intel");
 
-          xor eax, eax
-          in al, 60h"
-        : "=A"(code) ::: "intel");
-          keypress(code);
-    asm!("mov dx, 20h
-          mov al, dl
-          out dx, al
+          keypress(io::inb(0x60) as u32);
+          io::out(0x20, 0x20u8);
 
-          popa
+    asm!("popa
           .byte 0x1f
           .byte 0x07
           .word 0xa10f
@@ -51,7 +46,8 @@ pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
       skip_isr_addr:"
         :::: "intel");
 
+    // it must be referenced in code
     isr_addr_asm
 }
 
-extern "C" { pub fn isr_addr_asm(); }
+extern "C" { fn isr_addr_asm(); }

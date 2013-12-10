@@ -3,9 +3,9 @@ use super::drivers::keyboard;
 use kernel::int;
 use core::option::Some;
 
-pub static mut pos: int = 0;
+static mut pos: int = 0;
 
-pub unsafe fn seek(offset: int) {
+unsafe fn seek(offset: int) {
     pos += offset;
     vga::cursor_at(pos as uint);
 }
@@ -35,16 +35,17 @@ pub unsafe fn write_char(c: char) {
     vga::cursor_at(pos as uint);
 }
 
-pub unsafe fn keydown(f: extern fn(char)) {
-    keyboard::keydown = Some(f);
+pub fn keydown(f: extern fn(char)) {
+    unsafe {
+        keyboard::keydown = Some(f);
+    }
 }
 
 pub unsafe fn puts(j: int, buf: *u8) {
     let mut i = j;
     let mut curr = buf;
     while *curr != 0 {
-        (*vga::SCREEN)[i].char = *curr;
-        (*vga::SCREEN)[i].attr = 16;
+        (*vga::SCREEN)[i] = vga::character { char: *curr, attr: 16 };
         i += 1;
         curr = (curr as uint + 1) as *u8;
     }
@@ -53,8 +54,7 @@ pub unsafe fn puts(j: int, buf: *u8) {
 pub unsafe fn puti(j: uint, num: int) {
     let mut i = j;
     int::to_str_bytes(num, 10, |n| {
-        (*vga::SCREEN)[i].char = n;
-        (*vga::SCREEN)[i].attr = 16;
+        (*vga::SCREEN)[i] = vga::character { char: n, attr: 16 };
         i += 1;
     });
 }
