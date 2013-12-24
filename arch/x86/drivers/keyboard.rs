@@ -14,7 +14,7 @@ pub static mut keydown: Option<extern fn(char)> = None;
 
 #[no_split_stack]
 #[inline(never)]
-unsafe fn keypress(code: u32) {
+unsafe fn keypress(code: u8) {
     if(code & (1 << 7) == 0) {
         keydown.map(|f| {
             f(LAYOUT[code] as char);
@@ -34,7 +34,7 @@ pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
           pusha"
         :::: "intel");
 
-          keypress(io::inb(0x60) as u32);
+          keypress(io::inb(0x60));
           io::out(0x20, 0x20u8);
 
     asm!("popa
