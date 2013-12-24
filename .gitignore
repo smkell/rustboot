@@ -5,3 +5,6 @@
 *.elf
 *.efi
 *.bc
+*.ll
+lib*.rlib
+linker.map

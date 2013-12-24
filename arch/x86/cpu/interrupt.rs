@@ -1,9 +1,9 @@
 use platform::drivers::pic;
 use super::{idt, exception};
 use kernel::memory;
-use core::mem::Allocator;
+use kernel::memory::Allocator;
 
-struct table {
+pub struct table {
     reg: *mut idt::reg,
     table: *mut idt::table
 }

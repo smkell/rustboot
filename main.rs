@@ -6,12 +6,11 @@
 #[no_std];
 #[feature(asm, globs, macro_rules)];
 
+extern mod core;
+
 use platform::*;
 
-#[path = "rust-core/core/mod.rs"]
-mod core;
-
-mod kernel {
+pub mod kernel {
     pub mod int;
     pub mod memory;
 }

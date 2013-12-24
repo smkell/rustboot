@@ -1,6 +1,6 @@
 use platform::io;
 
-struct table;
+pub struct table;
 
 impl table {
     pub unsafe fn new() -> table {

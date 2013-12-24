@@ -7,11 +7,10 @@ TARGET := arm-linux-noeabi
 -include ./config.mk
 
 RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) -S --emit-llvm
+RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -Z debug-info
 
 AS := $(GCC_PREFIX)as
-CC := $(GCC_PREFIX)gcc
-CFLAGS := -g -ffreestanding -nostdlib -O3 -Wall
+LD := $(GCC_PREFIX)ld
 
 LLC := $(LLVM_ROOT)/bin/llc
 LLCFLAGS := -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
@@ -21,6 +20,9 @@ OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-arm
 
 MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
+BDIR := ./boot
+LCORE := libcore-2e829c2f-0.0.rlib
+LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/core.o
 
 all: boot/floppy.img
 
@@ -28,31 +30,43 @@ all: boot/floppy.img
 
 .DELETE_ON_ERROR:
 
-%.ll: ../../../%.rs $(MODS)
-	$(RUSTC) $(RUSTCFLAGS) ../../main.rs --out-dir boot/
-	sed -i 's/fixedstacksegment //g' $@
-	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $@
-	sed -i 's/nocapture read[a-z]*/nocapture/g' $@
+$(BDIR)/$(LCORE):
+	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
+
+%.bc: %.rlib
+	ar x $^ $@
+
+%.ll: %.bc
+	$(LLVM_ROOT)/bin/llvm-dis $^
+
+%.ll: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) --emit-llvm -S ../../main.rs --out-dir $(BDIR) -L $(BDIR)
 
 %.s: %.ll
+	sed -i 's/fixedstacksegment //g' $^
+	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $^
+	sed -i 's/nocapture read[a-z]*/nocapture/g' $^
 	$(LLC) $(LLCFLAGS) $^ -o $@
 	sed -i 's/.note.rustc,"aw"/.note.rustc,"a"/g' $@
 
 %.o: %.s
 	$(AS) -c $< -o $@
 
-boot/floppy.elf: boot/linker.ld boot/loader.o boot/main.o
-	$(CC) $(CFLAGS) -o $@ -T $^
+$(BDIR)/floppy.elf: $(LINK)
+	$(LD) -o $@ -T $^
 
-boot/floppy.img: boot/floppy.elf
+$(BDIR)/floppy.img: $(BDIR)/floppy.elf
 	$(OBJCOPY) -O binary $^ $@
 
-run: boot/floppy.img
+run: $(BDIR)/floppy.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
-debug: boot/floppy.img
+debug: $(BDIR)/floppy.img
 	tmux new-session -d -s rustboot
 	tmux new-window -t rustboot:1 "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
-	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file boot/floppy.elf'"
+	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
+
+clean:
+	rm -f $(BDIR)/*.{o,img,bc,elf,rlib,so}

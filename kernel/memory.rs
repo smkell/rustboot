@@ -1,8 +1,14 @@
 use core::fail::abort;
-use core::mem::Allocator;
 
 extern "C" {
     pub fn memset(s: *mut u8, c: i32, n: u32);
+}
+
+pub trait Allocator {
+    unsafe fn alloc(&mut self, size: uint) -> (*mut u8, uint);
+    unsafe fn zero_alloc(&mut self, size: uint) -> (*mut u8, uint);
+    unsafe fn realloc(&mut self, ptr: *mut u8, size: uint) -> (*mut u8, uint);
+    unsafe fn free(&mut self, ptr: *mut u8);
 }
 
 trait BitvTrait {

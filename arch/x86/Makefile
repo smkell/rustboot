@@ -7,10 +7,10 @@ TARGET := i686-intel-linux
 -include ./config.mk
 
 RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) --emit-llvm
+RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -Z debug-info
 
 CC := $(LLVM_ROOT)/bin/clang
-CFLAGS := -g -O3 -ffreestanding -target $(TARGET)
+CFLAGS := -O2 -ffreestanding -target $(TARGET)
 
 LD := $(GCC_PREFIX)ld
 LDFLAGS := -melf_i386
@@ -21,36 +21,40 @@ OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-i386
 
 MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
+BDIR := ./boot
+LCORE := libcore-2e829c2f-0.0.rlib
+LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o
 
-all: boot/floppy.img
+all: $(BDIR)/floppy.img
 
 .PHONY: clean run debug
-
-.DELETE_ON_ERROR:
-
-%.bc: ../../../%.rs $(MODS)
-	$(RUSTC) $(RUSTCFLAGS) ../../main.rs --out-dir boot/
-
-%.o: %.bc
-	$(CC) $(CFLAGS) -c $^ -o $@
 
 %.o: %.asm
 	$(ASM) -g -f elf32 -o $@ $<
 
-boot/floppy.img: boot/linker.ld boot/loader.o boot/main.o
-	$(LD) $(LDFLAGS) -o $@ -T $^
+$(BDIR)/$(LCORE):
+	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
 
-boot/floppy.elf: boot/linker.ld boot/loader.o boot/main.o
-	$(LD) $(LDFLAGS) -o $@ -T $^ --oformat=default
+%.bc: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) --emit-llvm ../../main.rs --out-dir $(BDIR) -L $(BDIR)
+
+%.o: %.bc
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+$(BDIR)/floppy.img: $(LINK)
+	$(LD) -g $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" -Map=./$(BDIR)/linker.map
+
+$(BDIR)/floppy.elf: $(LINK)
+	$(LD) -g $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" --oformat=default
 
 run: boot/floppy.img
 	$(QEMU) -fda $<
 
-clean:
-	rm -f boot/*.{o,img}
-
-debug: boot/floppy.elf boot/floppy.img
-	tmux new-session -d -s rustboot "$(QEMU) -fda boot/floppy.img -m 32 -s -S"
-	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file boot/floppy.elf'"
+debug: $(BDIR)/floppy.elf $(BDIR)/floppy.img
+	tmux new-session -d -s rustboot "$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S"
+	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
+
+clean:
+	rm -f $(BDIR)/*.{o,img,bc,elf,rlib,so}
