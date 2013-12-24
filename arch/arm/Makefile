@@ -33,19 +33,18 @@ all: boot/floppy.img
 $(BDIR)/$(LCORE):
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
 
-%.bc: %.rlib
-	ar x $^ $@
+$(BDIR)/core.bc: $(BDIR)/$(LCORE)
+	cd $(@D); ar x $(<F) $(@F)
 
 %.ll: %.bc
 	$(LLVM_ROOT)/bin/llvm-dis $^
+	sed -i 's/fixedstacksegment //g;s/arm-unknown-linux-gnueabihf/arm-none-eabi/g;s/nocapture read[a-z]*/nocapture/g' $@
 
 %.ll: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
 	$(RUSTC) $(RUSTCFLAGS) --emit-llvm -S ../../main.rs --out-dir $(BDIR) -L $(BDIR)
+	sed -i 's/fixedstacksegment //g;s/arm-unknown-linux-gnueabihf/arm-none-eabi/g;s/nocapture read[a-z]*/nocapture/g' $@
 
 %.s: %.ll
-	sed -i 's/fixedstacksegment //g' $^
-	sed -i 's/arm-unknown-linux-gnueabihf/arm-none-eabi/g' $^
-	sed -i 's/nocapture read[a-z]*/nocapture/g' $^
 	$(LLC) $(LLCFLAGS) $^ -o $@
 	sed -i 's/.note.rustc,"aw"/.note.rustc,"a"/g' $@
 
@@ -69,4 +68,4 @@ debug: $(BDIR)/floppy.img
 	tmux kill-session -t rustboot
 
 clean:
-	rm -f $(BDIR)/*.{o,img,bc,elf,rlib,so}
+	rm -f $(BDIR)/*.{o,img,bc,elf,rlib,so,ll}

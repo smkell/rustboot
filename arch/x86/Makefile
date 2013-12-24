@@ -42,10 +42,10 @@ $(BDIR)/$(LCORE):
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 $(BDIR)/floppy.img: $(LINK)
-	$(LD) -g $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" -Map=./$(BDIR)/linker.map
+	$(LD) $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" -Map=./$(BDIR)/linker.map
 
 $(BDIR)/floppy.elf: $(LINK)
-	$(LD) -g $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" --oformat=default
+	$(LD) $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" --oformat=default
 
 run: boot/floppy.img
 	$(QEMU) -fda $<
