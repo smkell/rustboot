@@ -23,7 +23,8 @@ QEMU := qemu-system-i386
 MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
-LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o
+OBJS := $(BDIR)/loader.o $(BDIR)/main.o
+LINK := $(BDIR)/linker.ld $(OBJS) "-(" $(BDIR)/$(LCORE) "-)"
 
 all: $(BDIR)/floppy.img
 
@@ -41,11 +42,11 @@ $(BDIR)/$(LCORE):
 %.o: %.bc
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-$(BDIR)/floppy.img: $(LINK)
-	$(LD) $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" -Map=./$(BDIR)/linker.map
+$(BDIR)/floppy.elf: $(OBJS)
+	$(LD) $(LDFLAGS) -o $@ -T $(LINK) -Map=./$(BDIR)/linker.map
 
-$(BDIR)/floppy.elf: $(LINK)
-	$(LD) $(LDFLAGS) -o $@ -T $^ "-(" $(BDIR)/$(LCORE) "-)" --oformat=default
+$(BDIR)/floppy.img: $(BDIR)/floppy.elf
+	$(OBJCOPY) -O binary -R .eh_frame $^ $@
 
 run: boot/floppy.img
 	$(QEMU) -fda $<
