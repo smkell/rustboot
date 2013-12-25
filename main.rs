@@ -8,12 +8,9 @@
 
 extern mod core;
 
-use platform::*;
+use platform::{cpu, io, drivers};
 
-pub mod kernel {
-    pub mod int;
-    pub mod memory;
-}
+pub mod kernel;
 
 #[cfg(target_arch = "x86")]
 #[path = "arch/x86/"]

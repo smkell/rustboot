@@ -1,7 +1,6 @@
 use platform::drivers::pic;
 use super::{idt, exception};
-use kernel::memory;
-use kernel::memory::Allocator;
+use kernel::allocator;
 
 pub struct table {
     reg: *mut idt::reg,
@@ -10,8 +9,8 @@ pub struct table {
 
 impl table {
     pub unsafe fn new() -> table {
-        let (table, _) = memory::allocator.alloc(0x800);
-        let (reg, _) = memory::allocator.alloc(6);
+        let (table, _) = allocator.alloc(0x800);
+        let (reg, _) = allocator.alloc(6);
         *(reg as *mut idt::reg) = idt::reg::new(table as *idt::table);
 
         table {

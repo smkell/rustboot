@@ -18,7 +18,8 @@ trait BitvTrait {
     fn size(&self) -> uint;
 }
 
-struct Bitv {
+// a special kind of bit vector...
+pub struct Bitv {
     storage: *mut [u32, ..2048]
 }
 
@@ -51,7 +52,7 @@ pub static USED:   uint = 1;
 pub static SPLIT:  uint = 2;
 pub static FULL:   uint = 3;
 
-struct BuddyAlloc {
+pub struct BuddyAlloc {
     base: uint,
     order: uint,
     storage: Bitv
@@ -189,9 +190,3 @@ impl Allocator for BuddyAlloc {
         }
     }
 }
-
-pub static mut allocator: BuddyAlloc = BuddyAlloc {
-    base: 0x100000,
-    order: 12,
-    storage: Bitv { storage: 0x105000 as *mut [u32, ..2048] }
-};

@@ -1,5 +1,4 @@
-use kernel::memory;
-use kernel::memory::Allocator;
+use kernel::allocator;
 use kernel::int;
 
 type page_dir = [u32, ..1024];
@@ -11,9 +10,9 @@ static USER:    u32 = 1 << 2;
 static CR0_PG: u32 = 1 << 31;
 
 pub unsafe fn identity() {
-    let (dir_ptr, _) = memory::allocator.alloc(0x1000);
+    let (dir_ptr, _) = allocator.alloc(0x1000);
     let dir = dir_ptr as *mut page_dir;
-    let (table_ptr, _) = memory::allocator.alloc(0x1000);
+    let (table_ptr, _) = allocator.alloc(0x1000);
     let table = table_ptr as *mut page_dir;
 
     int::range(0, 1024, |i| {
