@@ -61,11 +61,17 @@ run: $(BDIR)/floppy.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
 debug: $(BDIR)/floppy.img
+ifeq ($(strip $(TMUX)),)
 	tmux new-session -d -s rustboot
 	tmux new-window -t rustboot:1 "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
 	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
+else
+	# TODO: debug in current window, can't kill panes
+	tmux new-w "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
+	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'; tmux kill-w"
+endif
 
 clean:
 	rm -f $(BDIR)/*.{o,img,bc,elf,rlib,so,ll}

@@ -52,10 +52,15 @@ run: boot/floppy.img
 	$(QEMU) -fda $<
 
 debug: $(BDIR)/floppy.elf $(BDIR)/floppy.img
+ifeq ($(strip $(TMUX)),)
 	tmux new-session -d -s rustboot "$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S"
 	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
+else
+	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'; tmux kill-p"
+	$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S
+endif
 
 clean:
 	rm -f $(BDIR)/*.{o,img,bc,elf,rlib,so}
