@@ -4,16 +4,16 @@ A small kernel written in Rust.
 
 It paints the screen bright red and then displays some information. You can write. That's it:
 
-![](http://i.imgur.com/XW8PUlM.png)
+![][x86_run]
 
-![](http://i.imgur.com/3cHXx2D.png)
+![][arm_dbg]
 
 ## Setup
 
 You need a few things to run rustboot:
 
-1. [rust-core](https://github.com/thestinger/rust-core)
-2. Rust's [`master` branch](https://github.com/mozilla/rust) or 0.9 release
+1. [rust-core][rc]
+2. [Rust's `master` branch][rm] or 0.9 release
 3. qemu
 4. On x86
   * clang
@@ -60,13 +60,13 @@ Install `nasm` and `qemu` from homebrew:
 
 ```bash
 $ brew install nasm
-$ brew install quemu
+$ brew install qemu
 ```
 
-Install binutils from source.
+Install latest binutils from [source][sw].
 
 ```bash
-$ wget 'ftp://sourceware.org/pub/binutils/snapshots/binutils-2.23.52.tar.bz2'
+$ wget 'ftp://sourceware.org/pub/binutils/snapshots/binutils.tar.bz2'
 $ ./configure --target=i386-elf
 $ make && make install
 ```
@@ -77,7 +77,13 @@ To compile, simply execute `make` command.
 
 To run, use:
 ```bash
-$ make run	# emulate default platform (x86)
-$ make run arch=arm	# run on ARM
-$ make debug arch=arm	# debug on ARM
+$ make run # emulate default platform (x86)
+$ make arch=arm run   # run on ARM
+$ make arch=arm debug # debug on ARM
 ```
+
+[rc]: https://github.com/thestinger/rust-core
+[rm]: https://github.com/mozilla/rust
+[x86_run]: http://i.imgur.com/XW8PUlM.png
+[arm_dbg]: http://i.imgur.com/3cHXx2D.png
+[sw]: ftp://sourceware.org/pub/binutils/snapshots
