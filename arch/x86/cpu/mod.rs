@@ -1,3 +1,4 @@
+mod gdt;
 mod idt;
 pub mod interrupt;
 pub mod io;
@@ -5,7 +6,6 @@ mod exception;
 mod paging;
 
 pub static mut max: u32 = 0;
-pub static mut features: *mut [u32, ..40] = 0x100810 as *mut [u32, ..40];
 
 macro_rules! cpuid(
     ($n:expr, $s1:expr, $s2:expr, $s3:expr, $s4:expr) => (
@@ -33,6 +33,11 @@ pub fn init() {
               mov cr4, eax"
             ::: "eax" : "intel");
     }
+
+    let t = gdt::table::new();
+    t.enable(1, gdt::entry::new(0, 0xFFFFF, gdt::SIZE_32 | gdt::STORAGE | gdt::CODE_READ, 0));
+    t.enable(2, gdt::entry::new(0, 0xFFFFF, gdt::SIZE_32 | gdt::STORAGE | gdt::DATA_WRITE, 0));
+    t.load();
 }
 
 pub unsafe fn info() -> [u8, ..12] {

@@ -20,7 +20,7 @@ trait BitvTrait {
 
 // a special kind of bit vector...
 pub struct Bitv {
-    storage: *mut [u32, ..2048]
+    storage: *mut [u32, ..0x8_000 / 4]
 }
 
 impl BitvTrait for Bitv {
@@ -43,7 +43,7 @@ impl BitvTrait for Bitv {
 
     #[inline]
     fn size(&self) -> uint {
-        2048 * 4
+        0x8_000
     }
 }
 
@@ -106,10 +106,13 @@ impl Allocator for BuddyAlloc {
         let mut level = 0;
 
         loop {
-            if size == length {
+            if length == size {
                 if self.storage.get(index) == UNUSED { // if unused
-                    self.storage.set(index, 1); // use
-                    return ((self.base + ((index + 1 - (1 << level)) << (self.order - level))) as *mut u8, size);
+                    self.storage.set(index, USED); // use
+                    return (
+                        (self.base + ((index + 1 - (1 << level)) << (self.order - level))) as *mut u8,
+                        size
+                    );
                 }
             }
             else {
