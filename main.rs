@@ -1,6 +1,6 @@
 #[link(name = "main",
        package_id = "rustboot",
-       vers = "0.1",
+       vers = "0.2",
        license = "MIT")];
 #[crate_type = "lib"];
 #[no_std];
@@ -9,6 +9,7 @@
 extern mod core;
 
 use platform::{cpu, io, drivers};
+use kernel::memory::Allocator;
 
 pub mod kernel;
 
