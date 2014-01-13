@@ -1,5 +1,6 @@
 use core::mem::size_of;
 use kernel::allocator;
+use kernel::memory::Allocator;
 
 type entries = [entry, ..256];
 
