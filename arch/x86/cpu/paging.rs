@@ -1,5 +1,6 @@
 use kernel::allocator;
 use kernel::int;
+use kernel::memory::Allocator;
 
 type page_dir = [u32, ..1024];
 

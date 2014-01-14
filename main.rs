@@ -1,7 +1,4 @@
-#[link(name = "main",
-       package_id = "rustboot",
-       vers = "0.2",
-       license = "MIT")];
+#[crate_id = "main#0.2"];
 #[crate_type = "lib"];
 #[no_std];
 #[feature(asm, globs, macro_rules)];
