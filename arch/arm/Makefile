@@ -1,10 +1,6 @@
-RUST_ROOT := /usr/local
-LLVM_ROOT := /usr
-GCC_PREFIX := /usr/bin/arm-none-eabi-
-
 TARGET := arm-linux-noeabi
 
--include ./config.mk
+GCC_PREFIX := $(GCC_PREFIX)arm-none-eabi-
 
 RUSTC := $(RUST_ROOT)/bin/rustc
 RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -Z debug-info
@@ -19,18 +15,18 @@ GDB := $(GCC_PREFIX)gdb
 OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-arm
 
-MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
+MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
 LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/core.o aeabi_ldivmod.o
 
+-include ./config.mk
+
+.PHONY: all run debug clean
+
 all: boot/floppy.img
 
-.PHONY: run debug
-
-.DELETE_ON_ERROR:
-
-$(BDIR)/$(LCORE):
+$(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
 
 $(BDIR)/core.bc: $(BDIR)/$(LCORE)

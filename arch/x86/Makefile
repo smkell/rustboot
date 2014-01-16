@@ -1,10 +1,4 @@
-RUST_ROOT := /usr/local
-LLVM_ROOT := /usr
-GCC_PREFIX := /usr/bin/
-
 TARGET := i686-intel-linux
-
--include ./config.mk
 
 RUSTC := $(RUST_ROOT)/bin/rustc
 RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -Z debug-info
@@ -20,20 +14,19 @@ ASM := nasm
 OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-i386
 
-MODS := $(wildcard ../../*/*.rs) $(wildcard */*.rs)
+MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
 OBJS := $(BDIR)/loader.o $(BDIR)/main.o
 LINK := $(BDIR)/linker.ld $(OBJS) "-(" $(BDIR)/$(LCORE) "-)"
 
+-include ./config.mk
+
+.PHONY: all run debug clean
+
 all: $(BDIR)/floppy.img
 
-.PHONY: clean run debug
-
-%.o: %.asm
-	$(ASM) -g -f elf32 -o $@ $<
-
-$(BDIR)/$(LCORE):
+$(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
 
 %.bc: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
@@ -41,6 +34,9 @@ $(BDIR)/$(LCORE):
 
 %.o: %.bc
 	$(CC) $(CFLAGS) -c $^ -o $@
+
+%.o: %.asm
+	$(ASM) -g -f elf32 -o $@ $<
 
 $(BDIR)/floppy.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ -T $(LINK) -Map=./$(BDIR)/linker.map
