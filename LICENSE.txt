@@ -1,5 +1,5 @@
 Copyright (c) 2013 Charlie Somerville
-Copyright (c) 2013 Piotr Czarnecki
+Copyright (c) 2013-2014 Piotr Czarnecki
 
 MIT License
 
