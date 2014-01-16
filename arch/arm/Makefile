@@ -24,7 +24,7 @@ LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/core.o aeabi_l
 
 .PHONY: all run debug clean
 
-all: boot/floppy.img
+all: $(BDIR)/floppy.img
 
 $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
@@ -32,20 +32,14 @@ $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 $(BDIR)/core.bc: $(BDIR)/$(LCORE)
 	cd $(@D); ar x $(<F) $(@F)
 
-%.ll: %.bc
-	$(LLVM_ROOT)/bin/llvm-dis $^
-	sed -i 's/fixedstacksegment //g;s/arm-unknown-linux-gnueabihf/arm-none-eabi/g;s/nocapture read[a-z]*/nocapture/g' $@
+%.bc: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) --emit-llvm ../../main.rs --out-dir $(BDIR) -L $(BDIR)
 
-%.ll: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
-	$(RUSTC) $(RUSTCFLAGS) --emit-llvm -S ../../main.rs --out-dir $(BDIR) -L $(BDIR)
-	sed -i 's/fixedstacksegment //g;s/arm-unknown-linux-gnueabihf/arm-none-eabi/g;s/nocapture read[a-z]*/nocapture/g' $@
-
-%.s: %.ll
+%.s: %.bc
 	$(LLC) $(LLCFLAGS) $^ -o $@
-	sed -i 's/.note.rustc,"aw"/.note.rustc,"a"/g' $@
 
 %.o: %.s
-	$(AS) -c $< -o $@
+	$(AS) -c $< -o $@ -g
 
 $(BDIR)/floppy.elf: $(LINK)
 	$(LD) -o $@ -T $^
