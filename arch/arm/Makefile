@@ -18,7 +18,7 @@ QEMU := qemu-system-arm
 MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
-LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/core.o aeabi_ldivmod.o
+LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
 
 -include ./config.mk
 

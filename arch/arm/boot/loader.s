@@ -11,8 +11,6 @@
 .global abort
 .global __aeabi_memcpy
 .global __aeabi_memset
-.global __modsi3
-.global __aeabi_idiv
 .global vectors
 .global vectors_end
 .global irq_handler
@@ -29,8 +27,6 @@ free:
 abort:
 __aeabi_memcpy:
 __aeabi_memset:
-__modsi3:
-__aeabi_idiv:
     b .
 
 .type vectors, %object
