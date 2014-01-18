@@ -1,5 +1,8 @@
 use platform::io;
 
+static VIC_INT_ENABLE: *mut u32 = (0x10140000 + 0x010) as *mut u32;
+static UART0_IRQ: u8 = 12;
+
 pub struct table;
 
 impl table {
@@ -8,9 +11,10 @@ impl table {
     }
 
     pub unsafe fn enable(&self, irq: u8, isr: u32) {
-        // b isr
         *((irq * 4) as *mut u32) =
             0xea000000 | ((isr - irq as u32 * 4 - 8) >> 2);
+        // Installing exception handlers into the vectors directly [1]
+        // b isr    ; branch method
     }
 
     pub unsafe fn load(&self) {
@@ -25,8 +29,8 @@ impl table {
           mov sp, r2"
         ::: "r0", "r1", "r2", "cpsr");
 
-        *io::VIC_INTENABLE = 1 << 12;
-        *io::UART0_IMSC = 1 << 4;
+        *VIC_INT_ENABLE = 1 << UART0_IRQ; // enable UART0 IRQ [4]
+        *io::UART0_IMSC = 1 << 4; // enable RXIM interrupt
 
         let mut i = 0;
         while i < 10 {

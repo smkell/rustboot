@@ -1,5 +1,3 @@
-use16
-
 global __morestack
 global abort
 global memcmp
@@ -10,55 +8,56 @@ global start
 
 extern main
 
+use16
+
+; entry point
 start:
     ; initialize segment registers
     xor ax, ax
     mov ds, ax
     mov es, ax
-    mov ss, ax
-    ; initialize stack
-    mov ax, 0x7bff
-    mov sp, ax
-    ; load rust code into 0x7e00...0xfe00 so we can jump to it later
-    mov ah, 2       ; read
-    mov al, 65      ; 65 sectors (32.5 KiB)
-    mov ch, 0       ; cylinder & 0xff
-    mov cl, 2       ; sector | ((cylinder >> 2) & 0xc0)
-    xor dx, dx      ; head
-    mov bx, 0x7e00  ; read buffer
+
+    ; load Rust code into 0x7e00...0x1ffff so we can jump to it later
+    mov ax, 65|0x200 ; read 65 sectors (32.5 KiB)
+    mov ch, 0        ; cylinder & 0xff
+    mov cl, 2        ; sector | ((cylinder >> 2) & 0xc0)
+    xor dx, dx       ; head
+    mov bx, 0x7e00   ; read buffer
     int 0x13
     jc error
-    ; load the rest into segments starting at 0x10000
-    xor di, di
-    mov si, 67
+    ; load the rest into 3 segments starting at 0x10000
+    mov si, 67 ; starting with sector 67
+    xor di, di ; and memory segment in di
 .loop:
-    add di, 0x1000  ; destination
-    mov es, di
-    mov ax, si
+    ; sector 67 + i*128 copied to 0x10000 + i*0x10000
+    add di, 0x1000 ; di += 0x10000 >> 4
+    mov es, di     ; es = di (destination segment)
+    mov ax, si ; ax = sector number
     mov bl, 18
-    div bl
-    xor bx, bx
+    div bl     ; ax /= 18
+    xor bx, bx ; bx = 0 (destination = di * 16 + 0)
     mov dh, al
     mov ch, al
-    shr ch, 1
-    and dh, 1
-    mov cl, ah
-    mov ax, 128 | (2 << 8) ; 128 sectors (64 KiB)
-    int 0x13
+    shr ch, 1  ; ch = (si / 18) >> 1
+    and dh, 1  ; dh = (si / 18) & 1
+    mov cl, ah ; cl = si % 18
+    mov ax, 128|0x200 ; read 128 sectors (64 KiB)
+    int 0x13          ; disk read [2]
     jc error
     add si, 128
-    cmp di, 0x3000
+    cmp di, 0x3000 ; while di != 0x3000
     jne .loop
-    ; load protected mode GDT and a null IDT (we don't need interrupts)
-    cli
+
+    ; load protected mode GDT and a null IDT
+    cli         ; disable interrupts by clearing a flag [3]
     lgdt [gdtr]
     lidt [idtr]
-    ; set protected mode bit of cr0
+    ; set protected mode bit of cr0 [4]
     mov eax, cr0
     or eax, 1
     mov cr0, eax
-    ; far jump to load CS with 32 bit segment
-    jmp 0x08:protected_mode
+    ; far jump to load CS with 32-bit segment 1 (code) [5][6]
+    jmp (1 << 3):protected_mode
 
 error:
     mov bx, ax
@@ -74,10 +73,10 @@ error:
     jmp $
     .msg db "could not read disk", 0
 
+use32
 protected_mode:
-    use32
-    ; load all the other segments with 32 bit data segments
-    mov eax, 0x10
+    ; load all the other segments with 32-bit segment 2 (data)
+    mov eax, 2 << 3
     mov ds, eax
     mov es, eax
     mov fs, eax
@@ -94,7 +93,7 @@ protected_mode:
     ; rust functions compare esp against [gs:0x30] as a sort of stack guard thing
     ; as long as we set [gs:0x30] to dword 0, it should be ok
     mov [gs:0x30], dword 0
-    ; jump into rust
+    ; jump into Rust
     call main
 abort:
 __morestack:
@@ -108,7 +107,7 @@ gdtr:
     dw (gdt_end - gdt) + 1  ; size
     dd gdt                  ; offset
 
-idtr:
+idtr: ; null IDT register
     dw 0
     dd 0
 
@@ -131,7 +130,8 @@ gdt:
     db 0x00         ; base 24:31
 gdt_end:
 
-times 510-($-$$) db 0
+; half kilobyte sized sector ends with magic value 0x55 0xaa
+times 510-($-$$) db 0   ; fill unused space with zeros
 db 0x55
 db 0xaa
 
