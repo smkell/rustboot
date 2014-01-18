@@ -25,6 +25,7 @@ LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/core.o aeabi_l
 .PHONY: all run debug clean
 
 all: $(BDIR)/floppy.img
+	@wc -c $^
 
 $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)

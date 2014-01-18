@@ -4,7 +4,7 @@ RUSTC := $(RUST_ROOT)/bin/rustc
 RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -Z debug-info
 
 CC := $(LLVM_ROOT)/bin/clang
-CFLAGS := -O2 -ffreestanding -target $(TARGET)
+CFLAGS := -O3 -ffreestanding -target $(TARGET)
 
 LD := $(GCC_PREFIX)ld
 LDFLAGS := -melf_i386
@@ -20,11 +20,14 @@ LCORE := libcore-2e829c2f-0.0.rlib
 OBJS := $(BDIR)/loader.o $(BDIR)/main.o
 LINK := $(BDIR)/linker.ld $(OBJS) "-(" $(BDIR)/$(LCORE) "-)"
 
+SECTIONS := .text .data .rodata
+
 -include ./config.mk
 
 .PHONY: all run debug clean
 
 all: $(BDIR)/floppy.img
+	@wc -c $^
 
 $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
@@ -41,8 +44,14 @@ $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 $(BDIR)/floppy.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ -T $(LINK) -Map=./$(BDIR)/linker.map
 
-$(BDIR)/floppy.img: $(BDIR)/floppy.elf
-	$(OBJCOPY) -O binary -R .eh_frame $^ $@
+$(BDIR)/kernel.bin: $(BDIR)/floppy.elf
+	$(OBJCOPY) -O binary $(addprefix -j ,$(SECTIONS)) $^ $@
+
+$(BDIR)/boot.bin: $(BDIR)/floppy.elf
+	$(OBJCOPY) -O binary -j .boot $^ $@
+
+$(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin
+	cat $^ >> $@
 
 run: boot/floppy.img
 	$(QEMU) -fda $<

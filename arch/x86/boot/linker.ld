@@ -2,14 +2,16 @@ OUTPUT_FORMAT(elf32-i386)
 ENTRY(start)
 
 MEMORY {
-    ram : org = 0x7c00, l = 225K /* 3*64 + 32 + 0.5 + 0.5 */
+    boot : org = 0x7c00,  l = 512 /* bootloader */
+    ram  : org = 0x10000, l = 64K /* kernel */
 }
 
 SECTIONS {
-    . = 0x7c00;
+    .boot : {
+        *(.boot)
+    } >boot
 
     .text : {
-        *loader.o(.text)
         *(.text*)
     } >ram
 

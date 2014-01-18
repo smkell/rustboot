@@ -8,6 +8,7 @@ global start
 
 extern main
 
+section .boot
 use16
 
 ; entry point
@@ -17,16 +18,8 @@ start:
     mov ds, ax
     mov es, ax
 
-    ; load Rust code into 0x7e00...0x1ffff so we can jump to it later
-    mov ax, 65|0x200 ; read 65 sectors (32.5 KiB)
-    mov ch, 0        ; cylinder & 0xff
-    mov cl, 2        ; sector | ((cylinder >> 2) & 0xc0)
-    xor dx, dx       ; head
-    mov bx, 0x7e00   ; read buffer
-    int 0x13
-    jc error
-    ; load the rest into 3 segments starting at 0x10000
-    mov si, 67 ; starting with sector 67
+    ; load Rust code into 0x10000...0x1ffff so we can jump to it later
+    mov si, 2  ; starting with sector 67
     xor di, di ; and memory segment in di
 .loop:
     ; sector 67 + i*128 copied to 0x10000 + i*0x10000
@@ -38,14 +31,14 @@ start:
     xor bx, bx ; bx = 0 (destination = di * 16 + 0)
     mov dh, al
     mov ch, al
-    shr ch, 1  ; ch = (si / 18) >> 1
-    and dh, 1  ; dh = (si / 18) & 1
-    mov cl, ah ; cl = si % 18
+    shr ch, 1  ; ch = (si / 18) >> 1    ; cylinder & (0xff)
+    and dh, 1  ; dh = (si / 18) & 1     ; head
+    mov cl, ah ; cl = si % 18           ; sector | ((cylinder >> 2) & 0xc0)
     mov ax, 128|0x200 ; read 128 sectors (64 KiB)
     int 0x13          ; disk read [2]
     jc error
     add si, 128
-    cmp di, 0x3000 ; while di != 0x3000
+    cmp di, 0x1000 ; while di != 0x3000
     jne .loop
 
     ; load protected mode GDT and a null IDT
@@ -135,4 +128,5 @@ times 510-($-$$) db 0   ; fill unused space with zeros
 db 0x55
 db 0xaa
 
+section .text
 %include "memset.asm"
