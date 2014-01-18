@@ -76,16 +76,7 @@ protected_mode:
     mov gs, eax
     mov ss, eax
     ; set up stack
-    mov eax, 0x7bff
-    mov esp, eax
-    ; clear the screen
-    mov edi, 0xb8000
-    mov ecx, 80*25*2
-    mov al, 0
-    rep stosb
-    ; rust functions compare esp against [gs:0x30] as a sort of stack guard thing
-    ; as long as we set [gs:0x30] to dword 0, it should be ok
-    mov [gs:0x30], dword 0
+    mov esp, 0x7bff
     ; jump into Rust
     call main
 abort:
