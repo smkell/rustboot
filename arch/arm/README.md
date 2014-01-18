@@ -1,8 +1,8 @@
 ## ARM platform
 ### Files
 ```
-├── aeabi_ldivmod.s Implementation of (u)ldivmod
 ├── boot
+│   ├── aeabi_runtime.s Implementation of support routines
 │   ├── loader.s    Bootloader
 │   └── linker.ld   Linker script
 ├── core.bc
@@ -19,9 +19,9 @@
 
 ### Produced files
 ```
-├── aeabi_ldivmod.o
 └── boot
     ├── loader.o
+    ├── aeabi_runtime.o
     ├── main.s
     ├── main.o
     ├── libcore-2e829c2f-0.0.rlib
