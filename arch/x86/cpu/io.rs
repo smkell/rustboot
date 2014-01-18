@@ -13,3 +13,7 @@ pub fn inb(port: u16) -> u8 {
     }
     val
 }
+
+pub fn wait(port: u16, mask: u8) {
+    while inb(port) & mask != 0 {}
+}

@@ -1,6 +1,7 @@
 use kernel::int;
-use platform::cpu::io;
+use cpu::io;
 
+#[repr(u8)]
 pub enum Color {
     Black       = 0,
     Blue        = 1,
@@ -21,18 +22,25 @@ pub enum Color {
 }
 
 #[packed]
-pub struct character {
+struct Char {
     char: u8,
     attr: u8,
 }
 
+impl Char {
+    #[inline]
+    pub fn new(c: char, fg: Color, bg: Color) -> Char {
+        Char { char: c as u8, attr: fg as u8 | (bg as u8 << 4) }
+    }
+}
+
 pub static SCREEN_SIZE: uint = 80*25;
-type screen = [character, ..SCREEN_SIZE];
+type screen = [Char, ..SCREEN_SIZE];
 pub static SCREEN: *mut screen = 0xb8000 as *mut screen;
 
-pub unsafe fn clear_screen(background: Color) {
-    int::range(0, 80*25, |i| {
-        (*SCREEN)[i].attr = (background as u8) << 4;
+pub unsafe fn clear_screen(bg: Color) {
+    int::range(0, SCREEN_SIZE, |i| {
+        (*SCREEN)[i] = Char::new(' ', Black, bg);
     });
 }
 

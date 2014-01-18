@@ -1,13 +1,14 @@
 use super::drivers::vga;
 use super::drivers::keyboard;
 use kernel::int;
-use core::option::Some;
+use core::option::{Some, None};
+use core::{str, slice};
+use core::iter::Iterator;
 
 static mut pos: int = 0;
 
 unsafe fn seek(offset: int) {
     pos += offset;
-    vga::cursor_at(pos as uint);
 }
 
 pub unsafe fn write_char(c: char) {
@@ -19,7 +20,7 @@ pub unsafe fn write_char(c: char) {
                 }
             }
             else if pos > 0 {
-                if pos > 0 { pos -= 1; }
+                pos -= 1;
                 (*vga::SCREEN)[pos].char = 0;
             }
         }
@@ -27,11 +28,15 @@ pub unsafe fn write_char(c: char) {
     else if c == '\n' {
         seek(80 - pos % 80);
     }
+    else if c == '\t' {
+        seek(4 - pos % 4);
+    }
     else {
         (*vga::SCREEN)[pos].char = c as u8;
         pos += 1;
     }
 
+    pos %= vga::SCREEN_SIZE as int;
     vga::cursor_at(pos as uint);
 }
 
@@ -41,20 +46,21 @@ pub fn keydown(f: extern fn(char)) {
     }
 }
 
-pub unsafe fn puts(j: int, buf: *u8) {
-    let mut i = j;
-    let mut curr = buf;
-    while *curr != 0 {
-        (*vga::SCREEN)[i] = vga::character { char: *curr, attr: 16 };
-        i += 1;
-        curr = (curr as uint + 1) as *u8;
+pub fn putc(c: u8) {
+    unsafe {
+        (*vga::SCREEN)[pos].char = c;
+        pos += 1;
     }
 }
 
-pub unsafe fn puti(j: uint, num: int) {
-    let mut i = j;
+pub fn puti(num: int) {
     int::to_str_bytes(num, 10, |n| {
-        (*vga::SCREEN)[i] = vga::character { char: n, attr: 16 };
-        i += 1;
+        putc(n);
     });
+}
+
+pub fn puts(s: &str) {
+    for c in slice::iter(str::as_bytes(s)) {
+        putc(*c);
+    }
 }

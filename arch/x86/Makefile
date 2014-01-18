@@ -51,7 +51,7 @@ $(BDIR)/boot.bin: $(BDIR)/floppy.elf
 	$(OBJCOPY) -O binary -j .boot $^ $@
 
 $(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin
-	cat $^ >> $@
+	cat $^ > $@
 
 run: boot/floppy.img
 	$(QEMU) -fda $<

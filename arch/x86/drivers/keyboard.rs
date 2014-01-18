@@ -1,24 +1,55 @@
 use core::option::{Option, None};
-use platform::cpu::io;
+use cpu::io;
 
 pub static IRQ: u8 = 0x20 + 1;
 
-pub static LAYOUT: &'static str = "\
+pub static Layout: &'static str = "\
 \x00\x1B1234567890-=\x08\
 \tqwertyuiop[]\n\
 \x00asdfghjkl;'`\
 \x00\\zxcvbnm,./\x00\
 *\x00 ";
 
+static LayoutShift: &'static str = "\
+\x00\x1B!@#$%^&*()_+\x08\
+\tQWERTYUIOP{}\n\
+\x00ASDFGHJKL:\"~\
+\x00|ZXCVBNM<>?\x00\
+*\x00 ";
+
 pub static mut keydown: Option<extern fn(char)> = None;
+
+static mut shift: bool = false;
+static mut led_state: u8 = 0;
+
+fn led(state: u8) {
+    io::wait(0x64, 2);
+    io::out(0x60, 0xEDu8);
+    io::wait(0x64, 2);
+    unsafe {
+        led_state ^= state;
+        io::out(0x60, led_state);
+    }
+}
 
 #[no_split_stack]
 #[inline(never)]
-unsafe fn keypress(code: u8) {
-    if(code & (1 << 7) == 0) {
-        keydown.map(|f| {
-            f(LAYOUT[code] as char);
-        });
+fn keypress(code: u8) {
+    match (code & 0x7f, code & 0x80 == 0) {
+        (0x2A, down) | (0x36, down) => unsafe { shift = down },
+        (0x3A, true) => unsafe { // Caps lock
+            shift = !shift;
+            led(0b100)
+        },
+        (0x45, true) => led(0b010), // Number lock
+        (0x46, true) => led(0b001), // Scroll lock
+        (c, true) if c < 0x3A => unsafe {
+            // handle character
+            keydown.map(|f| {
+                f(if shift { LayoutShift[c] } else { Layout[c] } as char);
+            });
+        },
+        _ => {}
     }
 }
 
