@@ -40,6 +40,8 @@ pub fn init() {
     t.enable(1, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | CODE_READ, 0));
     t.enable(2, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | DATA_WRITE, 0));
     t.load();
+
+    unsafe { paging::init(); }
 }
 
 pub unsafe fn info() -> [u8, ..12] {
