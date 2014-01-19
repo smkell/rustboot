@@ -1,4 +1,4 @@
-use platform::cpu::io;
+use cpu::io;
 
 pub fn remap() {
     io::out(0x20, 0x11);

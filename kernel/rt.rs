@@ -9,6 +9,11 @@
 use core::i32::{ctlz32, cttz32};
 use core::mem::transmute;
 
+extern "C" {
+    pub fn memset(s: *mut u8, c: i32, n: u32);
+    pub fn memcpy(dest: *mut u8, src: *u8, n: int);
+}
+
 #[no_mangle]
 pub unsafe fn __mulodi4(a: i64, b: i64, overflow: *mut int) -> i64 {
     let N: int = 64;

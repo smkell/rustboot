@@ -1,8 +1,5 @@
 use core::fail::abort;
-
-extern "C" {
-    pub fn memset(s: *mut u8, c: i32, n: u32);
-}
+use kernel::rt::memset;
 
 pub trait Allocator {
     unsafe fn alloc(&mut self, size: uint) -> (*mut u8, uint);
@@ -18,9 +15,12 @@ trait BitvTrait {
     fn size(&self) -> uint;
 }
 
-// a special kind of bit vector...
+static BITV_SIZE: uint = 0x10_000;
+pub type BitvStorage = *mut [u32, ..BITV_SIZE / 4];
+
+// vector of 2-bit
 pub struct Bitv {
-    storage: *mut [u32, ..0x8_000 / 4]
+    storage: BitvStorage
 }
 
 impl BitvTrait for Bitv {
@@ -43,7 +43,7 @@ impl BitvTrait for Bitv {
 
     #[inline]
     fn size(&self) -> uint {
-        0x8_000
+        BITV_SIZE
     }
 }
 
@@ -156,9 +156,9 @@ impl Allocator for BuddyAlloc {
         }
     }
 
-    unsafe fn zero_alloc(&mut self, s: uint) -> (*mut u8, uint) {
+    fn zero_alloc(&mut self, s: uint) -> (*mut u8, uint) {
         let (ptr, size) = self.alloc(s);
-        memset(ptr, 0, size as u32);
+        unsafe { memset(ptr, 0, size as u32); }
         (ptr, size)
     }
 

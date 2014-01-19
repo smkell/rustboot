@@ -1,7 +1,6 @@
 global __morestack
 global abort
 global memcmp
-global memcpy
 global malloc
 global free
 global start

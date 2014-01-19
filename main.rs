@@ -6,7 +6,6 @@
 extern mod core;
 
 use platform::{cpu, io, drivers};
-use kernel::memory::Allocator;
 
 pub mod kernel;
 
@@ -26,27 +25,19 @@ mod platform {
     pub mod drivers;
 }
 
-// do we already need memset? TODO: own implementation
-#[cfg(target_arch = "arm")]
+// TODO: implement
 #[path = "rust-core/support.rs"]
 mod support;
-
-fn keydown(key: char) {
-    unsafe {
-        io::write_char(key);
-    }
-}
 
 #[lang="start"]
 #[no_mangle]
 pub fn main() {
     let table = cpu::interrupt::Table::new();
-    cpu::init();
-    io::keydown(keydown);
-
     unsafe {
         kernel::int_table = core::option::Some(table);
     }
+    cpu::init();
+    io::keydown(kernel::keydown);
 
     table.load();
     drivers::init();
