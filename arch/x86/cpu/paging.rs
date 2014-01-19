@@ -1,7 +1,7 @@
 use core::mem::size_of;
 use kernel::allocator;
-use kernel::int;
 use kernel::memory::Allocator;
+use kernel::int;
 use kernel::rt::memset;
 use kernel;
 use cpu::idt;
@@ -42,8 +42,8 @@ pub unsafe fn init() {
     (*dir).tables[0] = table as u32 | PRESENT | RW | USER;
 
     kernel::int_table.map(|t| {
-        use cpu::exception::{IsrWithCode, PF};
-        (*t.table)[PF as u8] = IsrWithCode::new(PF);
+        use cpu::exception::{Isr, PF};
+        (*t.table)[PF as u8] = Isr::new(PF, true);
     });
 
     (*dir).enable();

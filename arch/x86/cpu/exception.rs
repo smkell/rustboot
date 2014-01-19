@@ -55,40 +55,20 @@ unsafe fn blue_screen(stack: *IsrStack) {
 }
 
 #[packed]
-pub struct IsrWithCode {
-    push: u8,
-    value: Fault,
-    jmp: u8,
-    rel: u32
-}
-
-#[packed]
 pub struct Isr {
-    dec_esp: u8,
-    push: u8,
+    dec_esp: u8,    // dec esp  // only for exceptions without error codes
+    push: u8,       // push byte <imm>  // save int. number
     value: Fault,
-    jmp: u8,
+    jmp: u8,        // jmp rel  // jump to common handler
     rel: u32
-}
-
-impl IsrWithCode {
-    pub unsafe fn new(val: Fault) -> idt::IdtEntry {
-        let (isr_ptr, _) = allocator.alloc(size_of::<IsrWithCode>());
-        let isr = isr_ptr as *mut IsrWithCode;
-        *isr = IsrWithCode {
-            push: 0x6a, value: val,
-            jmp: 0xe9, rel: exception_handler() as u32 - offset(isr_ptr as *IsrWithCode, 1) as u32
-        };
-        idt::IdtEntry::new(transmute(isr_ptr), 1 << 3, idt::INTR_GATE | idt::PRESENT)
-    }
 }
 
 impl Isr {
-    pub unsafe fn new(val: Fault) -> idt::IdtEntry {
+    pub unsafe fn new(val: Fault, code: bool) -> idt::IdtEntry {
         let (isr_ptr, _) = allocator.alloc(size_of::<Isr>());
         let isr = isr_ptr as *mut Isr;
         *isr = Isr {
-            dec_esp: 0x4c,
+            dec_esp: if code { 0x90 } else { 0x4c },
             push: 0x6a, value: val,
             jmp: 0xe9, rel: exception_handler() as u32 - offset(isr_ptr as *Isr, 1) as u32
         };
