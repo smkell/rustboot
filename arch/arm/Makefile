@@ -45,8 +45,17 @@ $(BDIR)/core.bc: $(BDIR)/$(LCORE)
 $(BDIR)/floppy.elf: $(LINK)
 	$(LD) -o $@ -T $^
 
-$(BDIR)/floppy.img: $(BDIR)/floppy.elf
+$(BDIR)/kernel.bin: $(BDIR)/floppy.elf
 	$(OBJCOPY) -O binary $^ $@
+
+$(BDIR)/module.o: module.s
+	$(AS) -c $< -o $@
+
+$(BDIR)/initram.elf: $(BDIR)/module.o
+	$(LD) -s $< -o $@
+
+$(BDIR)/floppy.img: $(BDIR)/kernel.bin $(BDIR)/initram.elf
+	cat $^ > $@
 
 run: $(BDIR)/floppy.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^

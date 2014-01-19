@@ -50,7 +50,13 @@ $(BDIR)/kernel.bin: $(BDIR)/floppy.elf
 $(BDIR)/boot.bin: $(BDIR)/floppy.elf
 	$(OBJCOPY) -O binary -j .boot $^ $@
 
-$(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin
+$(BDIR)/module.o: module.asm
+	$(ASM) -f elf32 -o $@ $<
+
+$(BDIR)/initram.elf: $(BDIR)/module.o
+	$(LD) $(LDFLAGS) -s $< -o $@
+
+$(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin $(BDIR)/initram.elf
 	cat $^ > $@
 
 run: boot/floppy.img

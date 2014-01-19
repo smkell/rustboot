@@ -12,4 +12,6 @@ SECTIONS {
 
     .data : { *(.data) }
     .bss : { *(.bss) }
+
+    initram = .;
 }

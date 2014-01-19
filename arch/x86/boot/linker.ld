@@ -17,4 +17,6 @@ SECTIONS {
 
     .data : { *(.data*) } >ram
     .rodata : { *(.rodata*) } >ram
+
+    initram = .;
 }
