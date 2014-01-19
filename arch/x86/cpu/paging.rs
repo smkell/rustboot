@@ -1,4 +1,5 @@
 use core::mem::size_of;
+use core::option::Some;
 use kernel::allocator;
 use kernel::memory::Allocator;
 use kernel::int;
@@ -23,7 +24,7 @@ struct PageTable {
 }
 
 #[packed]
-struct PageDirectory {
+pub struct PageDirectory {
     tables: [u32, ..1024]
 }
 
@@ -46,11 +47,12 @@ pub unsafe fn init() {
         (*t.table)[PF as u8] = Isr::new(PF, true);
     });
 
+    kernel::page_dir = Some(dir);
     (*dir).enable();
 }
 
 impl PageDirectory {
-    pub unsafe fn enable(&mut self) {
+    pub unsafe fn enable(&self) {
         asm!("mov cr3, $0
 
               mov eax, cr0

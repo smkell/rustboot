@@ -1,6 +1,7 @@
 use core::option::{Option, None};
 use platform::cpu;
 use platform::io;
+use cpu::{interrupt, paging};
 
 pub mod int;
 pub mod memory;
@@ -14,7 +15,8 @@ pub static mut allocator: memory::BuddyAlloc = memory::BuddyAlloc {
     storage: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }
 };
 
-pub static mut int_table: Option<cpu::interrupt::Table> = None;
+pub static mut int_table: Option<interrupt::Table> = None;
+pub static mut page_dir: Option<*mut paging::PageDirectory> = None;
 
 pub fn keydown(key: char) {
     unsafe {
