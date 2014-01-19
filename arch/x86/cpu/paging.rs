@@ -51,6 +51,19 @@ pub unsafe fn init() {
     (*dir).enable();
 }
 
+pub unsafe fn map(page_ptr: *mut u8) {
+    let (phys_ptr, _) = allocator.alloc(0x1000);
+    let vaddr = page_ptr as u32;
+
+    let (table_ptr, _) = allocator.alloc(0x1000);
+    let table = table_ptr as *mut PageTable;
+
+    (*table).pages[(vaddr >> 12) & 0x3ff] = Page(phys_ptr as u32 | PRESENT | RW | USER);
+    kernel::page_dir.map(|p| {
+        (*p).tables[vaddr >> 22] = table as u32 | PRESENT | RW | USER;
+    });
+}
+
 impl PageDirectory {
     pub unsafe fn enable(&self) {
         asm!("mov cr3, $0

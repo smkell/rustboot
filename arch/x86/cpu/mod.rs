@@ -5,7 +5,7 @@ mod idt;
 pub mod interrupt;
 pub mod io;
 mod exception;
-mod paging;
+pub mod paging;
 
 pub static mut max: u32 = 0;
 

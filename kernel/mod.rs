@@ -5,6 +5,7 @@ use cpu::{interrupt, paging};
 
 pub mod int;
 pub mod memory;
+pub mod elf;
 
 #[cfg(target_word_size = "32")]
 pub mod rt;
