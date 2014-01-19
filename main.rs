@@ -25,10 +25,6 @@ mod platform {
     pub mod drivers;
 }
 
-// TODO: implement
-#[path = "rust-core/support.rs"]
-mod support;
-
 #[lang="start"]
 #[no_mangle]
 pub fn main() {

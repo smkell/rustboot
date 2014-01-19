@@ -81,7 +81,6 @@ protected_mode:
 abort:
 __morestack:
 memcmp:
-memcpy:
 malloc:
 free:
     jmp $
@@ -117,6 +116,3 @@ gdt_end:
 times 510-($-$$) db 0   ; fill unused space with zeros
 db 0x55
 db 0xaa
-
-section .text
-%include "memset.asm"

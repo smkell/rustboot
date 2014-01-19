@@ -17,7 +17,7 @@ QEMU := qemu-system-i386
 MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
-OBJS := $(BDIR)/loader.o $(BDIR)/main.o
+OBJS := $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/runtime.o
 LINK := $(BDIR)/linker.ld $(OBJS) "-(" $(BDIR)/$(LCORE) "-)"
 
 SECTIONS := .text .data .rodata
@@ -50,7 +50,7 @@ $(BDIR)/kernel.bin: $(BDIR)/floppy.elf
 $(BDIR)/boot.bin: $(BDIR)/floppy.elf
 	$(OBJCOPY) -O binary -j .boot $^ $@
 
-$(BDIR)/module.o: module.asm
+$(BDIR)/%.o: %.asm
 	$(ASM) -f elf32 -o $@ $<
 
 $(BDIR)/initram.elf: $(BDIR)/module.o
