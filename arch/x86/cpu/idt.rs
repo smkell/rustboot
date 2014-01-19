@@ -1,29 +1,13 @@
 use core::mem::size_of;
 
-pub type table = [entry, ..256];
+pub static PRESENT:   u8 = 1 << 7;
+pub static INTR_GATE: u8 = 0b1110;
+pub static TRAP_GATE: u8 = 0b1111;
+
+pub type Idt = [IdtEntry, ..256];
 
 #[packed]
-pub struct reg {
-    size: u16,
-    addr: *table,
-}
-
-impl reg {
-    pub unsafe fn new(idt: *table) -> reg {
-        reg {
-            addr: idt,
-            size: size_of::<table>() as u16
-        }
-    }
-}
-
-#[inline]
-pub unsafe fn load(reg: *mut reg) {
-    asm!("lidt [$0]" :: "A"(reg) :: "intel");
-}
-
-#[packed]
-pub struct entry {
+pub struct IdtEntry {
     addr_lo: u16,
     sel: u16,
     zero: u8,
@@ -31,18 +15,35 @@ pub struct entry {
     addr_hi: u16
 }
 
-pub static PRESENT:   u8 = 1 << 7;
-pub static INTR_GATE: u8 = 0b1110;
+#[packed]
+pub struct IdtReg {
+    size: u16,
+    addr: *Idt,
+}
 
-impl entry {
-    pub fn new(func: extern "C" unsafe fn(), sel: u16, flags: u8) -> entry {
+impl IdtEntry {
+    pub fn new(func: extern "C" unsafe fn(), sel: u16, flags: u8) -> IdtEntry {
         let base = func as u32;
-        entry {
+        IdtEntry {
             addr_lo: (base & 0xffff) as u16,
+            addr_hi: (base >> 16) as u16,
             sel: sel,
             zero: 0,
-            flags: flags,
-            addr_hi: (base >> 16) as u16
+            flags: flags
         }
     }
+}
+
+impl IdtReg {
+    pub unsafe fn new(idt: *Idt) -> IdtReg {
+        IdtReg {
+            size: size_of::<Idt>() as u16,
+            addr: idt,
+        }
+    }
+}
+
+#[inline]
+pub unsafe fn load(reg: *IdtReg) {
+    asm!("lidt [$0]" :: "A"(reg) :: "intel");
 }

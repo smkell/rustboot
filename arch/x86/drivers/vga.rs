@@ -38,9 +38,11 @@ pub static SCREEN_SIZE: uint = 80*25;
 type screen = [Char, ..SCREEN_SIZE];
 pub static SCREEN: *mut screen = 0xb8000 as *mut screen;
 
-pub unsafe fn clear_screen(bg: Color) {
+pub fn clear_screen(bg: Color) {
     int::range(0, SCREEN_SIZE, |i| {
-        (*SCREEN)[i] = Char::new(' ', Black, bg);
+        unsafe {
+            (*SCREEN)[i] = Char::new(' ', Black, bg);
+        }
     });
 }
 

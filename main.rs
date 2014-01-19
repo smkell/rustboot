@@ -40,12 +40,14 @@ fn keydown(key: char) {
 #[lang="start"]
 #[no_mangle]
 pub fn main() {
+    let table = cpu::interrupt::Table::new();
     cpu::init();
     io::keydown(keydown);
 
     unsafe {
-        let table = cpu::interrupt::table::new();
-        table.load();
-        drivers::init(table);
+        kernel::int_table = core::option::Some(table);
     }
+
+    table.load();
+    drivers::init();
 }

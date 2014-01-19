@@ -1,9 +1,14 @@
 use super::cpu::interrupt;
 use super::io;
 use core::option::{Option, None};
+use kernel;
 
-pub unsafe fn init(table: interrupt::table) {
-    table.enable(6, keypress as u32);
+pub fn init() {
+    unsafe {
+        kernel::int_table.map(|t| {
+            t.enable(interrupt::IRQ, keypress as u32);
+        });
+    }
 }
 
 pub static mut keydown: Option<extern fn(char)> = None;

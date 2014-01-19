@@ -1,40 +1,39 @@
-use platform::drivers::pic;
-use super::{idt, exception};
+use cpu::idt::{IdtEntry, IdtReg, Idt, INTR_GATE, PRESENT};
+use cpu::idt;
+use drivers::pic;
 use kernel::allocator;
 use kernel::memory::Allocator;
 
-pub struct table {
-    reg: *mut idt::reg,
-    table: *mut idt::table
+pub struct Table {
+    reg: *IdtReg,
+    table: *mut Idt
 }
 
-impl table {
-    pub unsafe fn new() -> table {
-        let (table, _) = allocator.alloc(0x800);
-        let (reg, _) = allocator.alloc(6);
-        *(reg as *mut idt::reg) = idt::reg::new(table as *idt::table);
-
-        table {
-            reg: reg as *mut idt::reg,
-            table: table as *mut idt::table
+impl Table {
+    pub fn new() -> Table {
+        unsafe {
+            let (table, _) = allocator.alloc(0x800);
+            let (reg, _) = allocator.alloc(6);
+            *(reg as *mut IdtReg) = IdtReg::new(table as *Idt);
+            Table { reg: reg as *IdtReg, table: table as *mut Idt }
         }
     }
 
     pub unsafe fn enable(&self, irq: u8, isr: extern "C" unsafe fn()) {
-        (*self.table)[irq] = idt::entry::new(
-            isr,
-            1 << 3,
-            idt::INTR_GATE | idt::PRESENT
+        (*self.table)[irq] = IdtEntry::new(
+            isr,                // interrupt service routine
+            1 << 3,             // segment selector
+            INTR_GATE | PRESENT // flags
         );
 
         pic::enable(irq);
     }
 
-    pub unsafe fn load(&self) {
-        (*self.table)[exception::PF] = idt::entry::new(exception::page_fault(), 1 << 3, idt::INTR_GATE | idt::PRESENT);
-
-        idt::load(self.reg);
-        pic::remap();
-        asm!("sti" :::: "intel");
+    pub fn load(&self) {
+        unsafe {
+            idt::load(self.reg);
+            pic::remap();
+            asm!("sti" :::: "intel");
+        }
     }
 }
