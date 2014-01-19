@@ -1,3 +1,5 @@
+use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
+
 mod gdt;
 mod idt;
 pub mod interrupt;
@@ -34,9 +36,9 @@ pub fn init() {
             ::: "eax" : "intel");
     }
 
-    let t = gdt::table::new();
-    t.enable(1, gdt::entry::new(0, 0xFFFFF, gdt::SIZE_32 | gdt::STORAGE | gdt::CODE_READ, 0));
-    t.enable(2, gdt::entry::new(0, 0xFFFFF, gdt::SIZE_32 | gdt::STORAGE | gdt::DATA_WRITE, 0));
+    let t = Gdt::new();
+    t.enable(1, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | CODE_READ, 0));
+    t.enable(2, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | DATA_WRITE, 0));
     t.load();
 }
 
