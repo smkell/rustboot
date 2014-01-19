@@ -1,7 +1,15 @@
+use core::mem::{size_of, transmute};
+use core::ptr::offset;
 use platform::io;
+use cpu::idt;
+use kernel::allocator;
+use kernel::memory::Allocator;
 
-pub static PF: u8 = 8;
-pub static DF: u8 = 14;
+#[repr(u8)]
+pub enum Fault {
+    PF = 8,
+    DF = 14
+}
 
 /*
 #[lang="fail_"]
@@ -30,35 +38,91 @@ pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
 }
 */
 
-#[no_split_stack]
-#[inline(never)]
-unsafe fn ex14() {
-    io::puti(0, 14);
+// exception info and processor state saved on stack
+pub struct IsrStack {
+    edi: u32, esi: u32, ebp: u32, esp: u32, ebx: u32, edx: u32, ecx: u32, eax: u32, // pushad last
+    ds: u32, es: u32, fs: u32, gs: u32, // segment registers
+    int_no: u32, err_code: u32, // added by ISRs
+    eip: u32, cs: u32, eflags: u32, useresp: u32, ss: u32 // the cpu adds these on the interrupt
 }
 
 #[no_split_stack]
 #[inline(never)]
-pub unsafe fn page_fault() -> extern "C" unsafe fn() {
-    asm!("jmp skip_page_fault
-      page_fault_asm:
-          .word 0xa80f
-          .word 0xa00f
-          .byte 0x06
-          .byte 0x1e
+unsafe fn blue_screen(stack: *IsrStack) {
+    io::puts("Exception ");
+    io::puti((*stack).int_no as int);
+    asm!("hlt");
+}
+
+#[packed]
+pub struct IsrWithCode {
+    push: u8,
+    value: Fault,
+    jmp: u8,
+    rel: u32
+}
+
+#[packed]
+pub struct Isr {
+    dec_esp: u8,
+    push: u8,
+    value: Fault,
+    jmp: u8,
+    rel: u32
+}
+
+impl IsrWithCode {
+    pub unsafe fn new(val: Fault) -> idt::IdtEntry {
+        let (isr_ptr, _) = allocator.alloc(size_of::<IsrWithCode>());
+        let isr = isr_ptr as *mut IsrWithCode;
+        *isr = IsrWithCode {
+            push: 0x6a, value: val,
+            jmp: 0xe9, rel: exception_handler() as u32 - offset(isr_ptr as *IsrWithCode, 1) as u32
+        };
+        idt::IdtEntry::new(transmute(isr_ptr), 1 << 3, idt::INTR_GATE | idt::PRESENT)
+    }
+}
+
+impl Isr {
+    pub unsafe fn new(val: Fault) -> idt::IdtEntry {
+        let (isr_ptr, _) = allocator.alloc(size_of::<Isr>());
+        let isr = isr_ptr as *mut Isr;
+        *isr = Isr {
+            dec_esp: 0x4c,
+            push: 0x6a, value: val,
+            jmp: 0xe9, rel: exception_handler() as u32 - offset(isr_ptr as *Isr, 1) as u32
+        };
+        idt::IdtEntry::new(transmute(isr_ptr), 1 << 3, idt::INTR_GATE | idt::PRESENT)
+    }
+}
+
+#[no_split_stack]
+#[inline(never)]
+pub unsafe fn exception_handler() -> extern "C" unsafe fn() {
+    // Points to the data on stack
+    // WARN: local var should use registers
+    let mut stack_ptr: *IsrStack;
+    asm!("jmp skip_exception_handler
+      exception_handler_asm:
+          .word 0xa80f // push gs
+          .word 0xa00f // push fs
+          .byte 0x06 // push es
+          .byte 0x1e // push ds
           pusha"
-        :::: "intel");
-          ex14();
-    asm!("hlt
-          popa
+        : "={esp}"(stack_ptr) ::: "volatile", "intel");
+
+            blue_screen(stack_ptr);
+
+    asm!("popa
           .byte 0x1f
           .byte 0x07
           .word 0xa10f
           .word 0xa90f
           iretd
-      skip_page_fault:"
-        :::: "intel");
+      skip_exception_handler:"
+        :::: "volatile", "intel");
 
-    page_fault_asm
+    exception_handler_asm
 }
 
-extern "C" { pub fn page_fault_asm(); }
+extern "C" { pub fn exception_handler_asm(); }
