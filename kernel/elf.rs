@@ -1,9 +1,11 @@
-use platform::{io, cpu};
+use core::ptr::{copy_nonoverlapping_memory, set_memory};
 use core::mem::{transmute, size_of};
 use core::ptr::offset;
 use core::c_types::*;
+
 use kernel::int;
-use kernel::rt::{memset, memcpy};
+use kernel::ptr::mut_offset;
+use platform::{io, cpu};
 
 // rust-bindgen generated bindings
 pub type Elf32_Half = c_ushort;
@@ -343,43 +345,44 @@ enum HeaderType {
     PT_HIPROC = 0x7fffffff
 }
 
-impl Elf32_Phdr {
-    unsafe fn load(&self, header: *Elf32_Ehdr) {
-        use cpu::paging;
-        let vaddr = self.p_vaddr as *mut u8;
-        let p_offset = self.p_offset as int;
-        let p_filesz = self.p_filesz as int;
+impl Elf32_Ehdr {
+    unsafe fn load(&self, buffer: *u8) -> extern "C" fn() {
+        //TODO: Verify file integrity
+        let pheader = offset(buffer, self.e_phoff as int) as *Elf32_Phdr;
 
-        paging::map(vaddr);
-
-        if self.p_memsz > self.p_filesz {
-            memset(offset(vaddr as *u8, p_offset + p_filesz) as *mut u8, 0, self.p_memsz - self.p_filesz);
-        }
-        memcpy(vaddr, offset(header as *u8, p_offset) as *u8, p_filesz);
+        int::range(0, self.e_phnum as uint, |i| {
+            match (*pheader).p_type {
+                PT_LOAD => (*pheader).load(buffer),
+                _ => {}
+            }
+        });
+        // return entry address
+        transmute(self.e_entry)
     }
 }
 
-pub unsafe fn load_elf(header: *Elf32_Ehdr) -> extern "C" fn() {
-    //TODO: Verify file integrity
-    let pheader = offset(header as *u8, (*header).e_phoff as int) as *Elf32_Phdr;
+impl Elf32_Phdr {
+    unsafe fn load(&self, buffer: *u8) {
+        // TODO: kernel::memory::virtual and arm::cpu::mmu
+        use cpu::paging;
 
-    int::range(0, (*header).e_phnum as uint, |i| {
-        match (*pheader).p_type {
-            PT_LOAD => (*pheader).load(header),
-            _ => {}
-        }
-    });
-    // return entry address
-    transmute((*header).e_entry)
+        let vaddr = self.p_vaddr as *mut u8;
+        let mem_size = self.p_memsz as uint;
+        let file_pos = self.p_offset as int;
+        let file_size = self.p_filesz as uint;
+
+        paging::map(vaddr);
+
+        copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
+        set_memory(mut_offset(vaddr, file_pos + file_size as int), 0, mem_size - file_size);
+    }
 }
 
-pub fn exec() {
+pub fn exec(buffer: *u8) {
     unsafe {
-        let ptr = &initram as *u8 as *Elf32_Ehdr;
-        let entry = load_elf(ptr);
+        let header = &(*(buffer as *Elf32_Ehdr));
+        let entry = header.load(buffer);
         // jump into the module
         entry();
     }
 }
-
-extern { static initram: u8; }

@@ -37,5 +37,5 @@ pub fn main() {
 
     table.load();
     drivers::init();
-    kernel::elf::exec();
+    kernel::elf::exec(&kernel::initram);
 }

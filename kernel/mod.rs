@@ -4,6 +4,7 @@ use platform::io;
 use cpu::{interrupt, paging};
 
 pub mod int;
+pub mod ptr;
 pub mod memory;
 pub mod elf;
 
@@ -24,3 +25,5 @@ pub fn keydown(key: char) {
         io::write_char(key);
     }
 }
+
+extern { pub static initram: u8; }
