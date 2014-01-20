@@ -364,14 +364,14 @@ impl Elf32_Ehdr {
 impl Elf32_Phdr {
     unsafe fn load(&self, buffer: *u8) {
         // TODO: kernel::memory::virtual and arm::cpu::mmu
-        use cpu::paging;
+        use super::memory::virtual;
 
         let vaddr = self.p_vaddr as *mut u8;
         let mem_size = self.p_memsz as uint;
         let file_pos = self.p_offset as int;
         let file_size = self.p_filesz as uint;
 
-        paging::map(vaddr);
+        virtual::map(vaddr);
 
         copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
         set_memory(mut_offset(vaddr, file_pos + file_size as int), 0, mem_size - file_size);

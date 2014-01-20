@@ -24,18 +24,3 @@ mod platform {
     pub mod io;
     pub mod drivers;
 }
-
-#[lang="start"]
-#[no_mangle]
-pub fn main() {
-    let table = cpu::interrupt::Table::new();
-    unsafe {
-        kernel::int_table = core::option::Some(table);
-    }
-    cpu::init();
-    io::keydown(kernel::keydown);
-
-    table.load();
-    drivers::init();
-    kernel::elf::exec(&kernel::initram);
-}

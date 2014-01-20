@@ -14,7 +14,7 @@ ASM := nasm
 OBJCOPY := $(GCC_PREFIX)objcopy
 QEMU := qemu-system-i386
 
-MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs)
+MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs) $(wildcard ../../kernel/*/*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
 OBJS := $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/runtime.o
@@ -32,8 +32,8 @@ all: $(BDIR)/floppy.img
 $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 	$(RUSTC) $(RUSTCFLAGS) ../../rust-core/core/lib.rs --out-dir $(BDIR)
 
-%.bc: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
-	$(RUSTC) $(RUSTCFLAGS) --emit-llvm ../../main.rs --out-dir $(BDIR) -L $(BDIR)
+$(BDIR)/main.bc: ../../lib.rs $(MODS) $(BDIR)/$(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --emit-llvm ../../lib.rs --out-dir $(BDIR)
 
 %.o: %.bc
 	$(CC) $(CFLAGS) -c $^ -o $@

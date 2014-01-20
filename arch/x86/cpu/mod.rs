@@ -5,7 +5,7 @@ mod idt;
 pub mod interrupt;
 pub mod io;
 mod exception;
-pub mod paging;
+pub mod mmu;
 
 pub static mut max: u32 = 0;
 
@@ -41,7 +41,7 @@ pub fn init() {
     t.enable(2, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | DATA_WRITE, 0));
     t.load();
 
-    unsafe { paging::init(); }
+    unsafe { mmu::init(); }
 }
 
 pub unsafe fn info() -> [u8, ..12] {

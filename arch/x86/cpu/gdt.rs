@@ -1,5 +1,5 @@
 use core::mem::{size_of, transmute};
-use kernel::allocator;
+use kernel::heap;
 use kernel::memory::Allocator;
 
 pub static SIZE_32: u16 = 1 << 14;
@@ -61,8 +61,8 @@ pub struct Gdt {
 impl Gdt {
     pub fn new() -> Gdt {
         unsafe {
-            let (table_ptr, _) = allocator.zero_alloc(size_of::<Table>());
-            let (reg_ptr, _) = allocator.alloc(size_of::<GdtReg>());
+            let (table_ptr, _) = heap.zero_alloc(size_of::<Table>());
+            let (reg_ptr, _) = heap.alloc(size_of::<GdtReg>());
 
             let reg: &mut GdtReg = transmute(reg_ptr);
             *reg = GdtReg::new(transmute(table_ptr));

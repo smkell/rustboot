@@ -1,6 +1,6 @@
 use core::mem::size_of;
 use core::option::Some;
-use kernel::allocator;
+use kernel::heap;
 use kernel::memory::Allocator;
 use kernel::int;
 use kernel::rt::memset;
@@ -29,11 +29,11 @@ pub struct PageDirectory {
 }
 
 pub unsafe fn init() {
-    let (kernel_dir, _) = allocator.alloc(0x1000);
+    let (kernel_dir, _) = heap.alloc(0x1000);
     let dir = kernel_dir as *mut PageDirectory;
     memset(dir as *mut u8, 0, size_of::<PageDirectory>() as u32);
 
-    let (table_ptr, _) = allocator.alloc(0x1000);
+    let (table_ptr, _) = heap.alloc(0x1000);
     let table = table_ptr as *mut PageTable;
 
     int::range(0, 1024, |i| {
@@ -52,10 +52,10 @@ pub unsafe fn init() {
 }
 
 pub unsafe fn map(page_ptr: *mut u8) {
-    let (phys_ptr, _) = allocator.alloc(0x1000);
+    let (phys_ptr, _) = heap.alloc(0x1000);
     let vaddr = page_ptr as u32;
 
-    let (table_ptr, _) = allocator.alloc(0x1000);
+    let (table_ptr, _) = heap.alloc(0x1000);
     let table = table_ptr as *mut PageTable;
 
     (*table).pages[(vaddr >> 12) & 0x3ff] = Page(phys_ptr as u32 | PRESENT | RW | USER);

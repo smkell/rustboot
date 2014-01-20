@@ -2,7 +2,7 @@ use core::mem::{size_of, transmute};
 use core::ptr::offset;
 use platform::io;
 use cpu::idt;
-use kernel::allocator;
+use kernel::heap;
 use kernel::memory::Allocator;
 
 #[repr(u8)]
@@ -57,7 +57,7 @@ pub struct Isr {
 
 impl Isr {
     pub unsafe fn new(val: Fault, code: bool) -> idt::IdtEntry {
-        let (isr_ptr, _) = allocator.alloc(size_of::<Isr>());
+        let (isr_ptr, _) = heap.alloc(size_of::<Isr>());
         let isr = isr_ptr as *mut Isr;
         *isr = Isr {
             push_dummy: if code { 0x90 } else { 0x50 },   // [9]

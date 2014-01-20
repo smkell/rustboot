@@ -1,7 +1,7 @@
 use cpu::idt::{IdtEntry, IdtReg, Idt, INTR_GATE, PRESENT};
 use cpu::idt;
 use drivers::pic;
-use kernel::allocator;
+use kernel::heap;
 use kernel::memory::Allocator;
 
 pub struct Table {
@@ -12,8 +12,8 @@ pub struct Table {
 impl Table {
     pub fn new() -> Table {
         unsafe {
-            let (table, _) = allocator.alloc(0x800);
-            let (reg, _) = allocator.alloc(6);
+            let (table, _) = heap.alloc(0x800);
+            let (reg, _) = heap.alloc(6);
             *(reg as *mut IdtReg) = IdtReg::new(table as *Idt);
             Table { reg: reg as *IdtReg, table: table as *mut Idt }
         }
