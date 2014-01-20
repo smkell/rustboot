@@ -43,8 +43,8 @@ pub unsafe fn init() {
     (*dir).tables[0] = table as u32 | PRESENT | RW | USER;
 
     kernel::int_table.map(|t| {
-        use cpu::exception::{Isr, PF};
-        (*t.table)[PF as u8] = Isr::new(PF, true);
+        use cpu::exception::{Isr, PAGE_FAULT};
+        (*t.table)[PAGE_FAULT as u8] = Isr::new(PAGE_FAULT, true);
     });
 
     kernel::page_dir = Some(dir);

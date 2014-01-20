@@ -7,43 +7,35 @@ use kernel::memory::Allocator;
 
 #[repr(u8)]
 pub enum Fault {
-    PF = 8,
-    DF = 14
+    DIVIDE_ERROR = 0,
+    NMI = 2,
+    BREAKPOINT = 3,
+    OVERFLOW = 4,
+    BOUND_EXCEEDED = 5,
+    INVALID_OPCODE = 6,
+    NO_MATH_COPROCESSOR = 7,
+    DOUBLE_FAULT = 8,
+    COPROCESSOR_SEGMENT_OVERUN = 9,
+    INVALID_TSS = 10,
+    SEGMENT_NOT_PRESENT = 11,
+    STACK_SEGMENT_FAULT = 12,
+    GENERAL_PROTECTION = 13,
+    PAGE_FAULT = 14,
+    FLOATING_POINT_ERROR = 16,
+    ALIGNMENT_CHECK = 17,
+    MACHINE_CHECK = 18,
+    SIMD_FP_EXCEPTION = 19,
 }
-
-/*
-#[lang="fail_"]
-#[fixed_stack_segment]
-pub fn fail(expr: *u8, file: *u8, line: uint) -> ! {
-    unsafe {
-        io::puts(0, expr);
-        io::puts(80, file);
-        io::puti(80*2, line as int);
-
-        zero::abort();
-    }
-}
-
-#[lang="fail_bounds_check"]
-#[fixed_stack_segment]
-pub fn fail_bounds_check(file: *u8, line: uint, index: uint, len: uint) {
-    unsafe {
-        io::puts(0, file);
-        io::puti(80, line as int);
-        io::puti(80*2, index as int);
-        io::puti(80*3, len as int);
-
-        zero::abort();
-    }
-}
-*/
 
 // exception info and processor state saved on stack
 pub struct IsrStack {
-    edi: u32, esi: u32, ebp: u32, esp: u32, ebx: u32, edx: u32, ecx: u32, eax: u32, // pushad last
-    ds: u32, es: u32, fs: u32, gs: u32, // segment registers
-    int_no: u32, err_code: u32, // added by ISRs
-    eip: u32, cs: u32, eflags: u32, useresp: u32, ss: u32 // the cpu adds these on the interrupt
+    // Registers saved by the ISR (in reverse order)
+    edi: u32, esi: u32, ebp: u32, esp: u32, ebx: u32, edx: u32, ecx: u32, eax: u32,
+    ds: u32, es: u32, fs: u32, gs: u32,
+    int_no: u32,   // added by ISRs
+    err_code: u32, // added by some exceptions
+     // the cpu adds these when calling the ISR
+    eip: u32, cs: u32, eflags: u32, useresp: u32, ss: u32
 }
 
 #[no_split_stack]
@@ -56,10 +48,10 @@ unsafe fn blue_screen(stack: *IsrStack) {
 
 #[packed]
 pub struct Isr {
-    dec_esp: u8,    // dec esp  // only for exceptions without error codes
+    push_dummy: u8, // push eax  // (only for exceptions without error codes)
     push: u8,       // push byte <imm>  // save int. number
     value: Fault,
-    jmp: u8,        // jmp rel  // jump to common handler
+    jmp: u8,        // jmp rel  // jump to the common handler
     rel: u32
 }
 
@@ -68,7 +60,7 @@ impl Isr {
         let (isr_ptr, _) = allocator.alloc(size_of::<Isr>());
         let isr = isr_ptr as *mut Isr;
         *isr = Isr {
-            dec_esp: if code { 0x90 } else { 0x4c },
+            push_dummy: if code { 0x90 } else { 0x50 },   // [9]
             push: 0x6a, value: val,
             jmp: 0xe9, rel: exception_handler() as u32 - offset(isr_ptr as *Isr, 1) as u32
         };
