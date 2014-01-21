@@ -13,9 +13,9 @@ pub mod elf;
 pub mod rt;
 
 pub static mut heap: memory::BuddyAlloc = memory::BuddyAlloc {
-    base: 0x110_000,
-    order: 15,
-    storage: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }
+    base: 0x110_000 as *mut u8,
+    order: 17,
+    tree: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }
 };
 
 pub static mut int_table: Option<interrupt::Table> = None;
@@ -30,6 +30,7 @@ pub fn keydown(key: char) {
 #[lang="start"]
 #[no_mangle]
 pub fn main() {
+    memory::BuddyAlloc::new(0x110_000 as *mut u8, 17, memory::Bitv { storage: 0x100_000 as memory::BitvStorage });
     let table = interrupt::Table::new();
     unsafe {
         int_table = Some(table);

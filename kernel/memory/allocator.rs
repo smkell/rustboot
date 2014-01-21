@@ -1,5 +1,8 @@
-use core::fail::abort;
-use kernel::rt::memset;
+use core::fail::{abort, out_of_memory};
+use core::ptr::offset;
+use core::ptr::set_memory;
+use core::i32::ctlz32;
+use kernel::ptr::mut_offset;
 
 pub trait Allocator {
     unsafe fn alloc(&mut self, size: uint) -> (*mut u8, uint);
@@ -53,32 +56,26 @@ pub static SPLIT:  uint = 2;
 pub static FULL:   uint = 3;
 
 pub struct BuddyAlloc {
-    base: uint,
+    base: *mut u8,
     order: uint,
-    storage: Bitv
+    tree: Bitv
 }
 
 impl BuddyAlloc {
-    pub unsafe fn new(base: uint, order: uint, storage: Bitv) -> BuddyAlloc {
-        memset(storage.to_bytes(), 0, storage.size() as u32);
+    pub fn new(base: *mut u8, order: uint, storage: Bitv) -> BuddyAlloc {
+        unsafe { set_memory(storage.to_bytes(), 0, storage.size()); }
 
-        let this = BuddyAlloc {
-            base: base,
-            order: order,
-            storage: storage
-        };
-
-        this
+        BuddyAlloc { base: base, order: order, tree: storage }
     }
 
     pub unsafe fn combine(&self, mut index: uint) {
         loop {
             let buddy = index + (index & 1) * 2;
-            if buddy < 1 || self.storage.get(buddy - 1) != UNUSED {
-                self.storage.set(index, UNUSED);
-                while index >= 1 && self.storage.get(index) == FULL {
+            if buddy < 1 || self.tree.get(buddy - 1) != UNUSED {
+                self.tree.set(index, UNUSED);
+                while index >= 1 && self.tree.get(index) == FULL {
                     index = (index + 1) / 2 - 1;
-                    self.storage.set(index, SPLIT);
+                    self.tree.set(index, SPLIT);
                 }
             }
         }
@@ -86,71 +83,54 @@ impl BuddyAlloc {
 }
 
 impl Allocator for BuddyAlloc {
-    fn alloc(&mut self, s: uint) -> (*mut u8, uint) {
-        let mut size = s;
-
+    fn alloc(&mut self, mut size: uint) -> (*mut u8, uint) {
         if size == 0 {
             size = 1;
         }
-        else if size & (size-1) != 0 {
-            size |= size >> 1;
-            size |= size >> 2;
-            size |= size >> 4;
-            size |= size >> 8;
-            size |= size >> 16;
-            size += 1;
-        }
+        // smallest power of 2 >= size
+        let lg2_size = 32 - unsafe { ctlz32(size as i32 - 1) };
+        size = 1 << lg2_size;
 
-        let mut length = 1 << self.order;
-        let mut index = 0;
-        let mut level = 0;
+        let mut index = 0; // points to current tree node
+        let mut level = self.order; // current height
 
         loop {
-            if length == size {
-                if self.storage.get(index) == UNUSED { // if unused
-                    self.storage.set(index, USED); // use
-                    return (
-                        (self.base + ((index + 1 - (1 << level)) << (self.order - level))) as *mut u8,
+            match (self.tree.get(index), level == lg2_size as uint) {
+                (UNUSED, true) => {
+                    // Found appropriate unused node
+                    self.tree.set(index, USED); // use
+                    return unsafe {(
+                        mut_offset(self.base, (index + 1 - (1 << (self.order - level))) as int << level),
                         size
-                    );
+                    )};
                 }
-            }
-            else {
-                match self.storage.get(index) {
-                    UNUSED => {
-                        self.storage.set(index, SPLIT);
-                        self.storage.set(index*2 + 1, UNUSED);
-                        self.storage.set(index*2 + 2, UNUSED);
-                        index = index * 2 + 1;
-                        length /= 2;
-                        level += 1;
-                        continue
-                    },
-                    SPLIT => {
-                        index = index * 2 + 1;
-                        length /= 2;
-                        level += 1;
-                        continue
-                    },
-                    _ => ()
-                }
-            }
-
-            if index & 1 == 1 {
-                index += 1;
-            }
-            else {
-                loop {
+                (UNUSED, false) => {
+                    // This large node is unused, split it!
+                    self.tree.set(index, SPLIT);
+                    self.tree.set(index*2 + 1, UNUSED);
+                    self.tree.set(index*2 + 2, UNUSED);
+                    index = index * 2 + 1; // left child
                     level -= 1;
-                    length *= 2;
-
-                    if index == 0 { abort(); }
-
-                    index = (index + 1) / 2 - 1;
+                },
+                (SPLIT, false) => {
+                    // Traverse
+                    index = index * 2 + 1; // left child
+                    level -= 1;
+                },
+                _ => loop {
+                    // Get back
                     if index & 1 == 1 {
                         index += 1;
                         break;
                     }
+
+                    level += 1;
+
+                    if index == 0 {
+                        out_of_memory();
+                    }
+
+                    index = (index + 1) / 2 - 1; // parent
                 }
             }
         }
@@ -158,7 +138,7 @@ impl Allocator for BuddyAlloc {
 
     fn zero_alloc(&mut self, s: uint) -> (*mut u8, uint) {
         let (ptr, size) = self.alloc(s);
-        unsafe { memset(ptr, 0, size as u32); }
+        unsafe { set_memory(ptr, 0, size); }
         (ptr, size)
     }
 
@@ -166,13 +146,14 @@ impl Allocator for BuddyAlloc {
         abort();
     }
 
-    unsafe fn free(&mut self, offset: *mut u8) {
+    unsafe fn free(&mut self, ptr: *mut u8) {
         let mut length = 1 << self.order;
         let mut left = 0;
         let mut index = 0;
+        // TODO: offset
 
         loop {
-            match self.storage.get(index) {
+            match self.tree.get(index) {
                 USED => {
                     // offset == left
                     self.combine(index);
@@ -181,7 +162,7 @@ impl Allocator for BuddyAlloc {
                 UNUSED => { return },
                 _ => {
                     length /= 2;
-                    if (offset as uint) < left + length {
+                    if (ptr as uint) < left + length {
                         index += index + 1;
                     }
                     else {
