@@ -39,8 +39,11 @@ Interrupts must be unmasked with the `VIC_INT_ENABLE`[[3]] interrupt controller 
 
 Enabling interrupts[[5]]
 
+### Memory management unit: `cpu/mmu.rs`
+
 [1]: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0056d/Caccfahd.html
 [2]: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0203j/Cihdidh2.html
 [3]: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0273a/Cihiicbh.html
 [4]: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0225d/I1042232.html
 [5]: http://balau82.wordpress.com/2012/04/15/arm926-interrupts-in-qemu/ "ARM926 interrupts in QEMU"
+[6]: https://github.com/torvalds/linux/blob/master/arch/arm/mm/proc-arm926.S#L368 "linux / arch / arm / mm / proc-arm926.S"

@@ -1,3 +1,8 @@
 pub mod interrupt;
+pub mod mmu;
 
-pub fn init() {}
+pub fn init() {
+    unsafe {
+        mmu::init();
+    }
+}
