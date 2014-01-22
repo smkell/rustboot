@@ -18,7 +18,7 @@ MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs) 
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
 OBJS := $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/runtime.o
-LINK := $(BDIR)/linker.ld $(OBJS) "-(" $(BDIR)/$(LCORE) "-)"
+LINK := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed "-(" $(BDIR)/$(LCORE) "-)"
 
 SECTIONS := .text .data .rodata
 
@@ -41,13 +41,13 @@ $(BDIR)/main.bc: ../../lib.rs $(MODS) $(BDIR)/$(LCORE)
 %.o: %.asm
 	$(ASM) -g -f elf32 -o $@ $<
 
-$(BDIR)/floppy.elf: $(OBJS)
+$(BDIR)/kernel.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ -T $(LINK) -Map=./$(BDIR)/linker.map
 
-$(BDIR)/kernel.bin: $(BDIR)/floppy.elf
+$(BDIR)/kernel.bin: $(BDIR)/kernel.elf
 	$(OBJCOPY) -O binary $(addprefix -j ,$(SECTIONS)) $^ $@
 
-$(BDIR)/boot.bin: $(BDIR)/floppy.elf
+$(BDIR)/boot.bin: $(BDIR)/kernel.elf
 	$(OBJCOPY) -O binary -j .boot $^ $@
 
 $(BDIR)/%.o: %.asm
@@ -56,20 +56,23 @@ $(BDIR)/%.o: %.asm
 $(BDIR)/initram.elf: $(BDIR)/module.o
 	$(LD) $(LDFLAGS) -s $< -o $@
 
-$(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin $(BDIR)/initram.elf
+%.embed: %
+	$(LD) $(LDFLAGS) -r -b binary -o $@ $^
+
+$(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin
 	cat $^ > $@
 
 run: boot/floppy.img
 	$(QEMU) -fda $<
 
-debug: $(BDIR)/floppy.elf $(BDIR)/floppy.img
+debug: $(BDIR)/kernel.elf $(BDIR)/floppy.img
 ifeq ($(strip $(TMUX)),)
 	tmux new-session -d -s rustboot "$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S"
-	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'"
+	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.elf'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
 else
-	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'; tmux kill-p"
+	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.elf'; tmux kill-p"
 	$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S
 endif
 

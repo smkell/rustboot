@@ -18,13 +18,14 @@ QEMU := qemu-system-arm
 MODS := $(wildcard */*.rs) $(wildcard ../../*.rs) $(wildcard ../../kernel/*.rs)
 BDIR := ./boot
 LCORE := libcore-2e829c2f-0.0.rlib
-LINK := $(BDIR)/linker.ld $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
+OBJS := $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
+LINK := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 
 -include ./config.mk
 
 .PHONY: all run debug clean
 
-all: $(BDIR)/floppy.img
+all: $(BDIR)/kernel.bin
 	@wc -c $^
 
 $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
@@ -42,10 +43,10 @@ $(BDIR)/main.bc: ../../lib.rs $(MODS) $(BDIR)/$(LCORE)
 %.o: %.s
 	$(AS) -c $< -o $@ -g
 
-$(BDIR)/floppy.elf: $(LINK)
+$(BDIR)/kernel.elf: $(LINK)
 	$(LD) -o $@ -T $^
 
-$(BDIR)/kernel.bin: $(BDIR)/floppy.elf
+$(BDIR)/kernel.bin: $(BDIR)/kernel.elf
 	$(OBJCOPY) -O binary $^ $@
 
 $(BDIR)/module.o: module.s
@@ -54,23 +55,23 @@ $(BDIR)/module.o: module.s
 $(BDIR)/initram.elf: $(BDIR)/module.o
 	$(LD) -s $< -o $@
 
-$(BDIR)/floppy.img: $(BDIR)/kernel.bin $(BDIR)/initram.elf
-	cat $^ > $@
+%.embed: %
+	$(LD) -r -b binary -o $@ $^
 
-run: $(BDIR)/floppy.img
+run: $(BDIR)/kernel.img
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
-debug: $(BDIR)/floppy.img
+debug: $(BDIR)/kernel.bin
 ifeq ($(strip $(TMUX)),)
 	tmux new-session -d -s rustboot
 	tmux new-window -t rustboot:1 "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
-	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'"
+	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.bin'"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
 else
 	# TODO: debug in current window, can't kill panes
 	tmux new-w "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
-	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/floppy.elf'; tmux kill-w"
+	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.bin'; tmux kill-w"
 endif
 
 clean:

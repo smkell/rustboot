@@ -40,7 +40,7 @@ pub fn main() {
 
     table.load();
     drivers::init();
-    elf::exec(&initram);
+    elf::exec(&_binary_boot_initram_elf_start);
 }
 
-extern { static initram: u8; }
+extern { static _binary_boot_initram_elf_start: u8; }

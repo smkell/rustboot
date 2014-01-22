@@ -3,7 +3,8 @@
 .syntax unified
 .fpu softvfp
 
+.global _start
 .type start, %function
 
-start:
+_start:
     b .
