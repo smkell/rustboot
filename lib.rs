@@ -5,9 +5,16 @@
 
 extern mod core;
 
+#[cfg(target_arch = "arm")]
+pub use support::memcpy;
+
 use platform::{cpu, io, drivers};
 
 pub mod kernel;
+
+#[cfg(target_arch = "arm")]
+#[path = "rust-core/support.rs"]
+mod support;
 
 #[cfg(target_arch = "x86")]
 #[path = "arch/x86/"]

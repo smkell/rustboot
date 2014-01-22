@@ -33,8 +33,8 @@ $(BDIR)/$(LCORE): $(wildcard ../../rust-core/core/*.rs)
 $(BDIR)/core.bc: $(BDIR)/$(LCORE)
 	cd $(@D); ar x $(<F) $(@F)
 
-%.bc: ../../../%.rs $(MODS) $(BDIR)/$(LCORE)
-	$(RUSTC) $(RUSTCFLAGS) --emit-llvm ../../main.rs --out-dir $(BDIR) -L $(BDIR)
+$(BDIR)/main.bc: ../../lib.rs $(MODS) $(BDIR)/$(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --emit-llvm ../../lib.rs --out-dir $(BDIR)
 
 %.s: %.bc
 	$(LLC) $(LLCFLAGS) $^ -o $@
