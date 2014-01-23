@@ -1,5 +1,6 @@
 global memset
 global memcpy
+global memmove
 
 memset:
     push ebp
@@ -44,6 +45,32 @@ memcpy:
     rep movsb
 
     mov eax, [ebp+8]
+    pop edi
+    pop esi
+    pop ebp
+    ret
+
+memmove:
+    push ebp
+    mov ebp, esp
+    push esi
+    push edi
+
+    mov edi, [ebp+8]
+    mov esi, [ebp+12]
+    mov ecx, [ebp+16]
+    mov eax, edi
+    cld
+
+    cmp esi, edi
+    jnb .fwd
+    std
+    lea esi, [esi+ecx-1]
+    lea edi, [edi+ecx-1]
+
+.fwd:
+    rep movsb
+
     pop edi
     pop esi
     pop ebp

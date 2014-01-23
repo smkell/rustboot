@@ -1,8 +1,16 @@
 use core::fail::{abort, out_of_memory};
 use core::ptr::offset;
-use core::ptr::set_memory;
+use core::ptr::{set_memory, copy_memory};
 use core::i32::ctlz32;
+
 use kernel::ptr::mut_offset;
+
+enum Node {
+    UNUSED = 0,
+    USED = 1,
+    SPLIT = 2,
+    FULL = 3
+}
 
 pub trait Allocator {
     unsafe fn alloc(&mut self, size: uint) -> (*mut u8, uint);
@@ -12,8 +20,8 @@ pub trait Allocator {
 }
 
 trait BitvTrait {
-    fn get(&self, i: uint) -> uint;
-    fn set(&self, i: uint, x: uint);
+    fn get(&self, i: uint) -> Node;
+    fn set(&self, i: uint, x: Node);
     fn to_bytes(&self) -> *mut u8;
     fn size(&self) -> uint;
 }
@@ -28,12 +36,14 @@ pub struct Bitv {
 
 impl BitvTrait for Bitv {
     #[inline]
-    fn get(&self, i: uint) -> uint {
-        unsafe { 3 & ((*self.storage)[i / 16] as uint >> ((i % 16) * 2)) }
+    fn get(&self, i: uint) -> Node {
+        let w = i / 16;
+        let b = (i % 16) * 2;
+        unsafe { [UNUSED, USED, SPLIT, FULL][((*self.storage)[w] as uint >> b) & 3] }
     }
 
     #[inline]
-    fn set(&self, i: uint, x: uint) {
+    fn set(&self, i: uint, x: Node) {
         let w = i / 16;
         let b = (i % 16) * 2;
         unsafe { (*self.storage)[w] = (((*self.storage)[w] & !(3 << b)) | (x as u32 << b)); }
@@ -50,11 +60,6 @@ impl BitvTrait for Bitv {
     }
 }
 
-pub static UNUSED: uint = 0;
-pub static USED:   uint = 1;
-pub static SPLIT:  uint = 2;
-pub static FULL:   uint = 3;
-
 pub struct BuddyAlloc {
     base: *mut u8,
     order: uint,
@@ -68,16 +73,10 @@ impl BuddyAlloc {
         BuddyAlloc { base: base, order: order, tree: storage }
     }
 
-    pub unsafe fn combine(&self, mut index: uint) {
-        loop {
-            let buddy = index + (index & 1) * 2;
-            if buddy < 1 || self.tree.get(buddy - 1) != UNUSED {
-                self.tree.set(index, UNUSED);
-                while index >= 1 && self.tree.get(index) == FULL {
-                    index = (index + 1) / 2 - 1;
-                    self.tree.set(index, SPLIT);
-                }
-            }
+    #[inline]
+    fn offset(&self, index: uint, level: uint) -> *mut u8 {
+        unsafe {
+            mut_offset(self.base, (index + 1 - (1 << (self.order - level))) as int << level)
         }
     }
 }
@@ -88,21 +87,32 @@ impl Allocator for BuddyAlloc {
             size = 1;
         }
         // smallest power of 2 >= size
-        let lg2_size = 32 - unsafe { ctlz32(size as i32 - 1) };
-        size = 1 << lg2_size;
+        let lg2_size = 32 - unsafe { ctlz32(size as i32 - 1) } as uint;
 
         let mut index = 0; // points to current tree node
         let mut level = self.order; // current height
 
         loop {
-            match (self.tree.get(index), level == lg2_size as uint) {
+            match (self.tree.get(index), level == lg2_size) {
                 (UNUSED, true) => {
                     // Found appropriate unused node
                     self.tree.set(index, USED); // use
-                    return unsafe {(
-                        mut_offset(self.base, (index + 1 - (1 << (self.order - level))) as int << level),
-                        size
-                    )};
+
+                    let mut parent = index;
+                    loop {
+                        let buddy = parent - 1 + (parent & 1) * 2;
+                        match self.tree.get(buddy) {
+                            USED | FULL if parent > 0 => {
+                                parent = (parent + 1) / 2 - 1;
+                                self.tree.set(parent, FULL);
+                            }
+                            _ => break
+                        }
+                    }
+                    return (
+                        self.offset(index, level),
+                        1 << lg2_size
+                    );
                 }
                 (UNUSED, false) => {
                     // This large node is unused, split it!
@@ -111,23 +121,26 @@ impl Allocator for BuddyAlloc {
                     self.tree.set(index*2 + 2, UNUSED);
                     index = index * 2 + 1; // left child
                     level -= 1;
-                },
+                }
                 (SPLIT, false) => {
-                    // Traverse
+                    // Traverse children
                     index = index * 2 + 1; // left child
                     level -= 1;
-                },
+                }
                 _ => loop {
-                    // Get back
+                    // Go either right or back up
                     if index & 1 == 1 {
+                        // right sibling
                         index += 1;
                         break;
                     }
 
+                    // go up by one level
                     level += 1;
 
                     if index == 0 {
-                        out_of_memory();
+                        // out of memory -- back at tree's root after traversal
+                        return (self.base, 0);
                     }
 
                     index = (index + 1) / 2 - 1; // parent
@@ -142,32 +155,57 @@ impl Allocator for BuddyAlloc {
         (ptr, size)
     }
 
-    fn realloc(&mut self, _: *mut u8, _: uint) -> (*mut u8, uint) {
-        abort();
+    fn realloc(&mut self, src: *mut u8, size: uint) -> (*mut u8, uint) {
+        self.free(src);
+        let (ptr, sz) = self.alloc(size);
+        unsafe { copy_memory(ptr, src as *u8, sz); }
+        (ptr, sz)
     }
 
-    unsafe fn free(&mut self, ptr: *mut u8) {
+    fn free(&mut self, ptr: *mut u8) {
         let mut length = 1 << self.order;
         let mut left = 0;
         let mut index = 0;
-        // TODO: offset
+
+        if ((ptr as uint) < self.base as uint) || (ptr as uint >= self.base as uint + length) {
+            return;
+        }
+        let offset = ptr as uint - self.base as uint;
 
         loop {
             match self.tree.get(index) {
-                USED => {
-                    // offset == left
-                    self.combine(index);
-                    return
+                UNUSED => return,
+                USED => loop {
+                    if index == 0 {
+                        self.tree.set(0, UNUSED);
+                        return;
+                    }
+
+                    let buddy = index - 1 + (index & 1) * 2;
+                    match self.tree.get(buddy) {
+                        UNUSED => {}
+                        _ => {
+                            self.tree.set(index, UNUSED);
+                            loop {
+                                match self.tree.get(index) {
+                                    FULL if index > 0 => {
+                                        index = (index + 1) / 2 - 1; // parent
+                                        self.tree.set(index, SPLIT);
+                                    }
+                                    _ => return
+                                }
+                            }
+                        }
+                    }
                 },
-                UNUSED => { return },
                 _ => {
                     length /= 2;
-                    if (ptr as uint) < left + length {
-                        index += index + 1;
+                    if offset < left + length {
+                        index = index * 2 + 1; // left child
                     }
                     else {
                         left += length;
-                        index += index + 2;
+                        index = index * 2 + 2; // right child
                     }
                 }
             }

@@ -1,8 +1,11 @@
 use core::option::{Option, Some, None};
+use core::fail::out_of_memory;
+
 use platform::{cpu, io, drivers};
 use cpu::interrupt;
 
 use self::memory::virtual::PageDirectory;
+use self::memory::Allocator;
 
 pub mod int;
 pub mod ptr;
@@ -44,3 +47,22 @@ pub fn main() {
 }
 
 extern { static _binary_boot_initram_elf_start: u8; }
+
+#[lang = "exchange_malloc"]
+pub unsafe fn malloc(size: uint) -> *mut u8 {
+    if size == 0 {
+        0 as *mut u8
+    }
+    else {
+        let (ptr, sz) = heap.alloc(size);
+        if sz == 0 {
+            out_of_memory();
+        }
+        ptr
+    }
+}
+
+#[lang = "exchange_free"]
+pub unsafe fn free(ptr: *mut u8) {
+    heap.free(ptr);
+}

@@ -21,6 +21,10 @@ __aeabi_memset:
 __aeabi_memcpy:
         b       memcpy
 
+.globl __aeabi_memmove
+__aeabi_memmove:
+        b memmove
+
         .align 2
 .globl __aeabi_ldivmod
 __aeabi_ldivmod:

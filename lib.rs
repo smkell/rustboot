@@ -6,7 +6,7 @@
 extern mod core;
 
 #[cfg(target_arch = "arm")]
-pub use support::memcpy;
+pub use support::{memcpy, memmove};
 
 use platform::{cpu, io, drivers};
 
