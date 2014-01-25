@@ -49,29 +49,26 @@ $(BDIR)/kernel.elf: $(LINK)
 $(BDIR)/kernel.bin: $(BDIR)/kernel.elf
 	$(OBJCOPY) -O binary $^ $@
 
-$(BDIR)/module.o: module.s
-	$(AS) -c $< -o $@
-
-$(BDIR)/initram.elf: $(BDIR)/module.o
-	$(LD) -s $< -o $@
+$(BDIR)/initram.elf: module.s
+	$(AS) $< -o $@
 
 %.embed: %
 	$(LD) -r -b binary -o $@ $^
 
-run: $(BDIR)/kernel.img
+run: $(BDIR)/kernel.bin
 	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
 
-debug: $(BDIR)/kernel.bin
+debug: $(BDIR)/kernel.elf
 ifeq ($(strip $(TMUX)),)
 	tmux new-session -d -s rustboot
 	tmux new-window -t rustboot:1 "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
-	tmux split-window -t rustboot "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.bin'"
+	tmux split-window -t rustboot "$(GDB)"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
 else
 	# TODO: debug in current window, can't kill panes
 	tmux new-w "$(QEMU) -M versatilepb -m 32M -nographic -kernel $^ -s -S"
-	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.bin'; tmux kill-w"
+	tmux split-w "$(GDB); tmux kill-w"
 endif
 
 clean:

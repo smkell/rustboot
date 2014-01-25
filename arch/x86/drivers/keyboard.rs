@@ -20,6 +20,7 @@ static LayoutShift: &'static str = "\
 pub static mut keydown: Option<extern fn(char)> = None;
 
 static mut shift: bool = false;
+static mut caps_lock: bool = false;
 static mut led_state: u8 = 0;
 
 fn led(state: u8) {
@@ -32,13 +33,17 @@ fn led(state: u8) {
     }
 }
 
+fn isalpha(c: u8) -> bool {
+    ((c | 0x20) - 'a' as u8) < 26
+}
+
 #[no_split_stack]
 #[inline(never)]
 fn keypress(code: u8) {
     match (code & 0x7f, code & 0x80 == 0) {
         (0x2A, down) | (0x36, down) => unsafe { shift = down },
         (0x3A, true) => unsafe { // Caps lock
-            shift = !shift;
+            caps_lock = !caps_lock;
             led(0b100)
         },
         (0x45, true) => led(0b010), // Number lock
@@ -46,7 +51,13 @@ fn keypress(code: u8) {
         (c, true) if c < 0x3A => unsafe {
             // handle character
             keydown.map(|f| {
-                f(if shift { LayoutShift[c] } else { Layout[c] } as char);
+                let mut ch = if shift { LayoutShift[c] } else { Layout[c] };
+                if ch != 0 {
+                    if caps_lock && isalpha(ch) {
+                        ch ^= 1 << 5;
+                    }
+                    f(ch as char);
+                }
             });
         },
         _ => {}

@@ -68,11 +68,11 @@ run: boot/floppy.img
 debug: $(BDIR)/kernel.elf $(BDIR)/floppy.img
 ifeq ($(strip $(TMUX)),)
 	tmux new-session -d -s rustboot "$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S"
-	tmux new-window -t rustboot:1 "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.elf'"
+	tmux new-window -t rustboot:1 "$(GDB)"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
 else
-	tmux split-w "$(GDB) -ex 'target remote localhost:1234' -ex 'symbol-file $(BDIR)/kernel.elf'; tmux kill-p"
+	tmux split-w "$(GDB); tmux kill-p"
 	$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S
 endif
 
