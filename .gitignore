@@ -8,4 +8,5 @@
 **/boot/*.img
 **/boot/*.embed
 
+**/boot/*.d
 **/boot/linker.map
