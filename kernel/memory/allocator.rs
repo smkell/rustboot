@@ -187,16 +187,18 @@ impl Allocator for BuddyAlloc {
                         _ => {
                             self.tree.set(index, UNUSED);
                             loop {
-                                match self.tree.get(index) {
+                                let parent = (index + 1) / 2 - 1; // parent
+                                match self.tree.get(parent) {
                                     FULL if index > 0 => {
-                                        index = (index + 1) / 2 - 1; // parent
-                                        self.tree.set(index, SPLIT);
+                                        self.tree.set(parent, SPLIT);
                                     }
                                     _ => return
                                 }
+                                index = parent;
                             }
                         }
                     }
+                    index = (index + 1) / 2 - 1; // parent
                 },
                 _ => {
                     length /= 2;
