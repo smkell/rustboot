@@ -1,7 +1,7 @@
 #[crate_id = "main#0.2.1"];
 #[crate_type = "lib"];
 #[no_std];
-#[feature(asm, globs, macro_rules)];
+#[feature(asm, macro_rules)];
 
 extern mod core;
 

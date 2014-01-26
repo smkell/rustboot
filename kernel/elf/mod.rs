@@ -1,10 +1,8 @@
 use core::ptr::{copy_nonoverlapping_memory, set_memory};
 use core::mem::{transmute, size_of};
 use core::ptr::offset;
-use core::c_types::*;
 use core::option::{Option, Some, None};
 
-use kernel::int;
 use kernel::ptr::mut_offset;
 use platform::{io, cpu};
 
