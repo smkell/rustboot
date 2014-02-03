@@ -13,8 +13,8 @@ pub unsafe fn write_char(c: char) {
     volatile_store(UART0, c as u32);
 }
 
-pub fn keydown(f: extern fn(char)) {
-    unsafe {
-        drivers::keydown = Some(f);
-    }
+pub fn putc(c: u32) {
+	unsafe {
+		write_word(c);
+	}
 }

@@ -1,7 +1,10 @@
+use core::option::{Option, None};
+
 use super::cpu::interrupt;
 use super::io;
-use core::option::{Option, None};
 use kernel;
+
+pub static mut keydown: Option<extern fn(u32)> = None;
 
 pub fn init() {
     unsafe {
@@ -11,12 +14,10 @@ pub fn init() {
     }
 }
 
-pub static mut keydown: Option<extern fn(char)> = None;
-
 #[no_mangle]
 pub unsafe fn keypress() {
     keydown.map(|f| {
-        f(*io::UART0 as u8 as char);
+        f(*io::UART0);
     });
 
     asm!("pop {r11, lr}

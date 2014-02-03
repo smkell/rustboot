@@ -1,5 +1,5 @@
-use core::option::{Option, None};
 use cpu::io;
+use super::keydown;
 
 pub static IRQ: u8 = 0x20 + 1;
 
@@ -16,8 +16,6 @@ static LayoutShift: &'static str = "\
 \x00ASDFGHJKL:\"~\
 \x00|ZXCVBNM<>?\x00\
 *\x00 ";
-
-pub static mut keydown: Option<extern fn(char)> = None;
 
 static mut shift: bool = false;
 static mut caps_lock: bool = false;
@@ -38,7 +36,6 @@ fn isalpha(c: u8) -> bool {
 }
 
 #[no_split_stack]
-#[inline(never)]
 fn keypress(code: u8) {
     match (code & 0x7f, code & 0x80 == 0) {
         (0x2A, down) | (0x36, down) => unsafe { shift = down },
@@ -56,7 +53,7 @@ fn keypress(code: u8) {
                     if caps_lock && isalpha(ch) {
                         ch ^= 1 << 5;
                     }
-                    f(ch as char);
+                    f(ch);
                 }
             });
         },

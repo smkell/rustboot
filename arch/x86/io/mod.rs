@@ -1,9 +1,9 @@
-use super::drivers::vga;
-use super::drivers::keyboard;
-use kernel::int;
 use core::option::{Some, None};
 use core::{str, slice};
 use core::iter::Iterator;
+
+use super::drivers::vga;
+use kernel::int;
 
 static mut pos: int = 0;
 
@@ -11,7 +11,7 @@ unsafe fn seek(offset: int) {
     pos += offset;
 }
 
-pub unsafe fn write_char(c: char) {
+unsafe fn write_char(c: char) {
     if c == '\x08' {
         if pos > 0 {
             if pos % 80 == 0 {
@@ -40,16 +40,9 @@ pub unsafe fn write_char(c: char) {
     vga::cursor_at(pos as uint);
 }
 
-pub fn keydown(f: extern fn(char)) {
-    unsafe {
-        keyboard::keydown = Some(f);
-    }
-}
-
 pub fn putc(c: u8) {
     unsafe {
-        (*vga::SCREEN)[pos].char = c;
-        pos += 1;
+        write_char(c as char);
     }
 }
 

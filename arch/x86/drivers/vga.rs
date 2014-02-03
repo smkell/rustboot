@@ -22,8 +22,8 @@ pub enum Color {
 }
 
 #[packed]
-pub struct Char {
-    char: u8,
+struct Char {
+    pub char: u8,
     attr: u8,
 }
 

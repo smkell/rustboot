@@ -10,7 +10,7 @@ use self::memory::Allocator;
 pub mod int;
 pub mod ptr;
 pub mod memory;
-pub mod elf;
+mod elf;
 
 #[cfg(target_word_size = "32")]
 pub mod rt;
@@ -24,24 +24,18 @@ pub static mut heap: memory::BuddyAlloc = memory::BuddyAlloc {
 pub static mut int_table: Option<interrupt::Table> = None;
 pub static mut page_dir: Option<*mut PageDirectory> = None;
 
-pub fn keydown(key: char) {
-    unsafe {
-        io::write_char(key);
-    }
-}
-
 #[lang="start"]
 #[no_mangle]
 pub fn main() {
     memory::BuddyAlloc::new(0x110_000 as *mut u8, 17, memory::Bitv { storage: 0x100_000 as memory::BitvStorage });
+    cpu::init();
     let table = interrupt::Table::new();
+    table.load();
     unsafe {
         int_table = Some(table);
+        drivers::keydown = Some(io::putc);
     }
-    cpu::init();
-    io::keydown(keydown);
 
-    table.load();
     drivers::init();
     elf::exec(&_binary_boot_initram_elf_start);
 }
