@@ -1,10 +1,10 @@
-use core::fail::{abort, out_of_memory};
-use core::ptr::offset;
-use core::ptr::{set_memory, copy_memory};
+use core::mem::transmute;
+use core::ptr::{set_memory, copy_memory, offset};
 use core::i32::ctlz32;
 
 use kernel::ptr::mut_offset;
 
+#[repr(u8)]
 enum Node {
     UNUSED = 0,
     USED = 1,
@@ -39,7 +39,7 @@ impl BitvTrait for Bitv {
     fn get(&self, i: uint) -> Node {
         let w = i / 16;
         let b = (i % 16) * 2;
-        unsafe { [UNUSED, USED, SPLIT, FULL][((*self.storage)[w] as uint >> b) & 3] }
+        unsafe { transmute(((*self.storage)[w] as uint >> b) as u8 & 3) }
     }
 
     #[inline]
