@@ -6,3 +6,6 @@ pub fn init() {
         mmu::init();
     }
 }
+
+pub fn info() {
+}

@@ -104,17 +104,17 @@ pub fn __moddi3(mut a: i64, mut b: i64) -> i64 {
 
 #[no_mangle]
 pub fn __udivdi3(a: u64, b: u64) -> u64 {
-    let (div, _) = __udivmoddi4(a, b);
+    let (div, _) = udivmoddi4(a, b);
     div
 }
 
 #[no_mangle]
 pub fn __umoddi3(a: u64, b: u64) -> u64 {
-    let (_, rem) = __udivmoddi4(a, b);
+    let (_, rem) = udivmoddi4(a, b);
     rem
 }
 
-fn __udivmoddi4(a: u64, b: u64) -> (u64, u64) {
+fn udivmoddi4(a: u64, b: u64) -> (u64, u64) {
     let n_uword_bits = size_of::<u32>() as i32 * 8;
     let n_udword_bits = size_of::<u64>() as i32 * 8;
     let n: udwords;
@@ -341,4 +341,11 @@ fn __udivmoddi4(a: u64, b: u64) -> (u64, u64) {
         transmute((transmute::<udwords, u64>(q) << 1) | carry),
         transmute(r)
     ) };
+}
+
+#[no_mangle]
+pub unsafe fn __udivmoddi4(a: u64, b: u64, r: &mut u64) -> u64 {
+    let (div, rem) = udivmoddi4(a, b);
+    *r = rem;
+    div
 }

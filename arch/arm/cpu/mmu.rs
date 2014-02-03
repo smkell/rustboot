@@ -55,6 +55,6 @@ impl PageDirectory {
               mcr p15, 0, ip, c7, c10, 4    // drain WB
               mcr p15, 0, r0, c2, c0, 0     // load page table pointer
               mcr p15, 0, ip, c8, c7, 0     // invalidate I & D TLBs"
-            :: "{r0}"(self))
+            :: "{r0}"(self) : "ip")
     }
 }

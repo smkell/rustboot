@@ -52,7 +52,9 @@ __aeabi_uldivmod:
         pop     {r11, pc}
 
 .align 3
+ .globl __aeabi_uidiv
  .globl __udivsi3
+__aeabi_uidiv:
  __udivsi3:
 # 51 "udivsi3.S"
     push {r7, lr} ; mov r7, sp
