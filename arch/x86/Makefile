@@ -19,12 +19,12 @@ QEMU := qemu-system-i386
 BDIR := ./boot
 CORE_LIB := ../../rust-core/core/lib.rs
 LCORE := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
-OBJS := $(BDIR)/loader.o $(BDIR)/main.o $(BDIR)/runtime.o
+OBJS := $(BDIR)/loader.o $(BDIR)/main.o
 DEPS := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 LINK := "-(" $(LCORE) "-)"
 
 # TODO: fix dep-info target
-MODS := $(wildcard */*.rs) $(wildcard ../../kernel/*.rs) $(wildcard ../../kernel/*/*.rs) $(wildcard ../../kernel/*/*/*.rs)
+MODS := $(wildcard *.rs) $(wildcard */*.rs) $(wildcard ../../kernel/*.rs) $(wildcard ../../kernel/*/*.rs) $(wildcard ../../kernel/*/*/*.rs)
 
 SECTIONS := .text .data .rodata
 

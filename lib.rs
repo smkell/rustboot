@@ -5,6 +5,8 @@
 
 extern mod core;
 
+#[cfg(target_arch = "x86")]
+pub use platform::runtime::{memset, memcpy, memmove};
 #[cfg(target_arch = "arm")]
 pub use support::{memcpy, memmove};
 
@@ -22,6 +24,7 @@ mod platform {
     pub mod cpu;
     pub mod io;
     pub mod drivers;
+    pub mod runtime;
 }
 
 #[cfg(target_arch = "arm")]

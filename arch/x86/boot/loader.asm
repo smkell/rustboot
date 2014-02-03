@@ -1,8 +1,5 @@
 global __morestack
 global abort
-global memcmp
-global malloc
-global free
 global start
 
 extern main
@@ -80,9 +77,6 @@ protected_mode:
     call main
 abort:
 __morestack:
-memcmp:
-malloc:
-free:
     jmp $
 
 gdtr:
