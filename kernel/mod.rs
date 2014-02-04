@@ -15,10 +15,12 @@ mod elf;
 #[cfg(target_word_size = "32")]
 pub mod rt;
 
-pub static mut heap: memory::BuddyAlloc = memory::BuddyAlloc {
+pub static mut heap: memory::VirtAlloc = memory::VirtAlloc {
     base: 0x110_000 as *mut u8,
-    order: 17,
-    tree: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }
+    parent: memory::BuddyAlloc {
+        order: 17,
+        tree: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }
+    }
 };
 
 pub static mut int_table: Option<interrupt::Table> = None;
@@ -27,7 +29,7 @@ pub static mut page_dir: Option<*mut PageDirectory> = None;
 #[lang="start"]
 #[no_mangle]
 pub fn main() {
-    memory::BuddyAlloc::new(0x110_000 as *mut u8, 17, memory::Bitv { storage: 0x100_000 as memory::BitvStorage });
+    memory::BuddyAlloc::new(17, memory::Bitv { storage: 0x100_000 as memory::BitvStorage });
     let table = interrupt::Table::new();
     table.load();
     unsafe {
