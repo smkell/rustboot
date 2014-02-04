@@ -13,7 +13,7 @@ pub fn init() {
     vga::cursor_at(0);
 
     unsafe {
-        kernel::int_table.map(|t| {
+        kernel::int_table.map(|mut t| {
             t.enable_maskable(keyboard::IRQ, keyboard::isr_addr());
         });
     }

@@ -13,6 +13,7 @@ pub enum Int {
 pub struct Table {
     reg: &'static IdtReg,
     table: *mut Idt,
+    mask: u16,
 }
 
 impl Table {
@@ -21,23 +22,29 @@ impl Table {
             let table = kernel::zero_alloc(size_of::<Idt>());
             let reg = kernel::malloc_raw(size_of::<IdtReg>());
             *(reg as *mut IdtReg) = IdtReg::new(table as *Idt);
-            Table { reg: transmute(reg), table: table as *mut Idt }
+            Table {
+                reg: transmute(reg),
+                table: table as *mut Idt,
+                mask: 0xffff
+            }
         }
     }
 
-    pub unsafe fn enable_maskable(&self, irq: u8, isr: extern "C" unsafe fn()) {
+    pub unsafe fn enable_maskable(&mut self, irq: u8, isr: extern "C" unsafe fn()) {
         (*self.table)[irq] = IdtEntry::new(
             isr,                // interrupt service routine
             1 << 3,             // segment selector
             INTR_GATE | PRESENT // flags
         );
 
-        pic::enable(irq);
+        self.mask &= !(1u16 << (irq & 0b1111));
+        pic::mask(self.mask);
     }
 
     pub fn load(&self) {
         self.reg.load();
         pic::remap();
+        pic::mask(self.mask);
         enable();
     }
 }

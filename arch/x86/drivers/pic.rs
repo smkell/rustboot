@@ -12,9 +12,6 @@ pub fn remap() {
 
     io::out(0x21, 1);
     io::out(0xA1, 1);
-
-    io::out(0x21, 0xFF);
-    io::out(0xA1, 0xFF);
 }
 
 pub fn enable(irq: u8) {
@@ -22,4 +19,9 @@ pub fn enable(irq: u8) {
     let mask: u8 = !(1u8 << (irq & 0b111));
 
     io::out(port, io::inb(port) & mask);
+}
+
+pub fn mask(mask: u16) {
+    io::out(0x21, (mask & 0xFF) as u8);
+    io::out(0xA1, ((mask >> 8) & 0xFF) as u8);
 }
