@@ -47,15 +47,13 @@ fn keypress(code: u8) {
         (0x46, true) => led(0b001), // Scroll lock
         (c, true) if c < 0x3A => unsafe {
             // handle character
-            keydown.map(|f| {
-                let mut ch = if shift { LayoutShift[c] } else { Layout[c] };
-                if ch != 0 {
-                    if caps_lock && isalpha(ch) {
-                        ch ^= 1 << 5;
-                    }
-                    f(ch);
+            let mut ch = if shift { LayoutShift[c] } else { Layout[c] };
+            if ch != 0 {
+                if caps_lock && isalpha(ch) {
+                    ch ^= 1 << 5;
                 }
-            });
+                keydown.map(|f| f(ch) );
+            }
         },
         _ => {}
     }
@@ -66,8 +64,8 @@ fn keypress(code: u8) {
 pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
     asm!("jmp skip_isr_addr
       isr_addr_asm:
-          .word 0xa80f
-          .word 0xa00f
+          push gs
+          push fs
           .byte 0x06
           .byte 0x1e
           pusha"
@@ -77,10 +75,10 @@ pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
           io::out(0x20, 0x20u8);
 
     asm!("popa
-          .byte 0x1f
-          .byte 0x07
-          .word 0xa10f
-          .word 0xa90f
+          .byte 0x1f // pop ds
+          .byte 0x07 // pop es
+          pop fs
+          pop gs
           iretd
       skip_isr_addr:"
         :::: "intel");
