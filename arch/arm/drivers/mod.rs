@@ -9,7 +9,7 @@ pub static mut keydown: Option<extern fn(u32)> = None;
 pub fn init() {
     unsafe {
         kernel::int_table.map(|t| {
-            t.enable(interrupt::IRQ, keypress as u32);
+            t.enable(interrupt::IRQ, keypress);
         });
     }
 }
@@ -19,7 +19,4 @@ pub unsafe fn keypress() {
     keydown.map(|f| {
         f(*io::UART0);
     });
-
-    asm!("pop {r11, lr}
-          subs pc, lr, #4");
 }

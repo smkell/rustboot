@@ -1,15 +1,26 @@
-use platform::io;
-use core::mem::volatile_store;
+use core::mem::{volatile_store, transmute};
 use core::ptr::offset;
+
+use platform::io;
 
 static VIC_INT_ENABLE: *mut u32 = (0x10140000 + 0x010) as *mut u32;
 static UART0_IRQ: u8 = 12;
 static VT: *u32 = 0 as *u32;
-pub static IRQ: u8 = 6;
 
-fn set_word(handler: u8, instruction: u32) {
+#[repr(u8)]
+pub enum Int {
+    RESET = 0,
+    UNDEF,
+    SWI, // software interrupt
+    PREFETCH_ABORT,
+    DATA_ABORT,
+    IRQ = 6,
+    FIQ
+}
+
+fn set_word(vector: u8, instruction: u32) {
     unsafe {
-        volatile_store(offset(VT, handler as int) as *mut u32, instruction);
+        volatile_store(offset(VT, vector as int) as *mut u32, instruction);
     }
 }
 
@@ -25,9 +36,10 @@ impl Table {
         Table
     }
 
-    pub fn enable(&self, handler: u8, isr: u32) {
+    pub fn enable(&self, which: Int, isr: unsafe fn()) {
         // Installing exception handlers into the vectors directly [1]
-        set_word(handler, branch(isr - (handler as u32 * 4)));
+        let vector: u8 = unsafe { transmute(which) };
+        set_word(vector, branch(isr as u32 - (vector as u32 * 4)));
     }
 
     pub fn load(&self) {
@@ -38,7 +50,7 @@ impl Table {
             i += 1;
         }
 
-        self.enable(0, start as u32);
+        self.enable(RESET, unsafe { transmute(start) });
 
         unsafe {
             // Enable IRQs [5]
@@ -61,7 +73,7 @@ impl Table {
     }
 }
 
-extern "C" {
+extern {
     fn start();
 }
 

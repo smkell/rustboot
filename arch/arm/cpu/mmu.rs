@@ -23,8 +23,7 @@ pub struct PageDirectory {
 }
 
 pub unsafe fn init() {
-    let (kernel_dir, _) = heap.alloc(size_of::<PageDirectory>());
-    let dir = kernel_dir as *mut PageDirectory;
+    let dir = kernel::zero_alloc(size_of::<PageDirectory>()) as *mut PageDirectory;
     set_memory(dir as *mut u8, 0, size_of::<PageDirectory>());
 
     let (table_ptr, _) = heap.alloc(size_of::<PageTableCoarse>());
