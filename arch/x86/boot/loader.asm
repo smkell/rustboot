@@ -73,6 +73,10 @@ protected_mode:
     mov ss, eax
     ; set up stack
     mov esp, 0x7bff
+    ; enable SSE instructions
+    mov eax, cr4
+    or eax, 512
+    mov cr4, eax
     ; jump into Rust
     call main
 abort:

@@ -29,13 +29,6 @@ macro_rules! cpuid(
 )
 
 pub fn init() {
-    unsafe {
-        asm!("mov eax, cr4
-              or eax, 512
-              mov cr4, eax"
-            ::: "eax" : "intel");
-    }
-
     let t = Gdt::new();
     t.enable(1, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | CODE_READ, 0));
     t.enable(2, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | DATA_WRITE, 0));

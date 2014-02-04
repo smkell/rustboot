@@ -41,9 +41,11 @@ impl IdtReg {
             addr: idt,
         }
     }
-}
 
-#[inline]
-pub unsafe fn load(reg: *IdtReg) {
-    asm!("lidt [$0]" :: "A"(reg) :: "intel");
+    #[inline]
+    pub fn load(&self) {
+        unsafe {
+            asm!("lidt [$0]" :: "A"(self) :: "intel");
+        }
+    }
 }

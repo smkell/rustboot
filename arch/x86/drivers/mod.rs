@@ -14,7 +14,7 @@ pub fn init() {
 
     unsafe {
         kernel::int_table.map(|t| {
-            t.enable(keyboard::IRQ, keyboard::isr_addr());
+            t.enable_maskable(keyboard::IRQ, keyboard::isr_addr());
         });
     }
 }
