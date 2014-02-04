@@ -1,4 +1,5 @@
 use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
+use kernel;
 
 mod gdt;
 mod idt;
@@ -6,8 +7,6 @@ pub mod interrupt;
 pub mod io;
 mod exception;
 pub mod mmu;
-
-pub static mut max: u32 = 0;
 
 macro_rules! cpuid(
     ($n:expr, $s1:expr, $s2:expr, $s3:expr, $s4:expr) => (
@@ -34,14 +33,16 @@ pub fn init() {
     t.enable(2, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | DATA_WRITE, 0));
     t.load();
 
-    unsafe { mmu::init(); }
+    unsafe {
+        kernel::int_table.map(|t| {
+            use cpu::exception::{BREAKPOINT, exception_handler};
+            use cpu::interrupt::{Isr, Fault};
+            (*t.table)[BREAKPOINT as u8] = Isr::new(Fault(BREAKPOINT), false).idt_entry(exception_handler());
+        });
+
+        mmu::init();
+    }
 }
 
-pub unsafe fn info() -> [u8, ..12] {
-    let vendor = [0u8, ..12];
-    let ptr = &vendor as *[u8, ..12] as *mut [u32, ..3];
-
-    cpuid!(0, max, *ptr, (*ptr)[1], (*ptr)[2]);
-
-    vendor
+pub fn info() {
 }
