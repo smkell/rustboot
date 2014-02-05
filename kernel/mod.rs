@@ -15,8 +15,9 @@ mod elf;
 #[cfg(target_word_size = "32")]
 pub mod rt;
 
-pub static mut heap: memory::VirtAlloc = memory::VirtAlloc {
+pub static mut heap: memory::Alloc = memory::Alloc {
     base: 0x110_000 as *mut u8,
+    el_size: 0,
     parent: memory::BuddyAlloc {
         order: 17,
         tree: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }

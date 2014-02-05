@@ -77,9 +77,10 @@ pub struct BuddyAlloc {
     tree: Bitv
 }
 
-pub struct VirtAlloc {
+pub struct Alloc {
     parent: BuddyAlloc,
-    base: *mut u8
+    base: *mut u8,
+    el_size: uint
 }
 
 impl BuddyAlloc {
@@ -211,19 +212,27 @@ impl BuddyAlloc {
     }
 }
 
-impl Allocator for VirtAlloc {
+impl Allocator for Alloc {
     fn alloc(&mut self, mut size: uint) -> (*mut u8, uint) {
         let (offset, size) = self.parent.alloc(size);
-        return unsafe { (mut_offset(self.base, offset as int), size) };
+        unsafe {
+            return (
+                mut_offset(self.base, (offset << self.el_size) as int),
+                size << self.el_size
+            )
+        }
     }
 
     fn free(&mut self, ptr: *mut u8) {
-        let mut length = 1 << self.parent.order;
+        let mut length = 1 << self.parent.order << self.el_size;
 
-        if ((ptr as uint) < self.base as uint) || (ptr as uint >= self.base as uint + length) {
-            return;
+        unsafe {
+            if ptr < self.base || ptr >= mut_offset(self.base, length) {
+                return;
+            }
         }
-        let offset = ptr as uint - self.base as uint;
+
+        let offset = (ptr as uint - self.base as uint) >> self.el_size;
         self.parent.free(offset);
     }
 }
