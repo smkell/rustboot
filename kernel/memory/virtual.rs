@@ -1,1 +1,1 @@
-pub use cpu::mmu::{map, PageDirectory};
+pub use cpu::mmu::{map, PageDirectory, RW, USER};

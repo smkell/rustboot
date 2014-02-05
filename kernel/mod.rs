@@ -25,7 +25,6 @@ pub static mut heap: memory::Alloc = memory::Alloc {
 };
 
 pub static mut int_table: Option<interrupt::Table> = None;
-pub static mut page_dir: Option<*mut PageDirectory> = None;
 
 #[lang="start"]
 #[no_mangle]

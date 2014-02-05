@@ -3,11 +3,15 @@ use core::ptr::set_memory;
 use core::option::Some;
 
 use kernel::heap;
-use kernel::memory::Allocator;
+use kernel::memory::physical;
 use kernel;
 
 static CACHE:  u32 = 1 << 3;
 static BUFFER: u32 = 1 << 2;
+
+pub static SECTION: u32 = 0b10010;
+pub static RW:      u32 = 1 << 10;
+pub static USER:    u32 = 1 << 11;
 
 #[packed]
 struct Descriptor(u32);
@@ -23,27 +27,21 @@ pub struct PageDirectory {
 }
 
 pub unsafe fn init() {
-    let dir = kernel::zero_alloc(size_of::<PageDirectory>()) as *mut PageDirectory;
-    set_memory(dir as *mut u8, 0, size_of::<PageDirectory>());
+    let dir = physical::zero_alloc_frames(4) as *mut PageDirectory;
 
-    let (table_ptr, _) = heap.alloc(size_of::<PageTableCoarse>());
-    let table = table_ptr as *mut PageTableCoarse;
-
-    (*dir).tables[0] = Descriptor::section(0);
-
-    kernel::page_dir = Some(dir);
+    (*dir).tables[0] = Descriptor::section(0, RW);
     (*dir).enable();
 }
 
-pub unsafe fn map(page_ptr: *mut u8) {
+pub unsafe fn map(page_ptr: *mut u8, flags: u32) {
     // TODO
 }
 
 impl Descriptor {
-    fn section(base: u32) -> Descriptor {
+    fn section(base: u32, flags: u32) -> Descriptor {
         // make a section descriptor
         //                /permissions
-        Descriptor(base | (3 << 10) | 0b10010)
+        Descriptor(base | flags | SECTION)
     }
 }
 

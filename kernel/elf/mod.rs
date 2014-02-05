@@ -52,7 +52,7 @@ impl elf32::Elf32_Phdr {
         let file_pos = self.p_offset as int;
         let file_size = self.p_filesz as uint;
 
-        virtual::map(vaddr);
+        virtual::map(vaddr, virtual::RW | virtual::USER);
 
         copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
         set_memory(mut_offset(vaddr, file_pos + file_size as int), 0, mem_size - file_size);
@@ -68,7 +68,7 @@ impl elf64::Elf64_Phdr {
         let file_pos = self.p_offset as int;
         let file_size = self.p_filesz as uint;
 
-        virtual::map(vaddr);
+        virtual::map(vaddr, virtual::RW | virtual::USER);
 
         copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
         set_memory(mut_offset(vaddr, file_pos + file_size as int), 0, mem_size - file_size);
