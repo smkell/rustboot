@@ -31,6 +31,7 @@ pub static mut page_dir: Option<*mut PageDirectory> = None;
 #[no_mangle]
 pub fn main() {
     memory::BuddyAlloc::new(17, memory::Bitv { storage: 0x100_000 as memory::BitvStorage });
+    memory::physical::init();
     let table = interrupt::Table::new();
     table.load();
     unsafe {
