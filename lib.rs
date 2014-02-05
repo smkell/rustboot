@@ -10,7 +10,7 @@ pub use platform::runtime::{memset, memcpy, memmove};
 #[cfg(target_arch = "arm")]
 pub use support::{memcpy, memmove};
 
-use platform::{cpu, io, drivers};
+use platform::{cpu, drivers};
 
 pub mod kernel;
 
@@ -18,6 +18,7 @@ pub mod kernel;
 #[path = "rust-core/support.rs"]
 mod support;
 
+#[allow(dead_code)]
 #[cfg(target_arch = "x86")]
 #[path = "arch/x86/"]
 mod platform {
@@ -27,6 +28,7 @@ mod platform {
     pub mod runtime;
 }
 
+#[allow(dead_code)]
 #[cfg(target_arch = "arm")]
 #[path = "arch/arm/"]
 mod platform {

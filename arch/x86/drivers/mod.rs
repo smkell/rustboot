@@ -1,6 +1,5 @@
 use core::option::{Option, None};
 
-use cpu::interrupt;
 use kernel;
 pub mod pic;
 pub mod vga;

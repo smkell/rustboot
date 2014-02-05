@@ -4,12 +4,12 @@ use core::fail::out_of_memory;
 use platform::{cpu, io, drivers};
 use cpu::interrupt;
 
-use self::memory::virtual::PageDirectory;
 use self::memory::Allocator;
 
 pub mod int;
 pub mod ptr;
 pub mod memory;
+#[allow(dead_code)]
 mod elf;
 
 #[cfg(target_word_size = "32")]

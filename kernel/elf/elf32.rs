@@ -1,4 +1,4 @@
-use core::mem::{transmute, size_of};
+use core::mem::transmute;
 use core::ptr::offset;
 use core::c_types::{c_ushort, c_uint, c_int, c_ulong, c_long};
 
@@ -209,7 +209,7 @@ impl super::Ehdr for Elf32_Ehdr {
         let buffer: *u8 = transmute(self);
         let pheader = offset(buffer, self.e_phoff as int) as *Elf32_Phdr;
 
-        int::range(0, self.e_phnum as uint, |i| {
+        int::range(0, self.e_phnum as uint, |_| {
             match (*pheader).p_type {
                 PT_LOAD => (*pheader).load(buffer),
                 _ => {}

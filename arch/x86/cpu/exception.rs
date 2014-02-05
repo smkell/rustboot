@@ -2,9 +2,6 @@ use core::mem::transmute;
 
 use platform::io;
 use cpu::interrupt::IsrStack;
-use cpu::idt;
-use kernel::heap;
-use kernel::memory::Allocator;
 
 #[repr(u8)]
 pub enum Fault {
