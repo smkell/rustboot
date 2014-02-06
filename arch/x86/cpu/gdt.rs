@@ -1,4 +1,6 @@
 use core::mem::{size_of, transmute};
+
+use cpu::DtReg;
 use kernel;
 
 pub static SIZE_32: u16 = 1 << 14;
@@ -13,6 +15,7 @@ pub static CODE_READ:  u16 = CODE | EXTEND;
 pub static DATA_WRITE: u16 = EXTEND;
 
 type Table = [GdtEntry, ..256];
+pub type GdtReg = DtReg<Table>;
 
 #[packed]
 pub struct GdtEntry {
@@ -22,12 +25,6 @@ pub struct GdtEntry {
     access: u8,
     limit_hi_flags: u8,
     base_hi: u8
-}
-
-#[packed]
-struct GdtReg {
-    size: u16,
-    addr: *Table,
 }
 
 impl GdtEntry {
@@ -43,15 +40,6 @@ impl GdtEntry {
     }
 }
 
-impl GdtReg {
-    pub unsafe fn new(gdt: &Table) -> GdtReg {
-        GdtReg {
-            size: size_of::<Table>() as u16,
-            addr: gdt as *Table,
-        }
-    }
-}
-
 pub struct Gdt {
     reg: *GdtReg,
     table: *mut Table
@@ -60,11 +48,11 @@ pub struct Gdt {
 impl Gdt {
     pub fn new() -> Gdt {
         unsafe {
-            let table_ptr = kernel::zero_alloc(size_of::<Table>());
+            let table_ptr = kernel::zero_alloc(size_of::<Table>()) as *Table;
             let reg_ptr = kernel::malloc_raw(size_of::<GdtReg>());
 
             let reg: &mut GdtReg = transmute(reg_ptr);
-            *reg = GdtReg::new(transmute(table_ptr));
+            *reg = DtReg::new(table_ptr);
 
             Gdt { reg: transmute(reg_ptr), table: transmute(table_ptr) }
         }

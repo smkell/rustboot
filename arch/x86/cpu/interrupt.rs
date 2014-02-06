@@ -1,6 +1,7 @@
 use core::mem::{size_of, transmute};
 use core::ptr::offset;
 
+use cpu::DtReg;
 use cpu::exception::Fault;
 use cpu::idt::{IdtEntry, IdtReg, Idt, INTR_GATE, PRESENT};
 use drivers::pic;
@@ -19,9 +20,9 @@ pub struct Table {
 impl Table {
     pub fn new() -> Table {
         unsafe {
-            let table = kernel::zero_alloc(size_of::<Idt>());
+            let table = kernel::zero_alloc(size_of::<Idt>()) as *Idt;
             let reg = kernel::malloc_raw(size_of::<IdtReg>());
-            *(reg as *mut IdtReg) = IdtReg::new(table as *Idt);
+            *(reg as *mut IdtReg) = DtReg::new(table);
             Table {
                 reg: transmute(reg),
                 table: table as *mut Idt,

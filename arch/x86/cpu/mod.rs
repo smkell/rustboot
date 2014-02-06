@@ -1,3 +1,5 @@
+use core::mem::size_of;
+
 use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
 use kernel;
 
@@ -26,6 +28,21 @@ macro_rules! cpuid(
             : "A"($n) : "ebx", "edx", "ecx" : "intel");
     );
 )
+
+#[packed]
+struct DtReg<T> {
+    size: u16,
+    addr: *T,
+}
+
+impl<T> DtReg<T> {
+    pub fn new(descriptor_table: *T) -> DtReg<T> {
+        DtReg {
+            size: size_of::<T>() as u16,
+            addr: descriptor_table,
+        }
+    }
+}
 
 pub fn init() {
     let t = Gdt::new();

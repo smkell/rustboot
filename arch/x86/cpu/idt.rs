@@ -1,10 +1,13 @@
 use core::mem::size_of;
 
+use super::DtReg;
+
 pub static PRESENT:   u8 = 1 << 7;
 pub static INTR_GATE: u8 = 0b1110;
 pub static TRAP_GATE: u8 = 0b1111;
 
 pub type Idt = [IdtEntry, ..256];
+pub type IdtReg = DtReg<Idt>;
 
 #[packed]
 pub struct IdtEntry {
@@ -13,12 +16,6 @@ pub struct IdtEntry {
     zero: u8,
     flags: u8,
     addr_hi: u16
-}
-
-#[packed]
-pub struct IdtReg {
-    size: u16,
-    addr: *Idt,
 }
 
 impl IdtEntry {
@@ -34,14 +31,7 @@ impl IdtEntry {
     }
 }
 
-impl IdtReg {
-    pub unsafe fn new(idt: *Idt) -> IdtReg {
-        IdtReg {
-            size: size_of::<Idt>() as u16,
-            addr: idt,
-        }
-    }
-
+impl super::DtReg<Idt> {
     #[inline]
     pub fn load(&self) {
         unsafe {
