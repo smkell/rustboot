@@ -10,9 +10,9 @@ define_flags!(Descriptor: u32 {
     SECTION = 0b10010,
 
     BUFFER = 1 << 2,
-    CACHE  = 1 << 3,
+    CACHE,
     RW     = 1 << 10,
-    USER   = 1 << 11
+    USER
 })
 
 #[packed]
