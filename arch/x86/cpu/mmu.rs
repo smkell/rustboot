@@ -1,12 +1,17 @@
 use core::mem::{transmute, size_of};
+use core;
 
 use kernel::memory::physical::{alloc_frames, zero_alloc_frames};
 use kernel::int;
 use kernel;
 
-pub static PRESENT: u32 = 1 << 0;
-pub static RW:      u32 = 1 << 1;
-pub static USER:    u32 = 1 << 2;
+define_flags!(Page: u32 {
+    PRESENT  = 1 << 0,
+    RW       = 1 << 1,
+    USER     = 1 << 2,
+    ACCESSED = 1 << 5,
+    HUGE     = 1 << 7
+})
 
 static CR0_PG: u32 = 1 << 31;
 
@@ -15,9 +20,6 @@ static ENTRIES:   uint = 1024;
 
 static DIRECTORY_VADDR: u32 = 0xFFFFF000;
 static directory: *mut PageDirectory = DIRECTORY_VADDR as *mut PageDirectory;
-
-#[packed]
-struct Page(u32);
 
 // U: underlying element type
 #[packed]
@@ -43,13 +45,12 @@ pub unsafe fn init() {
         use cpu::interrupt::{Isr, Fault};
         use cpu::exception::{PAGE_FAULT, exception_handler};
         (*t.table)[PAGE_FAULT as u8] = Isr::new(Fault(PAGE_FAULT), true).idt_entry(exception_handler());
-        // exception_info[14] = info;
     });
 
     (*dir).switch();
 }
 
-pub unsafe fn map(page_ptr: *mut u8, flags: u32) {
+pub unsafe fn map(page_ptr: *mut u8, flags: Page) {
     let table = (*directory).fetch_table(page_ptr as u32, flags | PRESENT);
     (*table).set(page_ptr, alloc_frames(1), flags | PRESENT);
     flush_tlb(page_ptr);
@@ -62,23 +63,21 @@ fn flush_tlb<T>(addr: T) {
 }
 
 impl Page {
-    fn new(addr: u32, flags: u32) -> Page {
-        Page(addr | flags)
+    fn new(addr: u32, flags: Page) -> Page {
+        Page(addr) | flags
     }
 
-    fn at_frame(i: uint, flags: u32) -> Page {
+    fn at_frame(i: uint, flags: Page) -> Page {
         Page::new((i * PAGE_SIZE) as u32, flags)
     }
 
     fn present(self) -> bool {
-        match self {
-            Page(v) => (v & PRESENT) != 0
-        }
+        self & PRESENT
     }
 }
 
 impl<U> Table<U> {
-    fn set<T>(&mut self, addr: *mut T, entry: *mut T, flags: u32) {
+    fn set<T>(&mut self, addr: *mut T, entry: *mut T, flags: Page) {
         // update entry, based on the underlying type (page, table)
         let len = size_of::<U>() / size_of::<Page>();
         let index = (addr as uint / PAGE_SIZE / len) % ENTRIES;
@@ -87,8 +86,7 @@ impl<U> Table<U> {
 }
 
 impl Table<Page> {
-    fn identity_map(&mut self, start: uint, flags: u32) {
-        // TODO: use dmemset. zero_alloc_frames: use sse.
+    fn identity_map(&mut self, start: uint, flags: Page) {
         int::range(0, 1024, |i| {
             self.entries[i] = Page::at_frame(start + i, flags);
         });
@@ -97,7 +95,7 @@ impl Table<Page> {
 
 // Can't impl on typedefs. Rust #9767
 impl Table<Table<Page>> {
-    fn fetch_table(&mut self, addr: u32, flags: u32) -> *mut PageTable {
+    fn fetch_table(&mut self, addr: u32, flags: Page) -> *mut PageTable {
         let index = addr as uint / (PAGE_SIZE * ENTRIES);
         let table = self.entries[index];
         match self.entries[index] {

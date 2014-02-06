@@ -12,6 +12,10 @@ pub use support::{memcpy, memmove};
 
 use platform::{cpu, drivers};
 
+#[path = "kernel/macros.rs"]
+#[macro_escape]
+mod macros;
+
 pub mod kernel;
 
 #[cfg(target_arch = "arm")]

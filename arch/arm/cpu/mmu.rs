@@ -1,20 +1,19 @@
 use core::mem::size_of;
 use core::ptr::set_memory;
 use core::option::Some;
+use core;
 
-use kernel::heap;
 use kernel::memory::physical;
-use kernel;
 
-static CACHE:  u32 = 1 << 3;
-static BUFFER: u32 = 1 << 2;
+// kinda clever
+define_flags!(Descriptor: u32 {
+    SECTION = 0b10010,
 
-pub static SECTION: u32 = 0b10010;
-pub static RW:      u32 = 1 << 10;
-pub static USER:    u32 = 1 << 11;
-
-#[packed]
-struct Descriptor(u32);
+    BUFFER = 1 << 2,
+    CACHE  = 1 << 3,
+    RW     = 1 << 10,
+    USER   = 1 << 11
+})
 
 #[packed]
 struct PageTableCoarse {
@@ -33,15 +32,14 @@ pub unsafe fn init() {
     (*dir).enable();
 }
 
-pub unsafe fn map(page_ptr: *mut u8, flags: u32) {
+pub unsafe fn map(page_ptr: *mut u8, flags: Descriptor) {
     // TODO
 }
 
 impl Descriptor {
-    fn section(base: u32, flags: u32) -> Descriptor {
+    fn section(base: u32, flags: Descriptor) -> Descriptor {
         // make a section descriptor
-        //                /permissions
-        Descriptor(base | flags | SECTION)
+        Descriptor(base) | flags | SECTION
     }
 }
 
