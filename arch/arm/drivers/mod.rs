@@ -16,7 +16,9 @@ pub fn init() {
 
 #[no_mangle]
 pub unsafe fn keypress() {
-    keydown.map(|f| {
-        f(*io::UART0);
-    });
+    keydown.map(|f| f(*io::UART0) );
+    // Exception return instruction. [8]
+    // TODO: better interrupt handler. r11 could change
+    asm!("pop {r11, lr}
+          subs pc, r14, #4") // pc = lr - 4
 }

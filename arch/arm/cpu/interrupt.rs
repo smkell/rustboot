@@ -51,6 +51,8 @@ impl Table {
         }
 
         self.enable(RESET, unsafe { transmute(start) });
+        // breakpoints use an UND opcode to trigger UNDEF. [7]
+        self.enable(UNDEF, debug);
 
         unsafe {
             // Enable IRQs [5]
@@ -75,6 +77,11 @@ impl Table {
 
 extern {
     fn start();
+}
+
+#[no_mangle]
+pub unsafe fn debug() {
+    asm!("movs pc, lr")
 }
 
 /*
