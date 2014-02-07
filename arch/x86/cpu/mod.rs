@@ -44,6 +44,46 @@ impl<T> DtReg<T> {
     }
 }
 
+// TODO: make push_dummy push ds?
+// exception info and processor state saved on stack
+struct Context {
+    // Registers saved by the ISR (in reverse order)
+    edi: u32, esi: u32, ebp: u32, esp: u32, ebx: u32, edx: u32, ecx: u32, eax: u32,
+    ds: u32, es: u32, fs: u32, gs: u32,
+    int_no: u32,   // added by ISRs
+    err_code: u32, // added by some exceptions
+    call_stack: IsrCallStack
+}
+
+// the cpu adds these when calling the ISR
+struct IsrCallStack {
+    eip: u32, cs: u32, eflags: u32, esp: u32, ss: u32
+}
+
+impl Context {
+    unsafe fn save() -> &mut Context {
+        let this: &mut Context;
+        asm!("push gs
+              push fs
+              .byte 0x06 // push es
+              .byte 0x1e // push ds
+              pusha"
+            : "={esp}"(this) ::: "volatile", "intel");
+        this
+    }
+
+    unsafe fn restore() {
+        asm!("popa
+              .byte 0x1f // pop ds
+              .byte 0x07 // pop es
+              pop fs
+              pop gs
+              add esp, 8
+              iretd"
+            :::: "volatile", "intel");
+    }
+}
+
 pub fn init() {
     let t = Gdt::new();
     t.enable(1, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | CODE_READ, 0));

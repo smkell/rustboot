@@ -56,17 +56,6 @@ fn enable() {
     }
 }
 
-// exception info and processor state saved on stack
-pub struct IsrStack {
-    // Registers saved by the ISR (in reverse order)
-    edi: u32, esi: u32, ebp: u32, esp: u32, ebx: u32, edx: u32, ecx: u32, eax: u32,
-    ds: u32, es: u32, fs: u32, gs: u32,
-    int_no: u32,   // added by ISRs
-    err_code: u32, // added by some exceptions
-     // the cpu adds these when calling the ISR
-    eip: u32, cs: u32, eflags: u32, useresp: u32, ss: u32
-}
-
 #[packed]
 pub struct Isr {
     push_dummy: u8, // push eax  // (only for exceptions without error codes)

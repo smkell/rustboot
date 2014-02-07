@@ -1,7 +1,7 @@
 use core::mem::transmute;
 
 use platform::io;
-use cpu::interrupt::IsrStack;
+use cpu::Context;
 
 #[repr(u8)]
 pub enum Fault {
@@ -51,7 +51,7 @@ static Exceptions: &'static [&'static str] = &[
 
 #[no_split_stack]
 #[inline(never)]
-unsafe fn blue_screen(stack: &IsrStack) {
+unsafe fn blue_screen(stack: &Context) {
     io::puts("Exception ");
     io::puts(Exceptions[stack.int_no]);
     asm!("hlt");
@@ -60,16 +60,12 @@ unsafe fn blue_screen(stack: &IsrStack) {
 #[no_split_stack]
 #[inline(never)]
 pub unsafe fn exception_handler() -> extern "C" unsafe fn() {
-    // Points to the data on stack
-    let mut stack_ptr: &IsrStack;
     asm!("jmp skip_exception_handler
-      exception_handler_asm:
-          push gs
-          push fs
-          .byte 0x06 // push es
-          .byte 0x1e // push ds
-          pusha"
-        : "={esp}"(stack_ptr) ::: "volatile", "intel");
+      exception_handler_asm:"
+        :::: "volatile", "intel");
+
+    // Points to the data on the stack
+    let stack_ptr = Context::save();
 
     if stack_ptr.int_no as u8 == transmute(BREAKPOINT) {
         asm!("debug:" :::: "volatile")
@@ -78,14 +74,9 @@ pub unsafe fn exception_handler() -> extern "C" unsafe fn() {
         blue_screen(stack_ptr);
     }
 
-    asm!("popa
-          .byte 0x1f // pop ds
-          .byte 0x07 // pop es
-          pop fs
-          pop gs
-          add esp, 8
-          iretd
-      skip_exception_handler:"
+    Context::restore();
+
+    asm!("skip_exception_handler:"
         :::: "volatile", "intel");
 
     exception_handler_asm
