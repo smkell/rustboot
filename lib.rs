@@ -3,7 +3,7 @@
 #[no_std];
 #[feature(asm, macro_rules)];
 
-extern mod core;
+extern crate core;
 
 #[cfg(target_arch = "x86")]
 pub use platform::runtime::{memset, memcpy, memmove};

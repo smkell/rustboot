@@ -1,7 +1,7 @@
 TARGET := i686-intel-linux
 
 RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -Z debug-info -Z extra-debug-info
+RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -g
 
 CC := $(LLVM_ROOT)/bin/clang
 CFLAGS := -O3 -ffreestanding -target $(TARGET)
@@ -43,7 +43,7 @@ $(LCORE): $(CORE_LIB)
 
 # Compile rustboot
 $(BDIR)/main.bc: ../../lib.rs $(MODS) $(LCORE)
-	$(RUSTC) $(RUSTCFLAGS) --dep-info $(@D)/main.d -L $(BDIR) --emit-llvm ../../lib.rs --out-dir $(BDIR)
+	$(RUSTC) $(RUSTCFLAGS) --dep-info $(@D)/main.d -L $(BDIR) --emit bc ../../lib.rs --out-dir $(BDIR)
 
 %.o: %.bc
 	$(CC) $(CFLAGS) -c $^ -o $@
