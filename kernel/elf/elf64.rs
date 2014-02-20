@@ -2,7 +2,7 @@ use core::mem::transmute;
 use core::ptr::offset;
 use core::c_types::{c_ushort, c_uint, c_int, c_ulong, c_long};
 
-use kernel::int;
+use util::int::range;
 
 // rust-bindgen generated bindings
 pub type Elf64_Half = c_ushort;
@@ -163,7 +163,7 @@ impl super::Ehdr for Elf64_Ehdr {
         let buffer: *u8 = transmute(self);
         let pheader = offset(buffer, self.e_phoff as int) as *Elf64_Phdr;
 
-        int::range(0, self.e_phnum as uint, |_| {
+        range(0, self.e_phnum as uint, |_| {
             match (*pheader).p_type {
                 PT_LOAD => (*pheader).load(buffer),
                 _ => {}

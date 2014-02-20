@@ -3,7 +3,7 @@ use core::{str, slice};
 use core::iter::Iterator;
 
 use super::drivers::vga;
-use kernel::int;
+use util::int;
 
 static mut pos: int = 0;
 

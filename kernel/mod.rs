@@ -6,14 +6,10 @@ use cpu::interrupt;
 
 use self::memory::Allocator;
 
-pub mod int;
-pub mod ptr;
+pub mod util;
 pub mod memory;
 #[allow(dead_code)]
 mod elf;
-
-#[cfg(target_word_size = "32")]
-pub mod rt;
 
 pub static mut heap: memory::Alloc = memory::Alloc {
     base: 0x110_000 as *mut u8,

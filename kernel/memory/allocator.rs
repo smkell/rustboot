@@ -2,7 +2,7 @@ use core::mem::transmute;
 use core::ptr::{set_memory, copy_memory, offset};
 use core::i32::ctlz32;
 
-use kernel::ptr::mut_offset;
+use util::ptr::mut_offset;
 
 #[repr(u8)]
 enum Node {

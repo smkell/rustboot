@@ -11,9 +11,8 @@ pub use platform::runtime::{memset, memcpy, memmove};
 pub use support::{memcpy, memmove};
 
 use platform::{cpu, io, drivers};
+use kernel::util;
 
-#[path = "kernel/macros.rs"]
-#[macro_escape]
 mod macros;
 
 pub mod kernel;

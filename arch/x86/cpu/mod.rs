@@ -1,6 +1,7 @@
 use core::mem::size_of;
 
 use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
+use util::rt;
 use kernel;
 
 mod gdt;

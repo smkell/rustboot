@@ -1,6 +1,7 @@
 use core::cmp::expect;
 use core::ptr::offset;
-use kernel::ptr::mut_offset;
+
+use util::ptr::mut_offset;
 
 #[path = "../../rust-core/macros.rs"]
 mod macros;

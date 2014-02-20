@@ -1,6 +1,5 @@
 use core::mem::transmute;
 
-use kernel::int;
 use cpu::io;
 use platform::runtime::wmemset;
 

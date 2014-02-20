@@ -2,7 +2,7 @@ use core::ptr::{copy_nonoverlapping_memory, set_memory, offset};
 use core::mem::transmute;
 use core::option::{Option, Some, None};
 
-use kernel::ptr::mut_offset;
+use util::ptr::mut_offset;
 
 use self::elf32::Elf32_Ehdr;
 use self::elf64::Elf64_Ehdr;

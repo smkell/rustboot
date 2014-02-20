@@ -2,7 +2,7 @@ use core::mem::{transmute, size_of};
 use core;
 
 use kernel::memory::physical;
-use kernel::int;
+use util::int::range;
 use kernel;
 
 define_flags!(Flags: u32 {
@@ -107,7 +107,7 @@ impl<U> Table<U> {
 
 impl Table<Page> {
     fn identity_map(&mut self, start: uint, flags: Flags) {
-        int::range(0, ENTRIES, |i| {
+        range(0, ENTRIES, |i| {
             self.entries[i] = Page::at_frame(start + i, flags);
         });
     }
