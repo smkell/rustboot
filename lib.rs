@@ -1,4 +1,4 @@
-#[crate_id = "main#0.2.1"];
+#[crate_id = "main#0.2.2"];
 #[crate_type = "lib"];
 #[no_std];
 #[feature(asm, macro_rules)];
