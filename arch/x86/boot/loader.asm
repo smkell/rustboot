@@ -71,12 +71,16 @@ protected_mode:
     mov fs, eax
     mov gs, eax
     mov ss, eax
-    ; set up stack
-    mov esp, 0x7bff
+    ; set up aligned stack bottom
+    mov esp, 0x7c00
     ; enable SSE instructions
     mov eax, cr4
     or eax, 512
     mov cr4, eax
+    ; Temporarily store 0 as a stack upper limit.
+    ; Rust would call morestack otherwise.
+    ; Later, we should point gs to a small segment of local data.
+    mov dword[gs:0x30], 0
     ; jump into Rust
     call main
 abort:

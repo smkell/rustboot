@@ -1,1 +1,7 @@
-pub use cpu::mmu::{map, PageDirectory, RW, USER};
+pub use cpu::mmu::{
+	map,
+	Flags,
+	PageDirectory,
+	RW,
+	USER
+};

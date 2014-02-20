@@ -1,17 +1,20 @@
 use core::mem::{transmute, size_of};
 use core;
 
-use kernel::memory::physical::{alloc_frames, zero_alloc_frames};
+use kernel::memory::physical;
 use kernel::int;
 use kernel;
 
-define_flags!(Page: u32 {
+define_flags!(Flags: u32 {
     PRESENT  = 1 << 0,
     RW       = 1 << 1,
     USER     = 1 << 2,
     ACCESSED = 1 << 5,
     HUGE     = 1 << 7
 })
+
+#[packed]
+struct Page(u32);
 
 static CR0_PG: u32 = 1 << 31;
 
@@ -24,15 +27,15 @@ static directory: *mut PageDirectory = DIRECTORY_VADDR as *mut PageDirectory;
 // U: underlying element type
 #[packed]
 struct Table<U> {
-    entries: [Page, ..1024]
+    entries: [Page, ..ENTRIES]
 }
 
 pub type PageTable = Table<Page>;
 pub type PageDirectory = Table<Table<Page>>;
 
 pub unsafe fn init() {
-    let dir = zero_alloc_frames(1) as *mut PageDirectory;
-    let table = alloc_frames(1) as *mut PageTable;
+    let dir = physical::zero_alloc_frames(1) as *mut PageDirectory;
+    let table = physical::alloc_frames(1) as *mut PageTable;
 
     (*table).identity_map(0, PRESENT | RW);
     (*dir).set(transmute(0), table, PRESENT | RW);
@@ -50,9 +53,8 @@ pub unsafe fn init() {
     (*dir).switch();
 }
 
-pub unsafe fn map(page_ptr: *mut u8, flags: Page) {
-    let table = (*directory).fetch_table(page_ptr as u32, flags | PRESENT);
-    (*table).set(page_ptr, alloc_frames(1), flags | PRESENT);
+pub unsafe fn map(page_ptr: *mut u8, flags: Flags) {
+    (*directory).map_frame(page_ptr, flags);
     flush_tlb(page_ptr);
 }
 
@@ -63,11 +65,11 @@ fn flush_tlb<T>(addr: T) {
 }
 
 impl Page {
-    fn new(addr: u32, flags: Page) -> Page {
+    fn new(addr: u32, flags: Flags) -> Page {
         Page(addr) | flags
     }
 
-    fn at_frame(i: uint, flags: Page) -> Page {
+    fn at_frame(i: uint, flags: Flags) -> Page {
         Page::new((i * PAGE_SIZE) as u32, flags)
     }
 
@@ -76,8 +78,26 @@ impl Page {
     }
 }
 
+impl core::ops::BitOr<Flags, Page> for Page {
+    #[inline(always)]
+    fn bitor(&self, other: &Flags) -> Page {
+        match (self, other) {
+            (&Page(p), &Flags(f)) => Page(p | f)
+        }
+    }
+}
+
+impl core::ops::BitAnd<Flags, bool> for Page {
+    #[inline(always)]
+    fn bitand(&self, other: &Flags) -> bool {
+        match (self, other) {
+            (&Page(p), &Flags(f)) => p & f != 0
+        }
+    }
+}
+
 impl<U> Table<U> {
-    fn set<T>(&mut self, addr: *mut T, entry: *mut T, flags: Page) {
+    fn set<T>(&mut self, addr: *mut T, entry: *mut T, flags: Flags) {
         // update entry, based on the underlying type (page, table)
         let len = size_of::<U>() / size_of::<Page>();
         let index = (addr as uint / PAGE_SIZE / len) % ENTRIES;
@@ -86,8 +106,8 @@ impl<U> Table<U> {
 }
 
 impl Table<Page> {
-    fn identity_map(&mut self, start: uint, flags: Page) {
-        int::range(0, 1024, |i| {
+    fn identity_map(&mut self, start: uint, flags: Flags) {
+        int::range(0, ENTRIES, |i| {
             self.entries[i] = Page::at_frame(start + i, flags);
         });
     }
@@ -95,19 +115,24 @@ impl Table<Page> {
 
 // Can't impl on typedefs. Rust #9767
 impl Table<Table<Page>> {
-    fn fetch_table(&mut self, addr: u32, flags: Page) -> *mut PageTable {
+    fn fetch_table(&mut self, addr: u32, flags: Flags) -> *mut PageTable {
         let index = addr as uint / (PAGE_SIZE * ENTRIES);
-        let table = self.entries[index];
         match self.entries[index] {
-            Page(p) if table.present() => {
+            table @ Page(p) if table.present() => {
                 (p & 0xFFFFF000) as *mut PageTable
             }
             _ => unsafe { // allocate table
-                let table = zero_alloc_frames(1) as *mut PageTable;
+                let table = physical::zero_alloc_frames(1) as *mut PageTable;
                 (*directory).set(addr as *mut PageTable, table, flags);
+                flush_tlb(table);
                 table
             }
         }
+    }
+
+    pub unsafe fn map_frame(&mut self, page_ptr: *mut u8, flags: Flags) {
+        let table = self.fetch_table(page_ptr as u32, flags | PRESENT);
+        (*table).set(page_ptr, physical::alloc_frames(1), flags | PRESENT);
     }
 
     unsafe fn switch(&self) {

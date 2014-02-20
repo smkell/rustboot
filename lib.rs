@@ -10,7 +10,7 @@ pub use platform::runtime::{memset, memcpy, memmove};
 #[cfg(target_arch = "arm")]
 pub use support::{memcpy, memmove};
 
-use platform::{cpu, drivers};
+use platform::{cpu, io, drivers};
 
 #[path = "kernel/macros.rs"]
 #[macro_escape]
