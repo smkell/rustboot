@@ -6,7 +6,7 @@ use core;
 use kernel::memory::physical;
 
 // kinda clever
-define_flags!(Descriptor: u32 {
+define_flags!(Flags: u32 {
     SECTION = 0b10010,
 
     BUFFER = 1 << 2,
@@ -14,6 +14,9 @@ define_flags!(Descriptor: u32 {
     RW     = 1 << 10,
     USER
 })
+
+#[packed]
+struct Descriptor(u32);
 
 #[packed]
 struct PageTableCoarse {
@@ -32,14 +35,32 @@ pub unsafe fn init() {
     (*dir).enable();
 }
 
-pub unsafe fn map(page_ptr: *mut u8, flags: Descriptor) {
+pub unsafe fn map(page_ptr: *mut u8, flags: Flags) {
     // TODO
 }
 
 impl Descriptor {
-    fn section(base: u32, flags: Descriptor) -> Descriptor {
+    fn section(base: u32, flags: Flags) -> Descriptor {
         // make a section descriptor
         Descriptor(base) | flags | SECTION
+    }
+}
+
+impl core::ops::BitOr<Flags, Descriptor> for Descriptor {
+    #[inline(always)]
+    fn bitor(&self, other: &Flags) -> Descriptor {
+        match (self, other) {
+            (&Descriptor(p), &Flags(f)) => Descriptor(p | f)
+        }
+    }
+}
+
+impl core::ops::BitAnd<Flags, bool> for Descriptor {
+    #[inline(always)]
+    fn bitand(&self, other: &Flags) -> bool {
+        match (self, other) {
+            (&Descriptor(p), &Flags(f)) => p & f != 0
+        }
     }
 }
 
