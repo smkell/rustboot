@@ -72,16 +72,19 @@ fn memset_nonzero(mut s: *mut u8, c: u8, mut n: uint) {
     }
 }
 
-fn wmemset(s: *mut u8, c: u16, n: uint) {
+pub fn wmemset(mut dest: *mut u8, c: u16, n: uint) {
     if unlikely!(n == 0) {
         return;
     }
 
     if (n % 2) == 1 {
-        unsafe { *(s as *mut u16) = c; }
+        unsafe {
+            *(dest as *mut u16) = c;
+            dest = mut_offset(dest, 2);
+        }
     }
 
-    stosd16(s, c, n >> 1);
+    stosd16(dest, c, n >> 1);
 }
 
 fn dmemset(s: *mut u8, c: u32, n: uint) {

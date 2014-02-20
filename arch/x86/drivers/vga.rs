@@ -1,5 +1,8 @@
+use core::mem::transmute;
+
 use kernel::int;
 use cpu::io;
+use platform::runtime::wmemset;
 
 #[repr(u8)]
 pub enum Color {
@@ -39,11 +42,9 @@ type screen = [Char, ..SCREEN_SIZE];
 pub static SCREEN: *mut screen = 0xb8000 as *mut screen;
 
 pub fn clear_screen(bg: Color) {
-    int::range(0, SCREEN_SIZE, |i| {
-        unsafe {
-            (*SCREEN)[i] = Char::new(' ', Black, bg);
-        }
-    });
+    unsafe {
+        wmemset(SCREEN as *mut u8, transmute(Char::new(' ', Black, bg)), SCREEN_SIZE);
+    }
 }
 
 pub fn cursor_at(pos: uint) {
