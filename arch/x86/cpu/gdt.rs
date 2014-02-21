@@ -38,6 +38,14 @@ impl GdtEntry {
             limit_hi_flags: (dpl << 5) | ((limit >> 16) & 0xf) as u8 | ((access >> 8) & 0xf0) as u8
         }
     }
+
+    pub fn seg<T>(data: *mut T, access: u16, dpl: u8) -> GdtEntry {
+        GdtEntry::new(data as u32, size_of::<T>() as u32, access, dpl)
+    }
+
+    pub fn flat(access: u16, dpl: u8) -> GdtEntry {
+        GdtEntry::new(0, 0xFFFFF, access | PAGES, dpl)
+    }
 }
 
 pub struct Gdt {
@@ -69,9 +77,16 @@ impl Gdt {
         (*self.table)[n].access &= !PRESENT;
     }
 
-    pub fn load(&self) {
+    pub fn load(&self, code: u16, data: u16, local: u16) {
         unsafe {
-            asm!("lgdt [$0]" :: "A"(self.reg) :: "intel");
+            asm!("lgdt [$0]
+                  mov ds, $1
+                  mov ss, $1
+                  mov fs, $2
+                  mov gs, $2"
+                :: "r"(self.reg), "r"(data), "r"(local)
+                :: "volatile", "intel");
+            asm!("jmp $0, $$.flush; .flush:" :: "Ir"(code) :: "volatile")
         }
     }
 }

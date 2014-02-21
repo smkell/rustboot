@@ -1,11 +1,14 @@
 use core::mem::size_of;
+use core::option::{Option, None, Some};
 
 use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
 use util::rt;
+use util::ptr::mut_offset;
 use kernel;
 
 mod gdt;
 mod idt;
+mod tss;
 pub mod interrupt;
 pub mod io;
 mod exception;
@@ -85,13 +88,43 @@ impl Context {
     }
 }
 
+struct LocalSegment {
+    ts: tss::TssEntry,
+}
+
+impl LocalSegment {
+    // FIXME: Rust needs address spaces
+    fn get() -> &mut LocalSegment {
+        unsafe {
+            let this: &mut LocalSegment;
+            asm!("mov $0, dword[gs:0]" : "=r"(this) ::: "volatile", "intel")
+            this
+        }
+    }
+}
+
+pub static mut desc_table: Option<gdt::Gdt> = None;
+
 pub fn init() {
+    let local_data = unsafe { kernel::zero_alloc(size_of::<LocalSegment>()) as *mut LocalSegment };
+    let local_seg = unsafe {
+        let seg = kernel::zero_alloc(0x80) as *mut [u32, ..32];
+        *(seg as *mut *mut LocalSegment) = local_data;
+        *(mut_offset(seg, 0x30) as *mut u32) = 0;
+        seg
+    };
+
     let t = Gdt::new();
-    t.enable(1, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | CODE_READ, 0));
-    t.enable(2, GdtEntry::new(0, 0xFFFFF, SIZE_32 | STORAGE | DATA_WRITE, 0));
-    t.load();
+    t.enable(1, GdtEntry::flat(SIZE_32 | STORAGE | CODE_READ, 0));
+    t.enable(2, GdtEntry::flat(SIZE_32 | STORAGE | DATA_WRITE, 0));
+    t.enable(3, GdtEntry::flat(SIZE_32 | STORAGE | CODE_READ, 3));
+    t.enable(4, GdtEntry::flat(SIZE_32 | STORAGE | DATA_WRITE, 3));
+    t.enable(5, GdtEntry::seg(local_seg, SIZE_32 | STORAGE, 3));
+    t.load(1 << 3, 2 << 3, 5 << 3);
 
     unsafe {
+        desc_table = Some(t);
+
         kernel::int_table.map(|t| {
             use cpu::exception::{BREAKPOINT, exception_handler};
             use cpu::interrupt::{Isr, Fault};
