@@ -1,5 +1,6 @@
 use core::mem::size_of;
 use core::option::{Option, None, Some};
+use core;
 
 use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
 use util::rt;
@@ -32,6 +33,25 @@ macro_rules! cpuid(
             : "A"($n) : "ebx", "edx", "ecx" : "intel");
     );
 )
+
+define_flags!(Eflags: u32 {
+    CF,
+    IF = 1 << 9
+})
+
+impl Eflags {
+    fn read() -> Eflags {
+        unsafe {
+            let mut flags: u32;
+            asm!("pushf; pop $0;" : "=r"(flags) ::: "volatile")
+            Eflags(flags)
+        }
+    }
+}
+
+define_flags!(CR0Flags: u32 {
+    CR0_PG = 1 << 31
+})
 
 #[packed]
 struct DtReg<T> {

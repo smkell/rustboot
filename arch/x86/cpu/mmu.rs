@@ -16,8 +16,6 @@ define_flags!(Flags: u32 {
 #[packed]
 struct Page(u32);
 
-static CR0_PG: u32 = 1 << 31;
-
 static PAGE_SIZE: uint = 0x1000;
 static ENTRIES:   uint = 1024;
 
@@ -136,12 +134,13 @@ impl Table<Table<Page>> {
     }
 
     unsafe fn switch(&self) {
+        use super::CR0_PG;
         asm!("mov cr3, $0
 
               mov eax, cr0
               or eax, $1
               mov cr0, eax"
-            :: "{eax}"(self), "n"(CR0_PG)
+            :: "{eax}"(self), "n"(CR0_PG.get())
             :: "intel")
     }
 }
