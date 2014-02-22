@@ -9,6 +9,7 @@ use self::memory::Allocator;
 pub mod util;
 pub mod memory;
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 mod elf;
 
 pub static mut heap: memory::Alloc = memory::Alloc {

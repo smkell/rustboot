@@ -1,8 +1,8 @@
 use core::mem::{transmute, size_of};
 use core;
 
-use kernel::memory::physical;
 use util::int::range;
+use kernel::memory::physical;
 use kernel;
 
 define_flags!(Flags: u32 {
@@ -42,10 +42,9 @@ pub unsafe fn init() {
     // When accessing its virtual address
     (*dir).set(directory, dir, PRESENT | RW);
 
-    kernel::int_table.map(|t| {
-        use cpu::interrupt::{Isr, Fault};
-        use cpu::exception::{PAGE_FAULT, exception_handler};
-        (*t.table)[PAGE_FAULT as u8] = Isr::new(Fault(PAGE_FAULT), true).idt_entry(exception_handler());
+    kernel::int_table.map(|mut t| {
+        use super::exception::{PageFault, exception_handler};
+        t.set_isr(PageFault, true, exception_handler());
     });
 
     (*dir).switch();

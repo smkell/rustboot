@@ -42,6 +42,10 @@ impl Table {
         pic::mask(self.mask);
     }
 
+    pub unsafe fn set_isr(&mut self, val: Fault, code: bool, handler: extern "C" unsafe fn()) {
+        (*self.table)[val as uint] = Isr::new(Fault(val), code).idt_entry(handler);
+    }
+
     pub fn load(&self) {
         self.reg.load();
         pic::remap();

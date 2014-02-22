@@ -145,10 +145,9 @@ pub fn init() {
     unsafe {
         desc_table = Some(t);
 
-        kernel::int_table.map(|t| {
-            use cpu::exception::{BREAKPOINT, exception_handler};
-            use cpu::interrupt::{Isr, Fault};
-            (*t.table)[BREAKPOINT as u8] = Isr::new(Fault(BREAKPOINT), false).idt_entry(exception_handler());
+        kernel::int_table.map(|mut t| {
+            use cpu::exception::{Breakpoint, exception_handler};
+            t.set_isr(Breakpoint, false, exception_handler());
         });
 
         mmu::init();
