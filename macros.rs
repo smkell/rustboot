@@ -11,12 +11,24 @@ macro_rules! define_flags (
     };
 
     (
-        $name:ident: $t:ty {
+        $name:ident: $T:ty {
             $($flag:ident $(= $v:expr)*),*
         }
     ) => {
         #[packed]
-        pub struct $name($t);
+        pub struct $name($T);
+
+        impl $name {
+            /// Return the value.
+            pub fn get(self) -> $T {
+                match self { $name(x) => x }
+            }
+
+            /// Maps by applying a function to a contained value.
+            pub fn map(self, f: |$T| -> $T) -> $name {
+                match self { $name(x) => $name(f(x)) }
+            }
+        }
 
         impl core::ops::BitOr<$name, $name> for $name {
             #[inline(always)]
