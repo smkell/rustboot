@@ -72,6 +72,12 @@ impl BitvTrait for Bitv {
     }
 }
 
+impl Bitv {
+    pub fn init(&self) {
+        unsafe { set_memory(self.to_bytes(), 0, self.size()); }
+    }
+}
+
 pub struct BuddyAlloc {
     order: uint,
     tree: Bitv
@@ -85,8 +91,7 @@ pub struct Alloc {
 
 impl BuddyAlloc {
     pub fn new(order: uint, storage: Bitv) -> BuddyAlloc {
-        unsafe { set_memory(storage.to_bytes(), 0, storage.size()); }
-
+        storage.init();
         BuddyAlloc { order: order, tree: storage }
     }
 

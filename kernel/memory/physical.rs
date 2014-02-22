@@ -1,6 +1,6 @@
 use core::fail::abort;
 
-use kernel;
+use kernel::heap;
 use kernel::memory;
 use kernel::memory::Allocator;
 
@@ -15,7 +15,7 @@ pub static mut frames: memory::Alloc = memory::Alloc {
 
 pub fn init() {
     unsafe {
-        frames.parent.tree.storage = kernel::zero_alloc(0x1000) as memory::BitvStorage;
+        frames.parent.tree.storage = heap::zero_alloc::<u32>(1024) as memory::BitvStorage;
     }
 }
 

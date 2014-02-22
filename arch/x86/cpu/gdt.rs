@@ -1,7 +1,7 @@
 use core::mem::{size_of, transmute};
 
 use cpu::DtReg;
-use kernel;
+use kernel::heap;
 
 pub static SIZE_32: u16 = 1 << 14;
 pub static PAGES:   u16 = 1 << 15;
@@ -56,13 +56,13 @@ pub struct Gdt {
 impl Gdt {
     pub fn new() -> Gdt {
         unsafe {
-            let table_ptr = kernel::zero_alloc(size_of::<Table>()) as *Table;
-            let reg_ptr = kernel::malloc_raw(size_of::<GdtReg>());
+            let table_ptr = heap::zero_alloc::<Table>(1);
+            let reg_ptr: *mut GdtReg = heap::alloc(1);
 
             let reg: &mut GdtReg = transmute(reg_ptr);
-            *reg = DtReg::new(table_ptr);
+            *reg = DtReg::new(table_ptr as *Table);
 
-            Gdt { reg: transmute(reg_ptr), table: transmute(table_ptr) }
+            Gdt { reg: transmute(reg_ptr), table: table_ptr }
         }
     }
 

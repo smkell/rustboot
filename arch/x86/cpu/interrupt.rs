@@ -5,7 +5,7 @@ use cpu::DtReg;
 use cpu::exception::Fault;
 use cpu::idt::{IdtEntry, IdtReg, Idt, INTR_GATE, PRESENT};
 use drivers::pic;
-use kernel;
+use kernel::heap;
 
 pub enum Int {
     Fault(Fault)
@@ -20,12 +20,12 @@ pub struct Table {
 impl Table {
     pub fn new() -> Table {
         unsafe {
-            let table = kernel::zero_alloc(size_of::<Idt>()) as *Idt;
-            let reg = kernel::malloc_raw(size_of::<IdtReg>());
-            *(reg as *mut IdtReg) = DtReg::new(table);
+            let table = heap::zero_alloc::<Idt>(1);
+            let reg = heap::alloc::<IdtReg>(1);
+            *(reg as *mut IdtReg) = DtReg::new(table as *Idt);
             Table {
                 reg: transmute(reg),
-                table: table as *mut Idt,
+                table: table,
                 mask: 0xffff
             }
         }
@@ -71,7 +71,7 @@ pub struct Isr {
 
 impl Isr {
     pub fn new(val: Int, code: bool) -> &mut Isr {
-        let this: &mut Isr = unsafe { transmute(kernel::malloc_raw(size_of::<Isr>())) };
+        let this: &mut Isr = unsafe { transmute(heap::alloc::<Isr>(1)) };
         *this = Isr {
             push_dummy: if code { 0x90 } else { 0x50 },   // [9]
             push: 0x6a, value: val,

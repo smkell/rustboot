@@ -5,6 +5,7 @@ use core;
 use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
 use util::rt;
 use util::ptr::mut_offset;
+use kernel::heap;
 use kernel;
 
 mod gdt;
@@ -126,11 +127,11 @@ impl LocalSegment {
 pub static mut desc_table: Option<gdt::Gdt> = None;
 
 pub fn init() {
-    let local_data = unsafe { kernel::zero_alloc(size_of::<LocalSegment>()) as *mut LocalSegment };
+    let local_data = unsafe { heap::zero_alloc::<LocalSegment>(1) };
     let local_seg = unsafe {
-        let seg = kernel::zero_alloc(0x80) as *mut [u32, ..32];
+        let seg = heap::zero_alloc::<u32>(32);
         *(seg as *mut *mut LocalSegment) = local_data;
-        *(mut_offset(seg, 0x30) as *mut u32) = 0;
+        *(mut_offset(seg, 12)) = 0; // TODO: stack top
         seg
     };
 
