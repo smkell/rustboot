@@ -20,17 +20,19 @@ BDIR := ./boot
 CORE_LIB := ../../rust-core/core/lib.rs
 LCORE := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
 OBJS := $(BDIR)/loader.o $(BDIR)/main.o
-DEPS := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
-LINK := "-(" $(LCORE) "-)"
-
-# TODO: fix dep-info target
-MODS := $(wildcard *.rs) $(wildcard */*.rs) $(wildcard ../../kernel/*.rs) $(wildcard ../../kernel/*/*.rs) $(wildcard ../../kernel/*/*/*.rs)
+LINK := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
+LIBS := $(LCORE)
 
 SECTIONS := .text .data .rodata
+
+DEP_RM := arch\/
+DEP_KEEP := arch\/i686\|arch\/common
+DEP_SCRIPT := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
 
 -include ./config.mk
 -include $(BDIR)/core.d
 -include $(BDIR)/loader.d
+-include $(BDIR)/main.d
 
 .PHONY: all run debug clean
 
@@ -41,9 +43,10 @@ all: $(BDIR)/floppy.img
 $(LCORE): $(CORE_LIB)
 	$(RUSTC) $(RUSTCFLAGS) --dep-info $(@D)/core.d $(CORE_LIB) --out-dir $(BDIR)
 
-# Compile rustboot
-$(BDIR)/main.bc: ../../lib.rs $(MODS) $(LCORE)
-	$(RUSTC) $(RUSTCFLAGS) --dep-info $(@D)/main.d -L $(BDIR) --emit bc ../../lib.rs --out-dir $(BDIR)
+# Compile rustboot. Produce dependency info
+$(BDIR)/main.bc: ../../lib.rs $(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) --dep-info -L $(BDIR) --emit bc ../../lib.rs --out-dir $(BDIR)
+	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
 
 %.o: %.bc
 	$(CC) $(CFLAGS) -c $^ -o $@
@@ -53,8 +56,8 @@ $(BDIR)/main.bc: ../../lib.rs $(MODS) $(LCORE)
 	$(ASM) $(ASMFLAGS) -MD $*.d -o $@ $<
 
 # kernel (object)
-$(BDIR)/kernel.elf: $(DEPS)
-	$(LD) $(LDFLAGS) -o $@ -T $^ $(LINK) -Map=./$(BDIR)/linker.map
+$(BDIR)/kernel.elf: $(LINK)
+	$(LD) $(LDFLAGS) -o $@ -T $^ "-(" $(LIBS) "-)" -Map=./$(BDIR)/linker.map
 
 # initram
 $(BDIR)/%.o: %.asm
@@ -63,8 +66,8 @@ $(BDIR)/%.o: %.asm
 $(BDIR)/initram.elf: $(BDIR)/module.o
 	$(LD) $(LDFLAGS) -s $< -o $@
 
-%.embed: %
-	$(LD) $(LDFLAGS) -r -b binary -o $@ $^
+$(BDIR)/%.embed: $(BDIR)/%
+	cd $(@D); $(LD) $(LDFLAGS) -r -b binary -o $(@F) $(<F)
 
 # bootloader and kernel separately
 $(BDIR)/kernel.bin: $(BDIR)/kernel.elf
@@ -78,8 +81,8 @@ $(BDIR)/floppy.img: $(BDIR)/boot.bin $(BDIR)/kernel.bin
 	cat $^ > $@
 
 # running
-run: boot/floppy.img
-	$(QEMU) -fda $<
+run: all
+	$(QEMU) -fda $(BDIR)/floppy.img
 
 debug: $(BDIR)/kernel.elf $(BDIR)/floppy.img
 ifeq ($(strip $(TMUX)),)
@@ -93,4 +96,4 @@ else
 endif
 
 clean:
-	rm -f $(BDIR)/*.{d,o,bc,rlib,so,ll,embed,elf,bin,img,map}
+	@cat $(BDIR)/.gitignore | xargs -I{} find $(BDIR) -name {} | xargs rm -f

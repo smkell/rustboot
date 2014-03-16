@@ -26,5 +26,6 @@ pub fn main() {
     cpu::init();
 
     drivers::init();
-    elf::exec(&_binary_boot_initram_elf_start);
+    elf::exec(&_binary_initram_elf_start);
+    extern { static _binary_initram_elf_start: u8; }
 }

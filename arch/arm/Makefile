@@ -9,7 +9,7 @@ AS := $(GCC_PREFIX)as
 LD := $(GCC_PREFIX)ld
 
 LLC := $(LLVM_ROOT)/bin/llc
-LLCFLAGS := -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
+LLCFLAGS := -mtriple=$(TARGET) -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
 
 GDB := $(GCC_PREFIX)gdb
 OBJCOPY := $(GCC_PREFIX)objcopy
@@ -18,14 +18,17 @@ QEMU := qemu-system-arm
 BDIR := ./boot
 CORE_LIB := ../../rust-core/core/lib.rs
 LCORE := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
+
 OBJS := $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
 LINK := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 
-MODS := $(wildcard */*.rs) $(wildcard ../../kernel/*.rs) $(wildcard ../../kernel/*/*.rs) $(wildcard ../../kernel/*/*/*.rs)
+DEP_RM := arch\/
+DEP_KEEP := arch\/arm
+DEP_SCRIPT := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
 
 -include ./config.mk
 -include $(BDIR)/core.d
--include $(BDIR)/loader.d
+-include $(BDIR)/main.d
 
 .PHONY: all run debug clean
 
@@ -33,18 +36,20 @@ all: $(BDIR)/kernel.bin
 	@wc -c $^
 
 # Library rust-core
-$(LCORE):
-	$(RUSTC) $(RUSTCFLAGS) --dep-info $(@D)/core.d $(CORE_LIB) --emit=bc,link --out-dir $(BDIR)
+$(LCORE) $(BDIR)/core.bc:
+	$(RUSTC) $(RUSTCFLAGS) $(CORE_LIB) --dep-info --emit=bc,link --out-dir $(BDIR)
 
-# Compile rustboot
-$(BDIR)/main.bc: ../../lib.rs $(MODS) $(LCORE)
-	$(RUSTC) $(RUSTCFLAGS) --dep-info $(@D)/main.d -L $(BDIR) --emit=bc ../../lib.rs --out-dir $(BDIR)
+# Compile rustboot. Produce dependency info
+$(BDIR)/main.bc: $(LCORE)
+	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --dep-info --emit=bc ../../lib.rs --out-dir $(BDIR)
+	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
 
 %.s: %.bc
 	$(LLC) $(LLCFLAGS) $^ -o $@
 
+# Assemble object files. note: do not overwrite deps with -MD $*.d
 %.o: %.s
-	$(AS) -MD $*.d -g $< -o $@
+	$(AS) -g $< -o $@
 
 # initram
 $(BDIR)/%.o: %.s
@@ -53,8 +58,8 @@ $(BDIR)/%.o: %.s
 $(BDIR)/initram.elf: $(BDIR)/module.o
 	$(LD) -s -o $@ $^
 
-%.embed: %
-	$(LD) -r -b binary -o $@ $^
+$(BDIR)/%.embed: $(BDIR)/%
+	cd $(@D); $(LD) $(LDFLAGS) -r -b binary -o $(@F) $(<F)
 
 # kernel (object)
 $(BDIR)/kernel.elf: $(LINK)
@@ -65,8 +70,8 @@ $(BDIR)/kernel.bin: $(BDIR)/kernel.elf
 	$(OBJCOPY) -O binary $^ $@
 
 # running
-run: $(BDIR)/kernel.bin
-	$(QEMU) -M versatilepb -m 32M -nographic -kernel $^
+run: all
+	$(QEMU) -M versatilepb -m 32M -nographic -kernel $(BDIR)/kernel.bin
 
 debug: $(BDIR)/kernel.elf
 ifeq ($(strip $(TMUX)),)
@@ -82,4 +87,4 @@ else
 endif
 
 clean:
-	rm -f $(BDIR)/*.{d,o,bc,rlib,so,ll,embed,elf,bin}
+	@cat $(BDIR)/.gitignore | xargs -I{} find $(BDIR) -name {} | xargs rm -f
