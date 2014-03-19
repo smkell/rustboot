@@ -3,8 +3,9 @@ use core::ptr::offset;
 
 use cpu::DtReg;
 use cpu::exception::Fault;
-use cpu::idt::{IdtEntry, IdtReg, Idt, INTR_GATE, PRESENT};
+use cpu::idt::{IdtEntry, IdtReg, INTR_GATE, PRESENT};
 use drivers::pic;
+use util::ptr::mut_offset;
 use kernel::heap;
 
 pub enum Int {
@@ -12,17 +13,17 @@ pub enum Int {
 }
 
 pub struct Table {
-    reg: &'static IdtReg,
-    table: *mut Idt,
-    mask: u16,
+    priv reg: &'static IdtReg,
+    priv table: *mut IdtEntry,
+    priv mask: u16,
 }
 
 impl Table {
     pub fn new() -> Table {
         unsafe {
-            let table = heap::zero_alloc::<Idt>(1);
+            let table = heap::zero_alloc::<IdtEntry>(256);
             let reg = heap::alloc::<IdtReg>(1);
-            *(reg as *mut IdtReg) = DtReg::new(table as *Idt);
+            *(reg as *mut IdtReg) = DtReg::new(table, 256);
             Table {
                 reg: transmute(reg),
                 table: table,
@@ -31,8 +32,8 @@ impl Table {
         }
     }
 
-    pub unsafe fn enable_maskable(&mut self, irq: u8, isr: extern "C" unsafe fn()) {
-        (*self.table)[irq] = IdtEntry::new(
+    pub unsafe fn enable_maskable(&mut self, irq: uint, isr: extern "C" unsafe fn()) {
+        *mut_offset(self.table, irq as int) = IdtEntry::new(
             isr,                // interrupt service routine
             1 << 3,             // segment selector
             INTR_GATE | PRESENT // flags
@@ -43,7 +44,7 @@ impl Table {
     }
 
     pub unsafe fn set_isr(&mut self, val: Fault, code: bool, handler: extern "C" unsafe fn()) {
-        (*self.table)[val as uint] = Isr::new(Fault(val), code).idt_entry(handler);
+        *mut_offset(self.table, val as int) = Isr::new(Fault(val), code).idt_entry(handler);
     }
 
     pub fn load(&self) {
@@ -62,11 +63,11 @@ fn enable() {
 
 #[packed]
 pub struct Isr {
-    push_dummy: u8, // push eax  // (only for exceptions without error codes)
-    push: u8,       // push byte <imm>  // save int. number
-    value: Int,
-    jmp: u8,        // jmp rel  // jump to the common handler
-    rel: i32
+    priv push_dummy: u8, // push eax  // (only for exceptions without error codes)
+    priv push: u8,       // push byte <imm>  // save int. number
+    priv value: Int,
+    priv jmp: u8,        // jmp rel  // jump to the common handler
+    priv rel: i32
 }
 
 impl Isr {

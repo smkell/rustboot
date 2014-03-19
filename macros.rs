@@ -28,6 +28,10 @@ macro_rules! define_flags (
             pub fn map(self, f: |$T| -> $T) -> $name {
                 match self { $name(x) => $name(f(x)) }
             }
+
+            pub fn zero() -> $name {
+                $name(0)
+            }
         }
 
         impl core::ops::BitOr<$name, $name> for $name {

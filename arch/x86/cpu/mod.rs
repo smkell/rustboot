@@ -2,7 +2,6 @@ use core::mem::size_of;
 use core::option::{Option, None, Some};
 use core;
 
-use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE};
 use util::rt;
 use util::ptr::mut_offset;
 use kernel::heap;
@@ -57,13 +56,13 @@ define_flags!(CR0Flags: u32 {
 #[packed]
 struct DtReg<T> {
     size: u16,
-    addr: *T,
+    addr: *mut T,
 }
 
 impl<T> DtReg<T> {
-    pub fn new(descriptor_table: *T) -> DtReg<T> {
+    pub fn new(descriptor_table: *mut T, capacity: uint) -> DtReg<T> {
         DtReg {
-            size: size_of::<T>() as u16,
+            size: (capacity * size_of::<T>()) as u16,
             addr: descriptor_table,
         }
     }
@@ -127,20 +126,25 @@ impl LocalSegment {
 pub static mut desc_table: Option<gdt::Gdt> = None;
 
 pub fn init() {
-    let local_data = unsafe { heap::zero_alloc::<LocalSegment>(1) };
-    let local_seg = unsafe {
+    use cpu::gdt::{Gdt, GdtEntry, GdtAccess, PAGES, SIZE_32, STORAGE, CODE, CODE_READ, DATA_WRITE, TSS, DPL3};
+
+    let local_data = unsafe {
+        heap::zero_alloc::<LocalSegment>(1)
+    };
+    let tls = unsafe {
         let seg = heap::zero_alloc::<u32>(32);
-        *(seg as *mut *mut LocalSegment) = local_data;
-        *(mut_offset(seg, 12)) = 0; // TODO: stack top
+        *seg = local_data as u32;
+        // *(mut_offset(seg, 12)) = 0; // TODO: record stack bottom later
         seg
     };
 
     let t = Gdt::new();
-    t.enable(1, GdtEntry::flat(SIZE_32 | STORAGE | CODE_READ, 0));
-    t.enable(2, GdtEntry::flat(SIZE_32 | STORAGE | DATA_WRITE, 0));
-    t.enable(3, GdtEntry::flat(SIZE_32 | STORAGE | CODE_READ, 3));
-    t.enable(4, GdtEntry::flat(SIZE_32 | STORAGE | DATA_WRITE, 3));
-    t.enable(5, GdtEntry::seg(local_seg, SIZE_32 | STORAGE, 3));
+    t.enable(1, GdtEntry::flat(STORAGE | CODE_READ, SIZE_32));
+    t.enable(2, GdtEntry::flat(STORAGE | DATA_WRITE, SIZE_32));
+    t.enable(3, GdtEntry::flat(STORAGE | CODE_READ | DPL3, SIZE_32));
+    t.enable(4, GdtEntry::flat(STORAGE | DATA_WRITE | DPL3, SIZE_32));
+    t.enable(5, GdtEntry::new(tls as u32, 32 * 4, STORAGE | DPL3, SIZE_32));
+    t.enable(6, GdtEntry::seg(local_data, GdtAccess::zero(), SIZE_32));
     t.load(1 << 3, 2 << 3, 5 << 3);
 
     unsafe {
