@@ -144,7 +144,9 @@ pub fn init() {
     t.enable(3, GdtEntry::flat(STORAGE | CODE_READ | DPL3, SIZE_32));
     t.enable(4, GdtEntry::flat(STORAGE | DATA_WRITE | DPL3, SIZE_32));
     t.enable(5, GdtEntry::new(tls as u32, 32 * 4, STORAGE | DPL3, SIZE_32));
-    t.enable(6, GdtEntry::seg(local_data, GdtAccess::zero(), SIZE_32));
+    unsafe {
+        t.enable(6, (*local_data).ts.gdt_entry());
+    }
     t.load(1 << 3, 2 << 3, 5 << 3);
 
     unsafe {

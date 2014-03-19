@@ -1,7 +1,7 @@
 use cpu::io;
 use super::keydown;
 
-pub static IRQ: u8 = 0x20 + 1;
+pub static IRQ: uint = 0x20 + 1;
 
 pub static Layout: &'static str = "\
 \x00\x1B1234567890-=\x08\

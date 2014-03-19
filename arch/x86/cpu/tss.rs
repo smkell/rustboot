@@ -1,3 +1,5 @@
+use super::gdt::{GdtEntry, GdtFlags, ACCESSED, CODE};
+
 #[packed]
 pub struct TssEntry {
     prev_tss: u32,
@@ -27,4 +29,10 @@ pub struct TssEntry {
     ldt: u32,
     trap: u16,
     iomap_base: u16
+}
+
+impl TssEntry {
+    pub fn gdt_entry(&mut self) -> GdtEntry {
+        GdtEntry::seg(self as *mut TssEntry, CODE | ACCESSED, GdtFlags::zero())
+    }
 }
