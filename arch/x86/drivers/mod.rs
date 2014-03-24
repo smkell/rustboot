@@ -5,7 +5,7 @@ pub mod pic;
 pub mod vga;
 pub mod keyboard;
 
-pub static mut keydown: Option<extern fn(u8)> = None;
+pub static mut keydown: Option<fn(u8)> = None;
 
 pub fn init() {
     vga::clear_screen(vga::LightRed);

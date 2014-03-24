@@ -5,9 +5,6 @@ use util::ptr::mut_offset;
 
 mod stack;
 
-#[path = "../../../rust-core/macros.rs"]
-mod macros;
-
 type c_int = i32;
 
 // TODO: use SSE

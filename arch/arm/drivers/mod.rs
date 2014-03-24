@@ -4,7 +4,7 @@ use super::cpu::interrupt;
 use super::io;
 use kernel;
 
-pub static mut keydown: Option<extern fn(u32)> = None;
+pub static mut keydown: Option<fn(u32)> = None;
 
 pub fn init() {
     unsafe {

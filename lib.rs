@@ -1,9 +1,9 @@
 #[crate_id = "main#0.2.2"];
 #[crate_type = "lib"];
 #[no_std];
-#[feature(asm, macro_rules, default_type_params)];
-#[allow(default_type_param_usage)];
+#[feature(asm, macro_rules, default_type_params, phase)];
 
+#[phase(syntax, link)]
 extern crate core;
 
 #[cfg(target_arch = "x86")]
