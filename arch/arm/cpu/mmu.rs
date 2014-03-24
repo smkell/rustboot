@@ -18,7 +18,7 @@ define_flags!(Flags: u32 {
     BUFFER = 1 << 2,
     CACHE,
     RW     = 1 << 10,
-    USER
+    CLIENT_ACCESS
 })
 
 #[packed]
@@ -30,15 +30,91 @@ struct PageTableCoarse {
 }
 
 #[packed]
-pub struct PageDirectory {
-    tables: [Descriptor, ..4096]
+struct PageDirectory {
+    entries: [Descriptor, ..4096]
+}
+
+define_reg!(CR, CRFlags: uint {
+    CR_M  = 1 << 0,  // MMU enable
+    CR_A  = 1 << 1,
+    CR_C  = 1 << 2,  // Data cache enable
+    CR_W  = 1 << 3,
+    CR_P  = 1 << 4,  // 32-bit exception handler
+    CR_D  = 1 << 5,  // 32-bit data address range
+    CR_L  = 1 << 6,  // Implementation defined
+    CR_B  = 1 << 7,  // Endianness
+    CR_S  = 1 << 8,
+    CR_R  = 1 << 9,
+    CR_F  = 1 << 10, // Implementation defined
+    CR_Z  = 1 << 11, // Implementation defined
+    CR_I  = 1 << 12, // Instruction cache enable
+    CR_V  = 1 << 13,
+    CR_RR = 1 << 14,
+    CR_L4 = 1 << 15
+})
+
+// Each of the 16 domains can be either allowed full access (manager)
+// to a region of memory or restricted access to some pages in that region (client).
+define_flags!(DomainTypeMask: uint {
+    KERNEL = 0b11 << 0,
+    USER   = 0b11 << 2,
+    NOACCESS = 0,
+    CLIENT   = 0b01 * 0x55555555,
+    MANAGER  = 0b11 * 0x55555555
+})
+
+impl CR {
+    #[inline] #[allow(dead_code)]
+    pub fn read() -> CRFlags {
+        unsafe {
+            let flags;
+            asm!(concat!("mrc p15, 0, $0, c1, c0, 0") : "=r"(flags));
+            CRFlags(flags)
+        }
+    }
+
+    #[inline] #[allow(dead_code)]
+    pub fn write(f: CRFlags) {
+        match f {
+            CRFlags(val) => unsafe {
+                asm!(concat!("mcr p15, 0, $0, c1, c0, 0") :: "r"(val) :: "volatile");
+            }
+        }
+    }
 }
 
 pub unsafe fn init() {
     let dir: Phys<PageDirectory> = physical::zero_alloc_frames(4);
 
-    (*dir.as_ptr()).tables[0] = Descriptor::section(0, RW);
-    (*dir.as_ptr()).enable();
+    (*dir.as_ptr()).entries[0] = Descriptor::section(0, RW);
+
+    switch_directory(dir);
+    enable_paging();
+}
+
+pub fn switch_directory(dir: Phys<PageDirectory>) {
+    // Memory protection is determined by control register c1 bits S and R,
+    // domain access reg. c3 and per-page domain number and permission bits.
+    let cpu_domain = KERNEL & MANAGER | USER & MANAGER;
+
+    unsafe {
+        asm!("mcr p15, 0, $0, c3, c0, 0     // load domain access register
+              mcr p15, 0, $1, c2, c0, 0     // load page table pointer
+            " :: "r"(cpu_domain), "r"(dir.offset()) : "ip" : "volatile");
+    }
+}
+
+fn enable_paging() {
+    unsafe {
+        asm!("mov ip, 0
+              mcr p15, 0, ip, c7, c5, 0     // invalidate I & D cache
+              mcr p15, 0, ip, c7, c10, 4    // drain write buffer
+              mcr p15, 0, ip, c8, c7, 0     // invalidate I & D TLBs
+            " ::: "ip" : "volatile");
+
+        CR::write(CR - (CR_A | CR_W | CR_P | CR_D | CR_R | CR_F | CR_Z | CR_V | CR_RR)
+                     | (CR_S | CR_I | CR_C | CR_M));
+    }
 }
 
 pub unsafe fn map(page_ptr: *mut u8, size: uint, flags: Flags) {
@@ -52,31 +128,10 @@ impl Descriptor {
     }
 }
 
-impl core::ops::BitOr<Flags, Descriptor> for Descriptor {
-    #[inline(always)]
-    fn bitor(&self, other: &Flags) -> Descriptor {
-        match (self, other) {
-            (&Descriptor(p), &Flags(f)) => Descriptor(p | f)
-        }
-    }
-}
-
-impl core::ops::BitAnd<Flags, bool> for Descriptor {
-    #[inline(always)]
-    fn bitand(&self, other: &Flags) -> bool {
-        match (self, other) {
-            (&Descriptor(p), &Flags(f)) => p & f != 0
-        }
-    }
-}
+impl_ops!(Descriptor, Flags)
 
 impl PageDirectory {
-    pub unsafe fn enable(&self) {
-        asm!("mov ip, 0
-              mcr p15, 0, ip, c7, c5, 0     // invalidate I cache
-              mcr p15, 0, ip, c7, c10, 4    // drain WB
-              mcr p15, 0, r0, c2, c0, 0     // load page table pointer
-              mcr p15, 0, ip, c8, c7, 0     // invalidate I & D TLBs"
-            :: "{r0}"(self) : "ip")
+    pub unsafe fn map(&self, page_ptr: *mut u8, size: uint, flags: Flags) {
+        // TODO
     }
 }
