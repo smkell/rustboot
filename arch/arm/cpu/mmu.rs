@@ -4,6 +4,12 @@ use core::option::Some;
 use core;
 
 use kernel::memory::physical;
+use kernel::memory::physical::Phys;
+
+pub type Frame = [u8, ..PAGE_SIZE];
+
+static PAGE_SIZE: uint = 0x1000;
+static PAGE_SIZE_LOG2: uint = 12;
 
 // kinda clever
 define_flags!(Flags: u32 {
@@ -29,13 +35,13 @@ pub struct PageDirectory {
 }
 
 pub unsafe fn init() {
-    let dir = physical::zero_alloc_frames(4) as *mut PageDirectory;
+    let dir: Phys<PageDirectory> = physical::zero_alloc_frames(4);
 
-    (*dir).tables[0] = Descriptor::section(0, RW);
-    (*dir).enable();
+    (*dir.as_ptr()).tables[0] = Descriptor::section(0, RW);
+    (*dir.as_ptr()).enable();
 }
 
-pub unsafe fn map(page_ptr: *mut u8, flags: Flags) {
+pub unsafe fn map(page_ptr: *mut u8, size: uint, flags: Flags) {
     // TODO
 }
 

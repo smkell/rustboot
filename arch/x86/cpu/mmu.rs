@@ -1,9 +1,14 @@
 use core::mem::{transmute, size_of};
 use core;
 
-use util::int::range;
+use platform::runtime;
 use kernel::memory::physical;
+use kernel::memory::physical::Phys;
+use util::int::range;
+use util::rt;
 use kernel;
+
+pub type Frame = [u8, ..PAGE_SIZE];
 
 define_flags!(Flags: u32 {
     PRESENT  = 1 << 0,
@@ -14,13 +19,20 @@ define_flags!(Flags: u32 {
 })
 
 #[packed]
-struct Page(u32);
+pub struct Page(u32);
 
 static PAGE_SIZE: uint = 0x1000;
+static PAGE_SIZE_LOG2: uint = 12;
 static ENTRIES:   uint = 1024;
 
 static DIRECTORY_VADDR: u32 = 0xFFFFF000;
-static directory: *mut PageDirectory = DIRECTORY_VADDR as *mut PageDirectory;
+static TEMP1: u32 = 0xFF7FF000;
+
+static directory_temp_tables: *mut Directory = 0xFF800000_u as *mut Directory;
+static directory_temp: *mut PageDirectory = 0xFFBFF000_u as *mut PageDirectory;
+
+static directory_tables: *mut Directory = 0xFFC00000_u as *mut Directory;
+pub static directory: *mut PageDirectory = DIRECTORY_VADDR as *mut PageDirectory;
 
 // U: underlying element type
 #[packed]
@@ -28,33 +40,49 @@ struct Table<U> {
     entries: [Page, ..ENTRIES]
 }
 
+#[packed]
+struct Directory<U = PageTable> {
+    entries: [U, ..ENTRIES]
+}
+
 pub type PageTable = Table<Page>;
 pub type PageDirectory = Table<Table<Page>>;
 
 pub unsafe fn init() {
-    let dir = physical::zero_alloc_frames(1) as *mut PageDirectory;
-    let table = physical::alloc_frames(1) as *mut PageTable;
+    let dir: Phys<PageDirectory> = physical::zero_alloc_frames(1);
+    let table: Phys<PageTable>   = physical::alloc_frames(1);
 
-    (*table).identity_map(0, PRESENT | RW);
-    (*dir).set(transmute(0), table, PRESENT | RW);
+    (*table.as_ptr()).identity_map(0, PRESENT | RW);
+    (*dir.as_ptr()).set_addr(0 as *mut u8, table, PRESENT | RW);
 
     // Map the directory as its own last table.
-    // When accessing its virtual address
-    (*dir).set(directory, dir, PRESENT | RW);
+    // When accessing its virtual address(...)
+    (*dir.as_ptr()).set_addr(directory, dir, PRESENT | RW);
 
     kernel::int_table.map(|mut t| {
         use super::exception::{PageFault, exception_handler};
         t.set_isr(PageFault, true, exception_handler());
     });
 
-    (*dir).switch();
+    switch_directory(dir);
+    enable_paging();
 }
 
-pub unsafe fn map(page_ptr: *mut u8, flags: Flags) {
-    (*directory).map_frame(page_ptr, flags);
-    flush_tlb(page_ptr);
+pub fn switch_directory(dir: Phys<PageDirectory>) {
+    use super::CR3;
+    CR3::write(dir.as_ptr());
 }
 
+fn enable_paging() {
+    use super::{CR0, CR0_PG};
+    CR0::write(CR0 | CR0_PG);
+}
+
+pub unsafe fn map(page_ptr: *mut u8, len: uint, flags: Flags) {
+    (*directory).map(page_ptr, len, flags);
+}
+
+#[inline]
 fn flush_tlb<T>(addr: T) {
     unsafe {
         asm!("invlpg [$0]" :: "r"(addr) : "memory" : "volatile", "intel")
@@ -62,12 +90,18 @@ fn flush_tlb<T>(addr: T) {
 }
 
 impl Page {
-    fn new(addr: u32, flags: Flags) -> Page {
-        Page(addr) | flags
+    fn new<T>(addr: Phys<T>, flags: Flags) -> Page {
+        Page(addr.offset()) | flags
     }
 
     fn at_frame(i: uint, flags: Flags) -> Page {
-        Page::new((i * PAGE_SIZE) as u32, flags)
+        Page((i * PAGE_SIZE) as u32) | flags
+    }
+
+    fn physical<P>(&self) -> Phys<P> {
+        match *self {
+            Page(p) => Phys::at(p & 0xFFFFF000)
+        }
     }
 
     fn present(self) -> bool {
@@ -94,11 +128,23 @@ impl core::ops::BitAnd<Flags, bool> for Page {
 }
 
 impl<U> Table<U> {
-    fn set<T>(&mut self, addr: *mut T, entry: *mut T, flags: Flags) {
+    fn set_addr<S, T>(&mut self, vaddr: *mut S, phys: Phys<T>, flags: Flags) {
+        // FIXME error: internal compiler error: missing default for a not explicitely provided type param
+        self.set(vaddr as uint, Page::new(phys, flags));
+        flush_tlb(vaddr);
+    }
+
+    fn set(&mut self, addr: uint, page: Page) { // TODO addr: Phys<T>
         // update entry, based on the underlying type (page, table)
-        let len = size_of::<U>() / size_of::<Page>();
-        let index = (addr as uint / PAGE_SIZE / len) % ENTRIES;
-        self.entries[index] = Page::new(entry as u32, flags);
+        let size = size_of::<U>() / size_of::<Page>() * PAGE_SIZE;
+        let index = (addr / size) % ENTRIES;
+        self.entries[index] = page;
+    }
+
+    fn get(&self, addr: uint) -> Page {
+        let size = size_of::<U>() / size_of::<Page>() * PAGE_SIZE;
+        let index = (addr / size) % ENTRIES;
+        self.entries[index]
     }
 }
 
@@ -112,34 +158,60 @@ impl Table<Page> {
 
 // Can't impl on typedefs. Rust #9767
 impl Table<Table<Page>> {
-    fn fetch_table(&mut self, addr: u32, flags: Flags) -> *mut PageTable {
-        let index = addr as uint / (PAGE_SIZE * ENTRIES);
-        match self.entries[index] {
-            table @ Page(p) if table.present() => {
-                (p & 0xFFFFF000) as *mut PageTable
+    fn fetch_table<T>(&mut self, vptr: *mut T, flags: Flags) -> *mut PageTable {
+        match self.get(vptr as uint) {
+            table @ Page(_) if table.present() => {
+                table.physical().as_ptr()
             }
             _ => unsafe { // allocate table
-                let table = physical::zero_alloc_frames(1) as *mut PageTable;
-                (*directory).set(addr as *mut PageTable, table, flags);
-                flush_tlb(table);
-                table
+                let table: Phys<PageTable> = physical::zero_alloc_frames(1);
+                (*directory).set_addr(vptr, table, flags); // page fault
+                // flush_tlb(table);
+                table.as_ptr()
             }
         }
     }
 
-    pub unsafe fn map_frame(&mut self, page_ptr: *mut u8, flags: Flags) {
-        let table = self.fetch_table(page_ptr as u32, flags | PRESENT);
-        (*table).set(page_ptr, physical::alloc_frames(1), flags | PRESENT);
+    pub unsafe fn set_page<T>(&mut self, vptr: *mut T, phys: Phys<T>, flags: Flags) -> *mut T {
+        let table = self.fetch_table(vptr, flags);
+        (*table).set_addr(vptr, phys, flags);
+        vptr
     }
 
-    unsafe fn switch(&self) {
-        use super::CR0_PG;
-        asm!("mov cr3, $0
+    pub unsafe fn map_frame(&mut self, vptr: *mut u8, flags: Flags) {
+        self.set_page(vptr, physical::alloc_frames(1), flags | PRESENT);
+    }
 
-              mov eax, cr0
-              or eax, $1
-              mov cr0, eax"
-            :: "{eax}"(self), "n"(CR0_PG.get())
-            :: "intel")
+    pub fn map(&mut self, mut page_ptr: *mut u8, len: uint, flags: Flags) {
+        use util::ptr::mut_offset;
+        // TODO: optimize with uints?
+        unsafe {
+            let end = mut_offset(page_ptr, len as int);
+            while page_ptr < end {
+                self.map_frame(page_ptr, flags);
+                page_ptr = mut_offset(page_ptr, PAGE_SIZE as int);
+            }
+        }
+    }
+
+    pub fn clone(&self) -> *mut Table<Table<Page>> {
+        unsafe {
+            // new directory
+            let dir_phys: Phys<PageDirectory> = physical::zero_alloc_frames(1);
+            let dir_temp = (*directory).set_page(transmute(TEMP1), dir_phys, PRESENT | RW | USER);
+
+            rt::breakpoint();
+            (*dir_temp).set(directory as uint, Page::new(dir_phys, PRESENT | RW));
+            (*dir_temp).set(0, self.get(0));
+
+            let mut i = (ENTRIES * PAGE_SIZE) as uint;
+            while i < 0xC0000000 {
+                (*dir_temp).set(i, self.get(i));
+
+                i += PAGE_SIZE as uint;
+            }
+
+            dir_phys.as_ptr()
+        }
     }
 }
