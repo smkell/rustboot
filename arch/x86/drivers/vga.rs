@@ -37,8 +37,8 @@ impl Char {
 }
 
 pub static SCREEN_SIZE: uint = 80*25;
-type screen = [Char, ..SCREEN_SIZE];
-pub static SCREEN: *mut screen = 0xb8000 as *mut screen;
+type Screen = [Char, ..SCREEN_SIZE];
+pub static SCREEN: *mut Screen = 0xb8000 as *mut Screen;
 
 pub fn clear_screen(bg: Color) {
     unsafe {

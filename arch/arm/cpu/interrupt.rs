@@ -9,11 +9,11 @@ static VT: *u32 = 0 as *u32;
 
 #[repr(u8)]
 pub enum Int {
-    RESET = 0,
-    UNDEF,
+    Reset = 0,
+    Undef,
     SWI, // software interrupt
-    PREFETCH_ABORT,
-    DATA_ABORT,
+    PrefetchAbort,
+    DataAbort,
     IRQ = 6,
     FIQ
 }
@@ -36,6 +36,7 @@ impl Table {
         Table
     }
 
+    #[allow(visible_private_types)]
     pub fn enable(&self, which: Int, isr: unsafe fn()) {
         // Installing exception handlers into the vectors directly [1]
         let vector: u8 = unsafe { transmute(which) };
@@ -50,9 +51,9 @@ impl Table {
             i += 1;
         }
 
-        self.enable(RESET, unsafe { transmute(start) });
+        self.enable(Reset, unsafe { transmute(start) });
         // breakpoints use an UND opcode to trigger UNDEF. [7]
-        self.enable(UNDEF, debug);
+        self.enable(Undef, debug);
 
         unsafe {
             // Enable IRQs [5]

@@ -1,7 +1,6 @@
 use core::mem::{transmute, size_of};
 use core;
 
-use platform::runtime;
 use kernel::mm::physical;
 use kernel::mm::physical::Phys;
 use util::int::range;

@@ -2,8 +2,6 @@ use core::mem::size_of;
 use core::option::{Option, None, Some};
 use core;
 
-use util::rt;
-use util::ptr::mut_offset;
 use kernel::heap;
 use kernel;
 
@@ -179,7 +177,7 @@ impl LocalSegment {
 pub static mut desc_table: Option<gdt::Gdt> = None;
 
 pub fn init() {
-    use cpu::gdt::{Gdt, GdtEntry, GdtAccess, PAGES, SIZE_32, STORAGE, CODE, CODE_READ, DATA_WRITE, TSS, DPL3};
+    use cpu::gdt::{Gdt, GdtEntry, SIZE_32, STORAGE, CODE_READ, DATA_WRITE, DPL3};
 
     let local_data = unsafe {
         heap::zero_alloc::<LocalSegment>(1)

@@ -1,12 +1,13 @@
-use core::mem::{size_of, transmute};
+use core::mem::transmute;
 use core::ptr::offset;
 
 use cpu::DtReg;
 use cpu::exception::Fault;
 use cpu::idt::{IdtEntry, IdtReg, INTR_GATE, PRESENT};
-use drivers::pic;
+use platform::drivers::pic;
 use util::ptr::mut_offset;
 use kernel::heap;
+
 
 pub enum Int {
     Fault(Fault)
@@ -43,6 +44,7 @@ impl Table {
         pic::mask(self.mask);
     }
 
+    #[allow(visible_private_types)]
     pub unsafe fn set_isr(&mut self, val: Fault, code: bool, handler: extern "C" unsafe fn()) {
         *mut_offset(self.table, val as int) = Isr::new(Fault(val), code).idt_entry(handler);
     }

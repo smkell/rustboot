@@ -11,7 +11,7 @@ pub use platform::runtime::{memset, memcpy, memmove};
 #[cfg(target_arch = "arm")]
 pub use support::{memcpy, memmove};
 
-use platform::{cpu, io, drivers};
+use platform::cpu;
 use kernel::util;
 
 mod macros;

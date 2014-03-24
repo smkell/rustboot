@@ -2,6 +2,7 @@ use core::option::{Option, Some, None};
 
 use platform::{cpu, io, drivers};
 use cpu::interrupt;
+pub use cpu::interrupt::Table;
 
 pub mod util;
 pub mod mm;
@@ -10,7 +11,7 @@ pub mod heap;
 #[allow(non_camel_case_types)]
 mod elf;
 
-pub static mut int_table: Option<interrupt::Table> = None;
+pub static mut int_table: Option<Table> = None;
 
 #[lang="start"]
 #[no_mangle]
