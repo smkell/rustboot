@@ -3,8 +3,8 @@ use core::ptr::set_memory;
 use core::option::Some;
 use core;
 
-use kernel::memory::physical;
-use kernel::memory::physical::Phys;
+use kernel::mm::physical;
+use kernel::mm::physical::Phys;
 
 pub type Frame = [u8, ..PAGE_SIZE];
 

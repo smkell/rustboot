@@ -2,16 +2,17 @@ use core::fail::abort;
 use core::mem::transmute;
 
 use kernel::heap;
-use kernel::memory;
-use kernel::memory::Allocator;
+use kernel::mm;
+use kernel::mm::Allocator;
 use cpu::mmu::Frame;
+use util::bitv;
 
-pub static mut frames: memory::Alloc = memory::Alloc {
+pub static mut frames: mm::Alloc = mm::Alloc {
     base: 0x200_000 as *mut u8,
     el_size: 12,
-    parent: memory::BuddyAlloc {
+    parent: mm::BuddyAlloc {
         order: 13,
-        tree: memory::Bitv { storage: 0 as memory::BitvStorage }
+        tree: bitv::Bitv { storage: 0 as *mut u32 }
     }
 };
 
@@ -24,7 +25,7 @@ impl<T> Phys<T> {
         Phys { ptr: offset as *mut T }
     }
 
-    /*unsafe*/ pub fn as_ptr(&self) -> *mut T {
+    pub fn as_ptr(&self) -> *mut T {
         match *self {
             Phys { ptr: p } => p
         }
@@ -34,15 +35,12 @@ impl<T> Phys<T> {
         unsafe {
             transmute(*self)
         }
-        // match *self {
-        //     Phys { ptr: p } => unsafe { transmute(p) }
-        // }
     }
 }
 
 pub fn init() {
     unsafe {
-        frames.parent.tree.storage = heap::zero_alloc::<u32>(1024) as memory::BitvStorage;
+        frames.parent.tree.storage = heap::zero_alloc::<u32>(1024);
     }
 }
 
@@ -58,4 +56,9 @@ pub unsafe fn zero_alloc_frames<T = Frame>(count: uint) -> Phys<T> {
         (_, 0) => abort(),
         (ptr, _) => Phys { ptr: ptr as *mut T }
     }
+}
+
+#[inline]
+pub unsafe fn free_frames<T>(ptr: Phys<T>) {
+    frames.free(ptr.offset() as *mut u8);
 }

@@ -2,6 +2,7 @@ use core::ptr::{copy_nonoverlapping_memory, set_memory, offset};
 use core::mem::transmute;
 use core::option::{Option, Some, None};
 
+use kernel::mm::virtual;
 use util::ptr::mut_offset;
 
 use self::elf32::Elf32_Ehdr;
@@ -43,8 +44,6 @@ struct ELFIdent {
 
 impl elf32::Elf32_Phdr {
     unsafe fn load(&self, buffer: *u8) {
-        use kernel::memory::virtual;
-
         let vaddr = self.p_vaddr as *mut u8;
         let mem_size = self.p_memsz as uint;
         let file_pos = self.p_offset as int;
@@ -59,8 +58,6 @@ impl elf32::Elf32_Phdr {
 
 impl elf64::Elf64_Phdr {
     unsafe fn load(&self, buffer: *u8) {
-        use kernel::memory::virtual;
-
         let vaddr = self.p_vaddr as *mut u8;
         let mem_size = self.p_memsz as uint;
         let file_pos = self.p_offset as int;

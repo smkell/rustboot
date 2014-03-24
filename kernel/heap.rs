@@ -2,21 +2,21 @@ use core::fail::out_of_memory;
 use core::mem::size_of;
 use core::uint::mul_with_overflow;
 
-use kernel::memory;
-use kernel::memory::Allocator;
+use kernel::mm::{Allocator, Alloc, BuddyAlloc};
+use util::bitv;
 
-pub static mut heap: memory::Alloc = memory::Alloc {
+pub static mut heap: Alloc = Alloc {
     base: 0x110_000 as *mut u8,
     el_size: 0,
-    parent: memory::BuddyAlloc {
+    parent: BuddyAlloc {
         order: 17,
-        tree: memory::Bitv { storage: 0x100_000 as memory::BitvStorage }
+        tree: bitv::Bitv { storage: 0x100_000 as *mut u32 }
     }
 };
 
 pub fn init() {
     unsafe {
-        heap.parent.tree.init();
+        heap.parent.tree.clear(1 << (heap.parent.order + 1));
     }
 }
 
