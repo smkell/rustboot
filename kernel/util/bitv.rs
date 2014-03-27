@@ -22,7 +22,7 @@ impl Bitv {
         let w = (i / 16) as int;
         let b = (i % 16) * 2;
         unsafe {
-            *mut_offset(self.storage, w) &=  !(3 << b) | (x as u32 << b)
+            *mut_offset(self.storage, w) = *mut_offset(self.storage, w) & !(3 << b) | (x as u32 << b)
         }
     }
 

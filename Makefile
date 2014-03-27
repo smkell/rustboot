@@ -4,6 +4,8 @@ LLVM_ROOT := /usr
 GCC_PREFIX := /usr/bin/
 SHELL := /bin/bash
 
+-include ./config.mk
+
 export RUST_ROOT
 export LLVM_ROOT
 export GCC_PREFIX
