@@ -4,7 +4,7 @@ use util::ptr::mut_offset;
 
 // vector of 2-bit
 pub struct Bitv {
-    storage: *mut u32
+    pub storage: *mut u32
 }
 
 impl Bitv {

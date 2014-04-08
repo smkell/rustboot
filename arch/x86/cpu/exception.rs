@@ -53,7 +53,7 @@ static Exceptions: &'static [&'static str] = &[
 #[inline(never)]
 unsafe fn blue_screen(stack: &Context) {
     io::puts("Exception ");
-    io::puts(Exceptions[stack.int_no]);
+    io::puts(Exceptions[stack.int_no as uint]);
     asm!("hlt");
 }
 

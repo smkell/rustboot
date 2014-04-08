@@ -1,7 +1,7 @@
-#[crate_id = "main#0.2.2"];
-#[crate_type = "lib"];
-#[no_std];
-#[feature(asm, macro_rules, default_type_params, phase)];
+#![crate_id = "main#0.2.2"]
+#![crate_type = "lib"]
+#![no_std]
+#![feature(asm, macro_rules, default_type_params, phase)]
 
 #[phase(syntax, link)]
 extern crate core;

@@ -33,14 +33,14 @@ pub trait Allocator {
 }
 
 pub struct BuddyAlloc {
-    order: uint,
-    tree: Bitv
+    pub order: uint,
+    pub tree: Bitv
 }
 
 pub struct Alloc {
-    parent: BuddyAlloc,
-    base: *mut u8,
-    el_size: uint
+    pub parent: BuddyAlloc,
+    pub base: *mut u8,
+    pub el_size: uint
 }
 
 impl BuddyAlloc {

@@ -12,11 +12,11 @@ pub type IdtReg = DtReg<IdtEntry>;
 
 #[packed]
 pub struct IdtEntry {
-    priv addr_lo: u16,
-    priv sel: u16,
-    priv zero: u8,
-    priv flags: IdtFlags,
-    priv addr_hi: u16
+    addr_lo: u16,
+    sel: u16,
+    zero: u8,
+    flags: IdtFlags,
+    addr_hi: u16
 }
 
 impl IdtEntry {

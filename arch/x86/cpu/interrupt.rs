@@ -14,9 +14,9 @@ pub enum Int {
 }
 
 pub struct Table {
-    priv reg: &'static IdtReg,
-    priv table: *mut IdtEntry,
-    priv mask: u16,
+    reg: &'static IdtReg,
+    table: *mut IdtEntry,
+    mask: u16,
 }
 
 impl Table {
@@ -65,11 +65,11 @@ fn enable() {
 
 #[packed]
 pub struct Isr {
-    priv push_dummy: u8, // push eax  // (only for exceptions without error codes)
-    priv push: u8,       // push byte <imm>  // save int. number
-    priv value: Int,
-    priv jmp: u8,        // jmp rel  // jump to the common handler
-    priv rel: i32
+    push_dummy: u8, // push eax  // (only for exceptions without error codes)
+    push: u8,       // push byte <imm>  // save int. number
+    value: Int,
+    jmp: u8,        // jmp rel  // jump to the common handler
+    rel: i32
 }
 
 impl Isr {

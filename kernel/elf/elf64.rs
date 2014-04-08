@@ -37,14 +37,14 @@ pub struct Elf64_Ehdr {
 
 #[packed]
 pub struct Elf64_Phdr {
-    p_type: super::HeaderType,
-    p_flags: Elf64_Word,
-    p_offset: Elf64_Off,
-    p_vaddr: Elf64_Addr,
-    p_paddr: Elf64_Addr,
-    p_filesz: Elf64_Xword,
-    p_memsz: Elf64_Xword,
-    p_align: Elf64_Xword,
+    pub p_type: super::HeaderType,
+    pub p_flags: Elf64_Word,
+    pub p_offset: Elf64_Off,
+    pub p_vaddr: Elf64_Addr,
+    pub p_paddr: Elf64_Addr,
+    pub p_filesz: Elf64_Xword,
+    pub p_memsz: Elf64_Xword,
+    pub p_align: Elf64_Xword,
 }
 
 #[packed]

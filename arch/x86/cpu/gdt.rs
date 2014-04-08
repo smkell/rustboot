@@ -32,12 +32,12 @@ pub type GdtReg = DtReg<GdtEntry>;
 
 #[packed]
 pub struct GdtEntry {
-    priv limit_lo: u16,
-    priv base_lo: u16,
-    priv base_hl: u8,
-    priv access: u8, // TODO: use GdtAccess here
-    priv limit_hi_flags: u8,
-    priv base_hh: u8
+    limit_lo: u16,
+    base_lo: u16,
+    base_hl: u8,
+    access: u8, // TODO: use GdtAccess here
+    limit_hi_flags: u8,
+    base_hh: u8
 }
 
 impl GdtEntry {
@@ -72,8 +72,8 @@ impl GdtEntry {
 }
 
 pub struct Gdt {
-    priv reg: *GdtReg,
-    priv table: *mut GdtEntry
+    reg: *GdtReg,
+    table: *mut GdtEntry
 }
 
 impl Gdt {

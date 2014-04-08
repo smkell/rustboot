@@ -1,5 +1,5 @@
 // based on define_flags by lexs
-#[macro_escape];
+#![macro_escape]
 
 macro_rules! define_flags (
     (

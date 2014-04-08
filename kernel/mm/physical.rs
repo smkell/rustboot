@@ -17,7 +17,7 @@ pub static mut frames: mm::Alloc = mm::Alloc {
 };
 
 pub struct Phys<T> {
-    priv ptr: *mut T
+    ptr: *mut T
 }
 
 impl<T> Phys<T> {
