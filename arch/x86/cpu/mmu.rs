@@ -1,4 +1,5 @@
 use core::mem::{transmute, size_of};
+use core::ptr::copy_nonoverlapping_memory;
 use core;
 
 use kernel::mm::physical;
@@ -9,7 +10,8 @@ use kernel;
 
 pub type Frame = [u8, ..PAGE_SIZE];
 
-define_flags!(Flags: u32 {
+// 32380 => 32460 bytes!
+define_flags!(Flags: uint {
     PRESENT  = 1 << 0,
     RW       = 1 << 1,
     USER     = 1 << 2,
@@ -18,20 +20,20 @@ define_flags!(Flags: u32 {
 })
 
 #[packed]
-pub struct Page(u32);
+pub struct Page(uint);
 
 static PAGE_SIZE: uint = 0x1000;
 static PAGE_SIZE_LOG2: uint = 12;
 static ENTRIES:   uint = 1024;
 
-static DIRECTORY_VADDR: u32 = 0xFFFFF000;
-static TEMP1: u32 = 0xFF7FF000;
+static DIR_VADDR: uint = 0xFFFFF000;
+static TEMP1: uint = 0xFF7FF000;
 
 static directory_temp_tables: *mut Directory = 0xFF800000_u as *mut Directory;
 static directory_temp: *mut PageDirectory = 0xFFBFF000_u as *mut PageDirectory;
 
 static directory_tables: *mut Directory = 0xFFC00000_u as *mut Directory;
-pub static directory: *mut PageDirectory = DIRECTORY_VADDR as *mut PageDirectory;
+pub static directory: *mut PageDirectory = DIR_VADDR as *mut PageDirectory;
 
 // U: underlying element type
 #[packed]
@@ -56,7 +58,7 @@ pub unsafe fn init() {
 
     // Map the directory as its own last table.
     // When accessing its virtual address(...)
-    (*dir.as_ptr()).set_addr(directory, dir, PRESENT | RW);
+    (*dir.as_ptr()).map_self(dir);
 
     kernel::int_table.map(|mut t| {
         use super::exception::{PageFault, exception_handler};
@@ -94,7 +96,7 @@ impl Page {
     }
 
     fn at_frame(i: uint, flags: Flags) -> Page {
-        Page((i * PAGE_SIZE) as u32) | flags
+        Page(i * PAGE_SIZE) | flags
     }
 
     fn physical<P>(&self) -> Phys<P> {
@@ -164,7 +166,7 @@ impl Table<Table<Page>> {
             }
             _ => unsafe { // allocate table
                 let table: Phys<PageTable> = physical::zero_alloc_frames(1);
-                (*directory).set_addr(vptr, table, flags); // page fault
+                self.set_addr(vptr, table, flags); // page fault
                 // flush_tlb(table);
                 table.as_ptr()
             }
@@ -187,30 +189,30 @@ impl Table<Table<Page>> {
         unsafe {
             let end = mut_offset(page_ptr, len as int);
             while page_ptr < end {
-                self.map_frame(page_ptr, flags);
+                let frame = physical::alloc_frames(1);
+                self.set_page(page_ptr, frame, flags | PRESENT);
+                (*directory).set_page(page_ptr, frame, flags | PRESENT);
                 page_ptr = mut_offset(page_ptr, PAGE_SIZE as int);
             }
         }
     }
 
-    pub fn clone(&self) -> *mut Table<Table<Page>> {
+    fn map_self(&mut self, this: Phys<PageDirectory>) {
+        self.set(directory as uint, Page::new(this, PRESENT | RW));
+    }
+
+    pub fn clone(&self) -> Phys<PageDirectory> {
         unsafe {
             // new directory
             let dir_phys: Phys<PageDirectory> = physical::zero_alloc_frames(1);
-            let dir_temp = (*directory).set_page(transmute(TEMP1), dir_phys, PRESENT | RW | USER);
+            let dir_temp = (*directory).set_page(transmute(TEMP1), dir_phys, PRESENT | RW);
 
-            rt::breakpoint();
-            (*dir_temp).set(directory as uint, Page::new(dir_phys, PRESENT | RW));
-            (*dir_temp).set(0, self.get(0));
+            (*dir_temp).map_self(dir_phys);
 
-            let mut i = (ENTRIES * PAGE_SIZE) as uint;
-            while i < 0xC0000000 {
-                (*dir_temp).set(i, self.get(i));
+            let cnt = 0xC0000000 / (ENTRIES * PAGE_SIZE);
+            copy_nonoverlapping_memory(dir_temp as *mut Page, &self.entries as *Page, cnt);
 
-                i += PAGE_SIZE as uint;
-            }
-
-            dir_phys.as_ptr()
+            dir_phys
         }
     }
 }

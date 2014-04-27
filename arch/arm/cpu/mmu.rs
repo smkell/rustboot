@@ -32,6 +32,8 @@ pub struct PageDirectory {
     entries: [Descriptor, ..4096]
 }
 
+pub static mut directory: *mut PageDirectory = 0 as *mut PageDirectory;
+
 define_reg!(CR, CRFlags: uint {
     CR_M  = 1 << 0,  // MMU enable
     CR_A  = 1 << 1,
@@ -131,5 +133,9 @@ impl_ops!(Descriptor, Flags)
 impl PageDirectory {
     pub unsafe fn map(&self, _: *mut u8, _: uint, _: Flags) {
         // TODO
+    }
+
+    pub unsafe fn clone(&mut self) -> *mut PageDirectory {
+        self as *mut PageDirectory
     }
 }

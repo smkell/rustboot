@@ -5,7 +5,6 @@ pub use self::allocator::{
 };
 
 pub use cpu::mmu::{
-	map,
 	Flags,
 	Frame,
 	PageDirectory,

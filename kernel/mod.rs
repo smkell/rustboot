@@ -7,6 +7,7 @@ pub use cpu::interrupt::Table;
 pub mod util;
 pub mod mm;
 pub mod heap;
+mod process;
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 mod elf;

@@ -18,7 +18,7 @@ type c_uchar = u8;
 type c_void = uint;
 
 #[packed]
-pub struct Elf64_Ehdr {
+pub struct Ehdr {
     e_ident: [c_uchar, ..16u],
     e_type: Elf64_Half,
     e_machine: Elf64_Half,
@@ -125,24 +125,28 @@ pub struct Elf64_Vernaux {
     vna_name: Elf64_Word,
     vna_next: Elf64_Word,
 }
-pub struct Union_Unnamed4 {
+
+pub struct AuxvValue {
     data: [c_uchar, ..8u],
 }
-impl Union_Unnamed4 {
+
+impl AuxvValue {
     pub fn a_val(&mut self) -> *mut c_long {
         unsafe { transmute(self) }
     }
     pub fn a_ptr(&mut self) -> *mut *mut c_void {
         unsafe { transmute(self) }
     }
-    pub fn a_fcn(&mut self) -> *mut extern "C" fn() {
+    pub fn a_fcn(&mut self) -> *mut extern fn() {
         unsafe { transmute(self) }
     }
 }
-pub struct Elf64_auxv_t {
+
+pub struct Auxv {
     a_type: c_long,
-    a_un: Union_Unnamed4,
+    a_un: AuxvValue,
 }
+
 pub struct Elf64_Nhdr {
     n_namesz: Elf64_Word,
     n_descsz: Elf64_Word,
@@ -154,22 +158,4 @@ pub struct Elf64_Lib {
     l_checksum: Elf64_Word,
     l_version: Elf64_Word,
     l_flags: Elf64_Word,
-}
-
-impl super::Ehdr for Elf64_Ehdr {
-    // unsafe fn load(&self, buffer: *u8) -> extern "C" fn();
-    unsafe fn load(&self) -> extern "C" fn() {
-        //TODO: Verify file integrity
-        let buffer: *u8 = transmute(self);
-        let pheader = offset(buffer, self.e_phoff as int) as *Elf64_Phdr;
-
-        range(0, self.e_phnum as uint, |_| {
-            match (*pheader).p_type {
-                PT_LOAD => (*pheader).load(buffer),
-                _ => {}
-            }
-        });
-        // return entry address
-        transmute(self.e_entry)
-    }
 }

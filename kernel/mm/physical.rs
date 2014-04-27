@@ -21,7 +21,7 @@ pub struct Phys<T> {
 }
 
 impl<T> Phys<T> {
-    pub fn at(offset: u32) -> Phys<T> {
+    pub fn at(offset: uint) -> Phys<T> {
         Phys { ptr: offset as *mut T }
     }
 
@@ -31,7 +31,7 @@ impl<T> Phys<T> {
         }
     }
 
-    pub fn offset(&self) -> u32 {
+    pub fn offset(&self) -> uint {
         unsafe {
             transmute(*self)
         }
