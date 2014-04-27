@@ -4,6 +4,14 @@ pub use self::allocator::{
 	Alloc,
 };
 
+pub use cpu::mmu::{
+	map,
+	Flags,
+	Frame,
+	PageDirectory,
+	RW,
+	USER
+};
+
 pub mod allocator;
 pub mod physical;
-pub mod virtual;

@@ -2,7 +2,7 @@ use core::ptr::{copy_nonoverlapping_memory, set_memory, offset};
 use core::mem::transmute;
 use core::option::{Option, Some, None};
 
-use kernel::mm::virtual;
+use kernel::mm;
 use util::ptr::mut_offset;
 
 use self::elf32::Elf32_Ehdr;
@@ -49,7 +49,7 @@ impl elf32::Elf32_Phdr {
         let file_pos = self.p_offset as int;
         let file_size = self.p_filesz as uint;
 
-        virtual::map(vaddr, mem_size, virtual::RW | virtual::USER);
+        mm::map(vaddr, mem_size, mm::RW | mm::USER);
 
         copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
         set_memory(mut_offset(vaddr, file_pos + file_size as int), 0, mem_size - file_size);
@@ -63,7 +63,7 @@ impl elf64::Elf64_Phdr {
         let file_pos = self.p_offset as int;
         let file_size = self.p_filesz as uint;
 
-        virtual::map(vaddr, mem_size, virtual::RW | virtual::USER);
+        mm::map(vaddr, mem_size, mm::RW | mm::USER);
 
         copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
         set_memory(mut_offset(vaddr, file_pos + file_size as int), 0, mem_size - file_size);

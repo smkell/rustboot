@@ -6,7 +6,7 @@
  * udivmoddi4
  */
 
-use core::i32::{ctlz32, cttz32};
+use core::u32::{ctlz32, cttz32};
 use core::mem::{transmute, size_of};
 
 mod detail {
@@ -163,7 +163,7 @@ fn udivmoddi4(a: u64, b: u64) -> (u64, u64) {
          */
         if (d.high & (d.high - 1)) == 0 {   /* if d is a power of 2 */
             return unsafe { (
-                (n.high >> cttz32(d.high)) as u64,
+                (n.high >> cttz32(d.high as u32)) as u64,
                 transmute(UdWords {
                     low: n.low,
                     high: n.high & (d.high - 1)
@@ -174,7 +174,7 @@ fn udivmoddi4(a: u64, b: u64) -> (u64, u64) {
          * ---
          * K 0
          */
-        sr = unsafe { ctlz32(d.high) - ctlz32(n.high) };
+        sr = unsafe { ctlz32(d.high as u32) - ctlz32(n.high as u32) } as i32;
         /* 0 <= sr <= n_uword_bits - 2 or sr large */
         if sr > n_uword_bits - 2 {
             return (0, a);
@@ -203,7 +203,7 @@ fn udivmoddi4(a: u64, b: u64) -> (u64, u64) {
                 if d.low == 1 {
                     return (a, rem);
                 }
-                sr = unsafe { cttz32(d.low) };
+                sr = unsafe { cttz32(d.low as u32) } as i32;
                 q = UdWords {
                     high: n.high >> sr,
                     low: (n.high << (n_uword_bits - sr)) | (n.low >> sr)
@@ -214,7 +214,7 @@ fn udivmoddi4(a: u64, b: u64) -> (u64, u64) {
              * ---
              *0 K
              */
-            sr = 1 + n_uword_bits + unsafe { ctlz32(d.low) - ctlz32(n.high) };
+            sr = 1 + n_uword_bits + unsafe { ctlz32(d.low as u32) - ctlz32(n.high as u32) } as i32;
             /* 2 <= sr <= n_udword_bits - 1
              * q.all = n.all << (n_udword_bits - sr);
              * r.all = n.all >> sr;
@@ -266,7 +266,7 @@ fn udivmoddi4(a: u64, b: u64) -> (u64, u64) {
              * ---
              * K K
              */
-            sr = unsafe { ctlz32(d.high) - ctlz32(n.high) };
+            sr = unsafe { ctlz32(d.high as u32) - ctlz32(n.high as u32) } as i32;
             /* 0 <= sr <= n_uword_bits - 1 or sr large */
             if sr > n_uword_bits - 1 {
                 return (0, a);

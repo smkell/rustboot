@@ -1,6 +1,7 @@
 use core::mem::transmute;
 use core::ptr::{set_memory, copy_memory, offset};
-use core::i32::ctlz32;
+use core::u32::ctlz32;
+use core::cmp::expect;
 
 use util::ptr::mut_offset;
 use util::bitv::Bitv;
@@ -59,7 +60,7 @@ impl BuddyAlloc {
             size = 1;
         }
         // smallest power of 2 >= size
-        let lg2_size = 32 - unsafe { ctlz32(size as i32 - 1) } as uint;
+        let lg2_size = 32 - unsafe { ctlz32(size as u32 - 1) } as uint;
 
         let mut index = 0; // points to current tree node
         let mut level = self.order; // current height
