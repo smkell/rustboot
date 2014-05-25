@@ -61,7 +61,7 @@ fn keypress(code: u8) {
 
 #[no_split_stack]
 #[inline(never)]
-pub unsafe fn isr_addr() -> extern "C" unsafe fn() {
+pub unsafe fn isr_addr() -> unsafe extern "C" fn() {
     asm!("jmp skip_isr_addr
       isr_addr_asm:
           push gs

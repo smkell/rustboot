@@ -59,7 +59,7 @@ unsafe fn blue_screen(stack: &Context) {
 
 #[no_split_stack]
 #[inline(never)]
-pub unsafe fn exception_handler() -> extern "C" unsafe fn() {
+pub unsafe fn exception_handler() -> unsafe extern "C" fn() {
     asm!("jmp skip_exception_handler
       exception_handler_asm:"
         :::: "volatile", "intel");

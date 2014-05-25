@@ -20,7 +20,7 @@ pub struct IdtEntry {
 }
 
 impl IdtEntry {
-    pub fn new(func: extern unsafe fn(), sel: u16, flags: IdtFlags) -> IdtEntry {
+    pub fn new(func: unsafe extern "Rust" fn(), sel: u16, flags: IdtFlags) -> IdtEntry {
         let addr = func as uint;
         let (addr_hi, addr_lo) = (
             (addr & 0xFFFF0000) >> 16,
