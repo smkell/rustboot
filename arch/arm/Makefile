@@ -1,30 +1,30 @@
-TARGET := arm-linux-noeabi
+TARGET         := arm-linux-noeabi
 
-GCC_PREFIX := $(GCC_PREFIX)arm-none-eabi-
+GCC_PREFIX     := $(GCC_PREFIX)arm-none-eabi-
 
-RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -g
+RUSTC          := $(RUST_ROOT)/bin/rustc
+RUSTCFLAGS     := -O --target $(TARGET) -Z no-landing-pads -g
 
-AS := $(GCC_PREFIX)as
-LD := $(GCC_PREFIX)ld
+AS             := $(GCC_PREFIX)as
+LD             := $(GCC_PREFIX)ld
 
-LLC := $(LLVM_ROOT)/bin/llc
-LLCFLAGS := -mtriple=$(TARGET) -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
+LLC            := $(LLVM_ROOT)/bin/llc
+LLCFLAGS       := -mtriple=$(TARGET) -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
 
-GDB := $(GCC_PREFIX)gdb
-OBJCOPY := $(GCC_PREFIX)objcopy
-QEMU := qemu-system-arm
+GDB            := $(GCC_PREFIX)gdb
+OBJCOPY        := $(GCC_PREFIX)objcopy
+QEMU           := qemu-system-arm
 
-BDIR := ./boot
-CORE_LIB := ../../rust-core/core/lib.rs
-LCORE := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
+BDIR           := ./boot
+CORE_LIB       := ../../rust-core/core/lib.rs
+LCORE          := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
 
-OBJS := $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
-LINK := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
+OBJS           := $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
+LINK           := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 
-DEP_RM := arch\/
-DEP_KEEP := arch\/arm
-DEP_SCRIPT := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
+DEP_RM         := arch\/
+DEP_KEEP       := arch\/arm
+DEP_SCRIPT     := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
 
 -include ./config.mk
 -include $(BDIR)/core.d

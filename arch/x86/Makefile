@@ -1,33 +1,33 @@
-TARGET := i686-intel-linux
+TARGET         := i686-intel-linux
 
-RUSTC := $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS := -O --target $(TARGET) -Z no-landing-pads -g
+RUSTC          := $(RUST_ROOT)/bin/rustc
+RUSTCFLAGS     := -O --target $(TARGET) -Z no-landing-pads -g
 
-CC := $(LLVM_ROOT)/bin/clang
-CFLAGS := -O3 -ffreestanding -target $(TARGET)
+CC             := $(LLVM_ROOT)/bin/clang
+CFLAGS         := -O3 -ffreestanding -target $(TARGET)
 
-LD := $(GCC_PREFIX)ld
-LDFLAGS := -melf_i386
+LD             := $(GCC_PREFIX)ld
+LDFLAGS        := -melf_i386
 
-ASM := nasm
-ASMFLAGS := -g -f elf32
+ASM            := nasm
+ASMFLAGS       := -g -f elf32
 
-GDB := $(GCC_PREFIX)gdb
-OBJCOPY := $(GCC_PREFIX)objcopy
-QEMU := qemu-system-i386
+GDB            := $(GCC_PREFIX)gdb
+OBJCOPY        := $(GCC_PREFIX)objcopy
+QEMU           := qemu-system-i386
 
-BDIR := ./boot
-CORE_LIB := ../../rust-core/core/lib.rs
-LCORE := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
-OBJS := $(BDIR)/loader.o $(BDIR)/main.o
-LINK := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
-LIBS := $(LCORE)
+BDIR           := ./boot
+CORE_LIB       := ../../rust-core/core/lib.rs
+LCORE          := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
+OBJS           := $(BDIR)/loader.o $(BDIR)/main.o
+LINK           := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
+LIBS           := $(LCORE)
 
-SECTIONS := .text .data .rodata
+SECTIONS       := .text .data .rodata
 
-DEP_RM := arch\/
-DEP_KEEP := arch\/i686\|arch\/common
-DEP_SCRIPT := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
+DEP_RM         := arch\/
+DEP_KEEP       := arch\/i686\|arch\/common
+DEP_SCRIPT     := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
 
 -include ./config.mk
 -include $(BDIR)/core.d
