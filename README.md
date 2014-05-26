@@ -1,27 +1,28 @@
 rustboot
---------
+================================================================================
 A small kernel written in Rust.
 
-It paints the screen bright red and then displays some information. You can write. That's it:
+It paints the screen bright red and then displays some information. You can
+write. That's it:
 
 ![][x86_run]
 
 ![][arm_dbg]
 
-## Setup
+Setup
+--------------------------------------------------------------------------------
 
 You need a few things to run rustboot:
 
-1. [rust-core][rc]
-2. [Rust's `master` branch][rm] or 0.9 release
-3. qemu
-4. On x86
+1. [Rust's `master` branch][rm]
+2. qemu
+3. On x86
   * clang
   * nasm
-5. On ARM
+4. On ARM
   * binutils for arm-none-eabi
   * gcc cross-compiler
-6. Optionally for debugging
+5. Optionally for debugging
   * gdb
   * tmux
 
@@ -31,7 +32,7 @@ Clone this repository and update rust-core.
 $ git clone https://github.com/pczarn/rustboot.git
 $ cd rustboot
 $ git submodule update --init
-### you can also pull latest rust-core:
+# you can also pull latest rust-core:
 $ git submodule foreach git pull origin master
 ```
 
@@ -71,7 +72,8 @@ $ ./configure --target=i386-elf
 $ make && make install
 ```
 
-## Running it
+Running it
+--------------------------------------------------------------------------------
 
 To compile, simply execute `make` command.
 
@@ -82,7 +84,6 @@ $ make arch=arm run   # run on ARM
 $ make arch=arm debug # debug on ARM
 ```
 
-[rc]: https://github.com/thestinger/rust-core
 [rm]: https://github.com/mozilla/rust
 [x86_run]: http://i.imgur.com/XW8PUlM.png
 [arm_dbg]: http://i.imgur.com/3cHXx2D.png
