@@ -1,11 +1,11 @@
 // bits of things mined from rust-core
 
-mod c_types;
-mod fail;
+pub mod c_types;
+pub mod fail;
 
 #[cfg(target_arch = "x86")]
 #[macro_escape]
-mod macros;
+pub mod macros;
 
 #[cfg(target_arch = "arm")]
-mod support;
+pub mod support;

@@ -3,6 +3,7 @@ use core::intrinsics::offset;
 use core::mem::transmute;
 use core::option::{Option, Some, None};
 use core::str;
+use core::str::StrSlice;
 use core::slice;
 use core;
 
@@ -126,8 +127,8 @@ impl self::Phdr {
 impl ELFIdent {
     unsafe fn load(&self) -> Option<&Ehdr> {
         // TODO: check endianness
-        static MAGIC: *u32 = "\u007fELF".as_bytes().to_ptr() as *u32;
-        if *MAGIC != transmute(self.ei_mag) {
+        static MAGIC_STRING : &'static str = "\u007fELF";
+        if *(MAGIC_STRING.as_ptr() as *u32) != transmute(self.ei_mag) {
             return None;
         }
 

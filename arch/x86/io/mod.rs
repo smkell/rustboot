@@ -1,5 +1,7 @@
 use core::option::{Some, None};
 use core::{str, slice};
+use core::str::StrSlice;
+use core::slice::ImmutableVector;
 use core::iter::Iterator;
 
 use super::drivers::vga;
@@ -53,7 +55,7 @@ pub fn puti(num: int) {
 }
 
 pub fn puts(s: &str) {
-    for c in slice::iter(str::as_bytes(s)) {
+    for c in s.as_bytes().iter() {
         putc(*c);
     }
 }

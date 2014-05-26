@@ -1,4 +1,3 @@
-use core::fail::abort;
 use core::mem::transmute;
 
 use kernel::heap;
@@ -6,6 +5,8 @@ use kernel::mm;
 use kernel::mm::Allocator;
 use cpu::mmu::Frame;
 use util::bitv;
+
+use rust_core::fail::abort;
 
 pub static mut frames: mm::Alloc = mm::Alloc {
     base: 0x200_000 as *mut u8,

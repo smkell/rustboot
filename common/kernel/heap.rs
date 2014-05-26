@@ -1,9 +1,10 @@
-use core::fail::out_of_memory;
 use core::mem::size_of;
 
 use kernel::util::int::uint_mul_with_overflow;
 use kernel::mm::{Allocator, Alloc, BuddyAlloc};
 use util::bitv;
+
+use rust_core::fail::out_of_memory;
 
 pub static mut heap: Alloc = Alloc {
     base: 0x110_000 as *mut u8,
@@ -37,7 +38,7 @@ pub unsafe fn free<T>(ptr: *mut T) {
 
 #[inline]
 pub unsafe fn alloc<T = u8>(count: uint) -> *mut T {
-    match mul_with_overflow(count, size_of::<T>()) {
+    match uint_mul_with_overflow(count, size_of::<T>()) {
         (_, true) => out_of_memory(),
         (size, _) => malloc_raw(size) as *mut T
     }
@@ -45,7 +46,7 @@ pub unsafe fn alloc<T = u8>(count: uint) -> *mut T {
 
 #[inline]
 pub unsafe fn zero_alloc<T = u8>(count: uint) -> *mut T {
-    match mul_with_overflow(count, size_of::<T>()) {
+    match uint_mul_with_overflow(count, size_of::<T>()) {
         (_, true) => out_of_memory(),
         (size, _) => match heap.zero_alloc(size) {
             (_, 0) => out_of_memory(),
@@ -56,7 +57,7 @@ pub unsafe fn zero_alloc<T = u8>(count: uint) -> *mut T {
 
 #[inline]
 pub unsafe fn realloc_raw<T>(ptr: *mut T, count: uint) -> *mut T {
-    match mul_with_overflow(count, size_of::<T>()) {
+    match uint_mul_with_overflow(count, size_of::<T>()) {
         (_, true) => out_of_memory(),
         (0, _) => {
             free(ptr);
@@ -67,18 +68,4 @@ pub unsafe fn realloc_raw<T>(ptr: *mut T, count: uint) -> *mut T {
             (ptr, _) => ptr as *mut T
         }
     }
-}
-
-#[cfg(target_word_size = "32")]
-#[inline(always)]
-pub fn mul_with_overflow(x: uint, y: uint) -> (int, bool) {
-    let (a, b) = core::intrinsic::mul_with_overflow(x as i32, y as i32);
-    (a as int, b)
-}
-
-#[cfg(target_word_size = "64")]
-#[inline(always)]
-pub fn mul_with_overflow(x: int, y: int) -> (int, bool) {
-    let (a, b) = ::i64::mul_with_overflow(x as i64, y as i64);
-    (a as int, b)
 }

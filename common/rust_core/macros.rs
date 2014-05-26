@@ -10,11 +10,16 @@
 
 #![macro_export]
 
+extern {
+    #[link_name = "llvm.expect.i8"]
+    pub fn u8_expect(val: u8, expected_val: u8) -> u8;
+}
+
 macro_rules! likely(
     ($val:expr) => {
         {
             let x: bool = $val;
-            unsafe { expect(x as u8, 1) != 0 }
+            unsafe { ::rust_core::macros::u8_expect(x as u8, 1) != 0 }
         }
     }
 )
@@ -23,7 +28,7 @@ macro_rules! unlikely(
     ($val:expr) => {
         {
             let x: bool = $val;
-            unsafe { expect(x as u8, 0) != 0 }
+            unsafe { ::rust_core::macros::u8_expect(x as u8, 0) != 0 }
         }
     }
 )

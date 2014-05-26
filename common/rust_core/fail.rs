@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use c_types::c_int;
+use rust_core::c_types::c_int;
 
 mod detail {
     extern {
@@ -24,18 +24,6 @@ pub fn abort() -> ! {
 
 pub fn breakpoint() {
     unsafe { detail::breakpoint() }
-}
-
-#[inline]
-#[lang="fail_bounds_check"]
-pub fn fail_bounds_check(_: *u8, _: uint, _: uint, _: uint) -> ! {
-    abort()
-}
-
-#[inline]
-#[lang="fail_"]
-pub fn fail_(_: *u8, _: *u8, _: uint) -> ! {
-    abort()
 }
 
 #[inline]
