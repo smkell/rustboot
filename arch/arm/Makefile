@@ -16,8 +16,6 @@ OBJCOPY        := $(GCC_PREFIX)objcopy
 QEMU           := qemu-system-arm
 
 BDIR           := ./boot
-CORE_LIB       := ../../rust-core/core/lib.rs
-LCORE          := $(BDIR)/$(shell $(RUSTC) --crate-file-name $(CORE_LIB))
 
 OBJS           := $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
 LINK           := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
@@ -27,7 +25,6 @@ DEP_KEEP       := arch\/arm
 DEP_SCRIPT     := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
 
 -include ./config.mk
--include $(BDIR)/core.d
 -include $(BDIR)/main.d
 
 .PHONY: all run debug clean
@@ -35,12 +32,8 @@ DEP_SCRIPT     := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KE
 all: $(BDIR)/kernel.bin
 	@wc -c $^
 
-# Library rust-core
-$(LCORE) $(BDIR)/core.bc:
-	$(RUSTC) $(RUSTCFLAGS) $(CORE_LIB) --dep-info --emit=bc,link --out-dir $(BDIR)
-
 # Compile rustboot. Produce dependency info
-$(BDIR)/main.bc: $(LCORE)
+$(BDIR)/main.bc:
 	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --dep-info --emit=bc ../../lib.rs --out-dir $(BDIR)
 	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
 
