@@ -20,9 +20,9 @@ BDIR           := ./boot
 OBJS           := $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
 LINK           := $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 
-DEP_RM         := arch\/
-DEP_KEEP       := arch\/arm
-DEP_SCRIPT     := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
+DEP_RM         := arch/
+DEP_KEEP       := arch/arm
+DEP_SCRIPT     := 's~\($(DEP_KEEP)\)~\n\1~g;s~ \S*$(DEP_RM)\S*~~g;s~\n\($(DEP_KEEP)\)~\1~g'
 
 -include ./config.mk
 -include $(BDIR)/main.d
@@ -33,8 +33,8 @@ all: $(BDIR)/kernel.bin
 	@wc -c $^
 
 # Compile rustboot. Produce dependency info
-$(BDIR)/main.bc:
-	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --dep-info --emit=bc ../../lib.rs --out-dir $(BDIR)
+$(BDIR)/main.bc: ../../common/lib.rs
+	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --dep-info --emit=bc $< --out-dir $(BDIR)
 	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
 
 %.s: %.bc

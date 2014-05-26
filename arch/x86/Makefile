@@ -24,9 +24,9 @@ LIBS           :=
 
 SECTIONS       := .text .data .rodata
 
-DEP_RM         := arch\/
-DEP_KEEP       := arch\/i686\|arch\/common
-DEP_SCRIPT     := 's/\($(DEP_KEEP)\)/\n\1/g;s/ \S*$(DEP_RM)\S*//g;s/\n\($(DEP_KEEP)\)/\1/g'
+DEP_RM         := arch/
+DEP_KEEP       := arch/i686\|arch/common
+DEP_SCRIPT     := 's~\($(DEP_KEEP)\)~\n\1~g;s~ \S*$(DEP_RM)\S*~~g;s~\n\($(DEP_KEEP)\)~\1~g'
 
 -include ./config.mk
 -include $(BDIR)/loader.d
@@ -38,8 +38,8 @@ all: $(BDIR)/floppy.img
 	@wc -c $^
 
 # Compile rustboot. Produce dependency info
-$(BDIR)/main.bc: ../../lib.rs
-	$(RUSTC) $(RUSTCFLAGS) --dep-info -L $(BDIR) --emit bc ../../lib.rs --out-dir $(BDIR)
+$(BDIR)/main.bc: ../../common/lib.rs
+	$(RUSTC) $(RUSTCFLAGS) --dep-info -L $(BDIR) --emit=bc $< --out-dir $(BDIR)
 	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
 
 %.o: %.bc

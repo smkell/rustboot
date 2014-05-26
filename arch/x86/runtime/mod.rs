@@ -4,6 +4,8 @@ use core::c_types::c_int;
 
 use util::ptr::mut_offset;
 
+use rust_core::macros;
+
 mod stack;
 
 // TODO: use SSE
