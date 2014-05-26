@@ -4,7 +4,6 @@ use core::intrinsics::offset;
 use util::ptr::mut_offset;
 
 use rust_core::c_types::c_int;
-use rust_core::macros;
 
 mod stack;
 

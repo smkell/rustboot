@@ -1,5 +1,4 @@
 use core::option::{Some, None};
-use core::{str, slice};
 use core::str::StrSlice;
 use core::slice::ImmutableVector;
 use core::iter::Iterator;

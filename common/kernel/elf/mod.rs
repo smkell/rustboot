@@ -2,9 +2,7 @@ use core::ptr::{copy_nonoverlapping_memory, set_memory};
 use core::intrinsics::offset;
 use core::mem::transmute;
 use core::option::{Option, Some, None};
-use core::str;
 use core::str::StrSlice;
-use core::slice;
 use core;
 
 use kernel::process::Process;
