@@ -1,5 +1,5 @@
 use core::mem::transmute;
-use core::ptr::offset;
+use core::intrinsics::offset;
 use core::c_types::{c_ushort, c_uint, c_int, c_ulong, c_long};
 
 use util::int::range;

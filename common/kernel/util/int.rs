@@ -1,4 +1,5 @@
 use core::fail::assert;
+use core::intrinsics::u32_mul_with_overflow;
 
 pub fn range(lo: uint, hi: uint, it: |uint|) {
     let mut iter = lo;
@@ -58,3 +59,17 @@ pub fn to_str_bytes(num: $T, radix: uint, f: |u8|) {
 
 #[cfg(target_word_size = "32")] int_module!(int, 32)
 #[cfg(target_word_size = "64")] int_module!(int, 64)
+
+#[cfg(target_word_size = "32")]
+#[inline]
+pub fn uint_mul_with_overflow(x: uint, y: uint) -> (int, bool) {
+    let (a, b) = u32_mul_with_overflow(x as u32, y as u32);
+    (a as uint, b)
+}
+
+#[cfg(target_word_size = "64")]
+#[inline]
+pub fn uint_mul_with_overflow(x: uint, y: uint) -> (int, bool) {
+    let (a, b) = u64_mul_with_overflow(x as u64, y as u64);
+    (a as uint, b)
+}

@@ -1,4 +1,4 @@
-use core::ptr::offset;
+use core::intrinsics::offset;
 
 /// Calculate the offset from a mut pointer. The count *must* be in bounds or
 /// otherwise the loads of this address are undefined.

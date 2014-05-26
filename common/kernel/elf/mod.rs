@@ -1,8 +1,9 @@
-use core::ptr::{copy_nonoverlapping_memory, set_memory, offset};
+use core::ptr::{copy_nonoverlapping_memory, set_memory};
+use core::intrinsics::offset;
 use core::mem::transmute;
 use core::option::{Option, Some, None};
-use core::str::as_bytes;
-use core::slice::to_ptr;
+use core::str;
+use core::slice;
 use core;
 
 use kernel::process::Process;
@@ -125,7 +126,7 @@ impl self::Phdr {
 impl ELFIdent {
     unsafe fn load(&self) -> Option<&Ehdr> {
         // TODO: check endianness
-        let MAGIC: *u32 = to_ptr(as_bytes("\u007fELF")) as *u32;
+        static MAGIC: *u32 = "\u007fELF".as_bytes().to_ptr() as *u32;
         if *MAGIC != transmute(self.ei_mag) {
             return None;
         }

@@ -1,6 +1,8 @@
 use core::mem::transmute;
-use core::ptr::{offset, copy_nonoverlapping_memory};
-use core::c_types::{c_ushort, c_uint, c_int, c_ulong, c_long};
+use core::ptr::copy_nonoverlapping_memory;
+use core::intrinsics::offset;
+
+use rust_core::c_types::{c_ushort, c_uint, c_int, c_ulong, c_long};
 
 use kernel::process::Process;
 use util::int;

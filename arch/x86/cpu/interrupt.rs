@@ -1,5 +1,5 @@
 use core::mem::transmute;
-use core::ptr::offset;
+use core::intrinsics::offset;
 
 use cpu::DtReg;
 use cpu::exception::Fault;

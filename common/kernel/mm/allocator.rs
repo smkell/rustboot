@@ -1,7 +1,8 @@
 use core::mem::transmute;
-use core::ptr::{set_memory, copy_memory, offset};
-use core::u32::ctlz32;
-use core::cmp::expect;
+use core::ptr::{set_memory, copy_memory};
+use core::intrinsics::offset;
+use core::intrinsics::ctlz32;
+//use core::cmp::expect;
 
 use util::ptr::mut_offset;
 use util::bitv::Bitv;

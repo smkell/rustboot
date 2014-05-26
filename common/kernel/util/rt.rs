@@ -6,7 +6,7 @@
  * udivmoddi4
  */
 
-use core::u32::{ctlz32, cttz32};
+use core::intrinsics::{ctlz32, cttz32};
 use core::mem::{transmute, size_of};
 
 mod detail {

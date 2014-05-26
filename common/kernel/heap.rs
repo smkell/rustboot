@@ -1,7 +1,7 @@
 use core::fail::out_of_memory;
 use core::mem::size_of;
-use core::uint::mul_with_overflow;
 
+use kernel::util::int::uint_mul_with_overflow;
 use kernel::mm::{Allocator, Alloc, BuddyAlloc};
 use util::bitv;
 
@@ -67,4 +67,18 @@ pub unsafe fn realloc_raw<T>(ptr: *mut T, count: uint) -> *mut T {
             (ptr, _) => ptr as *mut T
         }
     }
+}
+
+#[cfg(target_word_size = "32")]
+#[inline(always)]
+pub fn mul_with_overflow(x: uint, y: uint) -> (int, bool) {
+    let (a, b) = core::intrinsic::mul_with_overflow(x as i32, y as i32);
+    (a as int, b)
+}
+
+#[cfg(target_word_size = "64")]
+#[inline(always)]
+pub fn mul_with_overflow(x: int, y: int) -> (int, bool) {
+    let (a, b) = ::i64::mul_with_overflow(x as i64, y as i64);
+    (a as int, b)
 }

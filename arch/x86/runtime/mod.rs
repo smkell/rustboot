@@ -1,9 +1,9 @@
-use core::cmp::expect;
-use core::ptr::offset;
-use core::c_types::c_int;
+//use core::cmp::expect;
+use core::intrinsics::offset;
 
 use util::ptr::mut_offset;
 
+use rust_core::c_types::c_int;
 use rust_core::macros;
 
 mod stack;
