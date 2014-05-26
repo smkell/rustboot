@@ -1,10 +1,11 @@
-arch            = x86
-RUST_ROOT      := /usr
-LLVM_ROOT      := /usr
-GCC_PREFIX     := /usr/bin/
-SHELL          := /bin/bash
-
 -include ./config.mk
+
+arch           ?= x86
+
+RUST_ROOT      ?= /usr
+LLVM_ROOT      ?= /usr
+GCC_PREFIX     ?= /usr/bin/
+SHELL          ?= /bin/bash
 
 export RUST_ROOT
 export LLVM_ROOT
