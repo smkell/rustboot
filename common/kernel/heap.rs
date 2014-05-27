@@ -30,6 +30,11 @@ pub unsafe fn malloc_raw(size: uint) -> *mut u8 {
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn rust_allocate(size: uint, _align: uint) -> *mut u8 {
+    malloc_raw(size)
+}
+
 #[lang = "exchange_free"]
 #[inline]
 pub unsafe fn free<T>(ptr: *mut T) {
