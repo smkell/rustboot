@@ -2,7 +2,7 @@ include ../../common/Makefile
 
 -include $(BDIR)/loader.d
 
-TARGET         ?= i686-intel-linux
+TARGET         ?= i686-unknown-linux-gnu
 
 LDFLAGS        ?= -melf_i386
 
