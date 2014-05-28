@@ -8,7 +8,7 @@ LLCFLAGS       ?= -mtriple=$(TARGET) -march=arm -mcpu=arm926ej-s --float-abi=har
 
 QEMU           ?= qemu-system-arm
 
-OBJS           ?= $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
+OBJS           ?= $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o
 LINK           ?= $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 
 DEP_RM         ?= arch/
