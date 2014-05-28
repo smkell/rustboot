@@ -22,7 +22,7 @@ LLC            ?= $(LLVM_ROOT)/bin/llc
 # AS is probably defined
 AS              = $(GCC_PREFIX_2)as
 LD             ?= $(GCC_PREFIX_2)ld
-GDB            ?= $(GCC_PREFIX_2)gdb
+GDB            ?= $(GCC_PREFIX_2)gdbtui
 OBJCOPY        ?= $(GCC_PREFIX_2)objcopy
 
 BDIR           ?= ./boot
