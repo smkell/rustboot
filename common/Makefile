@@ -32,7 +32,7 @@ DEP_SCRIPT     ?= 's~\($(DEP_KEEP)\)~\n\1~g;s~ \S*$(DEP_RM)\S*~~g;s~\n\($(DEP_KE
 
 # Compile rustboot. Produce dependency info
 $(BDIR)/main.bc: ../../common/lib.rs
-	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --dep-info --emit=bc $< --out-dir $(BDIR)
+	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --out-dir $(BDIR) --dep-info --emit=bc $<
 	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
 
 # initram
