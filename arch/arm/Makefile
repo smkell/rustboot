@@ -4,7 +4,8 @@ GCC_PREFIX_2    = $(GCC_PREFIX)arm-none-eabi-
 
 TARGET         ?= arm-linux-noeabi
 
-LLCFLAGS       ?= -mtriple=$(TARGET) -march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
+LLCFLAGS       ?= -mtriple=$(TARGET) $(MORE_FLAGS) \
+	-march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
 
 QEMU           ?= qemu-system-arm
 

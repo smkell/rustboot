@@ -2,10 +2,14 @@
 
 arch           ?= x86
 
+DEBUG          ?= 1
+
 RUST_ROOT      ?= /usr
 LLVM_ROOT      ?= /usr
 GCC_PREFIX     ?= /usr/bin/
 SHELL          ?= /bin/bash
+
+export DEBUG
 
 export RUST_ROOT
 export LLVM_ROOT
