@@ -54,11 +54,9 @@ static Exceptions: &'static [&'static str] = &[
 
 // TODO respect destructors
 #[lang="begin_unwind"]
-extern "C" fn begin_unwind(fmt: &fmt::Arguments, file: &str, line: uint) -> ! {
-    unsafe {
-        asm!("hlt");
-        loop { }; // for divergence check
-    };
+unsafe extern "C" fn begin_unwind(fmt: &fmt::Arguments, file: &str, line: uint) -> ! {
+    asm!("hlt");
+    loop { }; // for divergence check
 }
 
 #[no_split_stack]
