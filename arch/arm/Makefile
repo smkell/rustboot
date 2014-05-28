@@ -14,6 +14,7 @@ LINK           ?= $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 DEP_RM         ?= arch/
 DEP_KEEP       ?= arch/arm
 
+LD             = $(GCC_PREFIX_2)ld
 
 .PHONY: all run debug
 
