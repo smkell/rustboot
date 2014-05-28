@@ -5,7 +5,7 @@
 GCC_PREFIX_2   ?= $(GCC_PREFIX)
 
 RUSTC          ?= $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS     ?= -O --target $(TARGET) -Z no-landing-pads -g
+RUSTCFLAGS     ?= -O --target $(TARGET) -Z no-landing-pads -g -Z lto
 
 # CC is probably defined (as GCC)
 CC              = $(LLVM_ROOT)/bin/clang
