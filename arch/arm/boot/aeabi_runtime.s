@@ -25,32 +25,6 @@ __aeabi_memcpy:
 __aeabi_memmove:
         b memmove
 
-        .align 2
-.globl __aeabi_ldivmod
-__aeabi_ldivmod:
-        push    {r11, lr}
-        sub     sp, sp, #16
-        add     r12, sp, #8
-        str     r12, [sp]
-        bl      __divmoddi4
-        ldr     r2, [sp, #8]
-        ldr     r3, [sp, #12]
-        add     sp, sp, #16
-        pop     {r11, pc}
-
-        .align 2
-.globl __aeabi_uldivmod
-__aeabi_uldivmod:
-        push    {r11, lr}
-        sub     sp, sp, #16
-        add     r12, sp, #8
-        str     r12, [sp]
-        bl      __udivmoddi4
-        ldr     r2, [sp, #8]
-        ldr     r3, [sp, #12]
-        add     sp, sp, #16
-        pop     {r11, pc}
-
 .align 3
  .globl __aeabi_uidiv
  .globl __udivsi3
