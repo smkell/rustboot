@@ -5,17 +5,19 @@
 GCC_PREFIX_2   ?= $(GCC_PREFIX)
 
 ifdef DEBUG
-MORE_FLAGS     ?= -g
-else
-MORE_FLAGS     ?= -O3
+MAYBE_DEBUG    ?= -g
+endif
+
+ifndef DEBUG
+MAYBE_OPTIMZE  ?= -O3
 endif
 
 RUSTC          ?= $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS     ?= --target $(TARGET) -Z no-landing-pads -Z lto $(MORE_FLAGS)
+RUSTCFLAGS     ?= --target $(TARGET) -Z no-landing-pads -Z lto $(MAYBE_DEBUG) $(MAYBE_OPTIMZE)
 
 # CC is probably defined (as GCC)
 CC              = $(LLVM_ROOT)/bin/clang
-CFLAGS         ?= -ffreestanding -target $(TARGET) $(MORE_FLAGS)
+CFLAGS         ?= -ffreestanding -target $(TARGET) $(MAYBE_DEBUG) $(MAYBE_OPTIMZE)
 
 LLC            ?= $(LLVM_ROOT)/bin/llc
 

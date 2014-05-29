@@ -1,10 +1,11 @@
+
 include ../../common/Makefile
 
 GCC_PREFIX_2    = $(GCC_PREFIX)arm-none-eabi-
 
 TARGET         ?= arm-linux-noeabi
 
-LLCFLAGS       ?= -mtriple=$(TARGET) $(MORE_FLAGS) \
+LLCFLAGS       ?= -mtriple=$(TARGET) $(MAYBE_OPTIMIZE) \
 	-march=arm -mcpu=arm926ej-s --float-abi=hard -asm-verbose
 
 QEMU           ?= qemu-system-arm
