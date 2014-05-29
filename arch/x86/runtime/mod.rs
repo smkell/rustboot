@@ -137,3 +137,17 @@ pub fn memmove(dest: *mut u8, src: *u8, n: uint) {
         }
     }
 }
+
+#[no_mangle]
+pub unsafe fn memcmp(s1: *u8, s2: *u8, n: uint) -> i32 {
+    let mut i = 0;
+    while i < n {
+        let a = *offset(s1, i as int);
+        let b = *offset(s2, i as int);
+        if a != b {
+            return (a - b) as i32
+        }
+        i += 1;
+    }
+    return 0;
+}

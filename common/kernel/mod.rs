@@ -12,6 +12,9 @@ mod process;
 #[allow(non_camel_case_types)]
 mod elf;
 
+#[lang = "stack_exhausted"] extern fn stack_exhausted() {}
+#[lang = "eh_personality"] extern fn eh_personality() {}
+
 pub static mut int_table: Option<Table> = None;
 
 #[lang="start"]

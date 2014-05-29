@@ -9,12 +9,13 @@ LLCFLAGS       ?= -mtriple=$(TARGET) $(MORE_FLAGS) \
 
 QEMU           ?= qemu-system-arm
 
-OBJS           ?= $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o $(BDIR)/core.o
+OBJS           ?= $(BDIR)/loader.o $(BDIR)/aeabi_runtime.o $(BDIR)/main.o
 LINK           ?= $(BDIR)/linker.ld $(OBJS) $(BDIR)/initram.elf.embed
 
 DEP_RM         ?= arch/
 DEP_KEEP       ?= arch/arm
 
+LD             = $(GCC_PREFIX_2)ld
 
 .PHONY: all run debug
 

@@ -1,5 +1,7 @@
-use core::mem::{volatile_store, transmute};
-use core::intrinsics::offset;
+use core::intrinsics::{offset, transmute, volatile_store};
+
+use core::failure;
+use core::fmt;
 
 use platform::io;
 
@@ -83,6 +85,12 @@ extern {
 #[no_mangle]
 pub unsafe fn debug() {
     asm!("movs pc, lr")
+}
+
+// TODO respect destructors
+#[lang="begin_unwind"]
+unsafe extern "C" fn begin_unwind(fmt: &fmt::Arguments, file: &str, line: uint) -> ! {
+    loop { };
 }
 
 /*
