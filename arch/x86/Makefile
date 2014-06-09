@@ -4,7 +4,8 @@ include ../../common/Makefile
 
 TARGET         ?= i686-unknown-linux-gnu
 
-LDFLAGS        ?= -melf_i386
+LDFLAGS        ?= -melf_i386 --gc-sections
+LDFLAGS_EMBED  ?= -melf_i386
 
 ASM            ?= nasm
 ASMFLAGS       ?= -g -f elf32
@@ -27,7 +28,7 @@ all: $(BDIR)/floppy.img
 	@wc -c $^
 
 %.o: %.bc
-	$(CC) $(CFLAGS) -fdata-sections -ffunction-sections -c $^ -o $@
+	$(CC) $(CFLAGS) -c $^ -o $@
 
 # initram
 $(BDIR)/%.o: %.asm
@@ -39,7 +40,7 @@ $(BDIR)/%.o: %.asm
 
 # kernel (object)
 $(BDIR)/kernel.elf: $(LINK)
-	$(LD) $(LDFLAGS) --gc-sections -o $@ -T $^ "-(" $(LIBS) "-)" -Map=./$(BDIR)/linker.map
+	$(LD) $(LDFLAGS) -o $@ -T $^ "-(" $(LIBS) "-)" -Map=./$(BDIR)/linker.map
 
 # bootloader and kernel separately
 $(BDIR)/kernel.bin: $(BDIR)/kernel.elf

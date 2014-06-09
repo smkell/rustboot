@@ -4,20 +4,22 @@
 # need to create new variable due to semantics of make "recursive variables"
 GCC_PREFIX_2   ?= $(GCC_PREFIX)
 
+# Opt level set to 2 should be enough.
 ifdef DEBUG
 MAYBE_DEBUG    ?= -g
 endif
 
 ifndef DEBUG
-MAYBE_OPTIMZE  ?= -O3
+MAYBE_RUSTC_OPTIMIZE ?= --opt-level=2 -Z lto
+MAYBE_CLANG_OPTIMIZE ?= -O2
 endif
 
 RUSTC          ?= $(RUST_ROOT)/bin/rustc
-RUSTCFLAGS     ?= --target $(TARGET) -Z no-landing-pads -Z lto $(MAYBE_DEBUG) $(MAYBE_OPTIMZE)
+RUSTCFLAGS     ?= --target $(TARGET) -Z no-landing-pads $(MAYBE_RUSTC_OPTIMIZE)
 
 # CC is probably defined (as GCC)
 CC              = $(LLVM_ROOT)/bin/clang
-CFLAGS         ?= -ffreestanding -target $(TARGET) $(MAYBE_DEBUG) $(MAYBE_OPTIMZE)
+CFLAGS         ?= -ffreestanding -target $(TARGET) $(MAYBE_CLANG_OPTIMIZE) $(MAYBE_DEBUG) -fdata-sections -ffunction-sections
 
 LLC            ?= $(LLVM_ROOT)/bin/llc
 
@@ -43,7 +45,7 @@ $(BDIR)/initram.elf: $(BDIR)/module.o
 	$(LD) $(LDFLAGS) -s $< -o $@
 
 $(BDIR)/%.embed: $(BDIR)/%
-	cd $(@D); $(LD) $(LDFLAGS) -r -b binary -o $(@F) $(<F)
+	cd $(@D); $(LD) $(LDFLAGS_EMBED) -r -b binary -o $(@F) $(<F)
 
 .PHONY: clean
 clean:
