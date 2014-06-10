@@ -205,3 +205,9 @@ impl Allocator for Alloc {
         self.parent.free(offset);
     }
 }
+
+impl Alloc {
+    pub fn new(parent: BuddyAlloc, base: *mut u8, el_size: uint) -> Alloc {
+        Alloc { parent: parent, base: base, el_size: el_size }
+    }
+}

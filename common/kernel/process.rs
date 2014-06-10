@@ -5,7 +5,7 @@ use kernel::mm::physical;
 
 use util::rt::breakpoint;
 
-use platform::cpu::mmu::{switch_directory, directory};
+use platform::cpu::mmu;
 
 pub struct Process {
     pub eip: u32,
@@ -19,7 +19,7 @@ impl Process {
             eip: 0,
             esp: 0,
             // paging: unsafe { physical::zero_alloc_frames(1) as *mut PageDirectory }
-            paging: unsafe { (*directory).clone() }
+            paging: unsafe { mmu::clone_directory() }
         }
     }
 
@@ -34,7 +34,7 @@ impl Process {
         unsafe {
             breakpoint();
             // TODO need to store physical address
-            switch_directory(self.paging);
+            mmu::switch_directory(self.paging);
             asm!("xor %eax, %eax
                   xor %edx, %edx
                   jmp *$0" :: "m"(self.eip), "{esp}"(self.esp) :: "volatile")
