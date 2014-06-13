@@ -1,13 +1,11 @@
 use core::ptr::RawPtr;
 use core::ptr::{copy_nonoverlapping_memory, set_memory};
 use core::mem::transmute;
-use core::option::{Option, Some, None};
-use core::str::StrSlice;
+use core::prelude::*;
 use core;
 
 use kernel::process::Process;
 use kernel::mm;
-use util::int;
 use platform::io;
 
 #[cfg(target_word_size = "32")] pub use self::elf32::{Ehdr, Phdr, Auxv, AuxvValue, AT_NULL};
@@ -60,7 +58,7 @@ impl self::Ehdr {
 
         let mut stack_flags = mm::RW;
 
-        int::range(0, self.e_phnum as uint, |i| {
+        for i in range(0, self.e_phnum) {
             let pheader = ph_base.offset(ph_size * i as int) as *Phdr;
 
             match (*pheader).p_type {
@@ -75,7 +73,7 @@ impl self::Ehdr {
                 },
                 _ => {}
             }
-        });
+        }
 
         static stack_bottom: u32 = 0xC0000000;
         let stack_vaddr = (stack_bottom - 0x1000) as *mut u8;

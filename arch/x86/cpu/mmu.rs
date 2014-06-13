@@ -1,11 +1,10 @@
 use core::mem::{transmute, size_of};
 use core::ptr::copy_nonoverlapping_memory;
-use core::ptr::RawPtr;
+use core::prelude::*;
 use core;
 
 use kernel::mm::physical;
 use kernel::mm::physical::Phys;
-use util::int::range;
 use util::rt;
 use kernel;
 
@@ -152,9 +151,9 @@ impl<U> Table<U> {
 
 impl Table<Page> {
     fn identity_map(&mut self, start: uint, flags: Flags) {
-        range(0, ENTRIES, |i| {
+        for i in range(0, ENTRIES) {
             self.entries[i] = Page::at_frame(start + i, flags);
-        });
+        }
     }
 }
 
