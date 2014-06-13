@@ -1,8 +1,8 @@
+use core::ptr::RawPtr;
 use core::mem::{size_of, transmute};
 use core;
 
 use cpu::DtReg;
-use util::ptr::mut_offset;
 use kernel::heap;
 
 define_flags!(GdtAccess: u8 {
@@ -92,12 +92,12 @@ impl Gdt {
     pub fn enable(&self, n: uint, mut entry: GdtEntry) {
         unsafe {
             entry.access |= PRESENT.get();
-            *mut_offset(self.table, n as int) = entry;
+            *self.table.offset(n as int) = entry;
         }
     }
 
     pub unsafe fn disable(&self, n: uint) {
-        (*mut_offset(self.table, n as int)).access &= !PRESENT.get();
+        (*self.table.offset(n as int)).access &= !PRESENT.get();
     }
 
     pub fn load(&self, code: u16, data: u16, local: u16) {

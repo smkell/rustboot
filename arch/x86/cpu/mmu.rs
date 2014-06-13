@@ -1,5 +1,6 @@
 use core::mem::{transmute, size_of};
 use core::ptr::copy_nonoverlapping_memory;
+use core::ptr::RawPtr;
 use core;
 
 use kernel::mm::physical;
@@ -184,15 +185,14 @@ impl Table<Table<Page>> {
     }
 
     pub fn map(&mut self, mut page_ptr: *mut u8, len: uint, flags: Flags) {
-        use util::ptr::mut_offset;
         // TODO: optimize with uints?
         unsafe {
-            let end = mut_offset(page_ptr, len as int);
+            let end = page_ptr.offset(len as int);
             while page_ptr < end {
                 let frame = physical::alloc_frames(1);
                 self.set_page(page_ptr, frame, flags | PRESENT);
                 (*directory).set_page(page_ptr, frame, flags | PRESENT);
-                page_ptr = mut_offset(page_ptr, PAGE_SIZE as int);
+                page_ptr = page_ptr.offset(PAGE_SIZE as int);
             }
         }
     }

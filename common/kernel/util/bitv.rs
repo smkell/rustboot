@@ -1,6 +1,6 @@
+use core::ptr::RawPtr;
 use core::mem::transmute;
 use core::ptr::set_memory;
-use util::ptr::mut_offset;
 
 // vector of 2-bit
 pub struct Bitv {
@@ -13,7 +13,7 @@ impl Bitv {
         let w = (i / 16) as int;
         let b = (i % 16) * 2;
         unsafe {
-            transmute((*mut_offset(self.storage, w) as uint >> b) as u8 & 3)
+            transmute((*self.storage.offset(w) as uint >> b) as u8 & 3)
         }
     }
 
@@ -22,7 +22,7 @@ impl Bitv {
         let w = (i / 16) as int;
         let b = (i % 16) * 2;
         unsafe {
-            *mut_offset(self.storage, w) = *mut_offset(self.storage, w) & !(3 << b) | (x as u32 << b)
+            *self.storage.offset(w) = *self.storage.offset(w) & !(3 << b) | (x as u32 << b)
         }
     }
 

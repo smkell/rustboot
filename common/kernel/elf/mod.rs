@@ -1,5 +1,5 @@
+use core::ptr::RawPtr;
 use core::ptr::{copy_nonoverlapping_memory, set_memory};
-use core::intrinsics::offset;
 use core::mem::transmute;
 use core::option::{Option, Some, None};
 use core::str::StrSlice;
@@ -7,7 +7,6 @@ use core;
 
 use kernel::process::Process;
 use kernel::mm;
-use util::ptr::mut_offset;
 use util::int;
 use platform::io;
 
@@ -57,12 +56,12 @@ impl self::Ehdr {
         //TODO: Verify file integrity
         let buffer: *u8 = transmute(self);
         let ph_size = self.e_phentsize as int;
-        let ph_base = offset(buffer, self.e_phoff as int);
+        let ph_base = buffer.offset(self.e_phoff as int);
 
         let mut stack_flags = mm::RW;
 
         int::range(0, self.e_phnum as uint, |i| {
-            let pheader = offset(ph_base, ph_size * i as int) as *Phdr;
+            let pheader = ph_base.offset(ph_size * i as int) as *Phdr;
 
             match (*pheader).p_type {
                 PT_NULL => {}
@@ -81,13 +80,13 @@ impl self::Ehdr {
         static stack_bottom: u32 = 0xC0000000;
         let stack_vaddr = (stack_bottom - 0x1000) as *mut u8;
         task.mmap(stack_vaddr, 0x1000, stack_flags);
-        let stack_ptr = mut_offset(stack_bottom as *mut u8, -(((4 + 5 + 15) & !0xF) + 8 + 4 + 4 + 4));
+        let stack_ptr = (stack_bottom as *mut u8).offset(-(((4 + 5 + 15) & !0xF) + 8 + 4 + 4 + 4));
         let argv_ptr = stack_ptr as *mut *mut u8;
-        let envp_ptr = mut_offset(argv_ptr, 2);
-        let auxv_ptr = mut_offset(argv_ptr, 1) as *mut Auxv;
-        let str_ptr = mut_offset(stack_bottom as *mut u8, -(4 + 5));
+        let envp_ptr = argv_ptr.offset(2);
+        let auxv_ptr = argv_ptr.offset(1) as *mut Auxv;
+        let str_ptr = (stack_bottom as *mut u8).offset(-(4 + 5));
 
-        *mut_offset(argv_ptr, 1) = transmute(0);
+        *argv_ptr.offset(1) = transmute(0);
         *envp_ptr = transmute(0);
         *auxv_ptr = Auxv { a_type: AT_NULL, a_un: AuxvValue { data: 0 } };
 
@@ -117,8 +116,8 @@ impl self::Phdr {
 
         task.mmap(vaddr, mem_size, flags);
 
-        copy_nonoverlapping_memory(vaddr, offset(buffer, file_pos), file_size);
-        set_memory(mut_offset(vaddr, file_size as int), 0, mem_size - file_size);
+        copy_nonoverlapping_memory(vaddr, buffer.offset(file_pos), file_size);
+        set_memory(vaddr.offset(file_size as int), 0, mem_size - file_size);
     }
 }
 

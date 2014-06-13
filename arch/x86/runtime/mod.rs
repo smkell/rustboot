@@ -1,8 +1,4 @@
-//use core::cmp::expect;
-use core::intrinsics::offset;
-
-use util::ptr::mut_offset;
-
+use core::ptr::RawPtr;
 use rust_core::c_types::c_int;
 
 mod stack;
@@ -65,7 +61,7 @@ fn memset_nonzero(mut s: *mut u8, c: u8, mut n: uint) {
             },*/
             q => {
                 stosb(s, c, q);
-                s = unsafe { mut_offset(s, q as int) };
+                s = unsafe { s.offset(q as int) };
                 n -= q;
             }
         }
@@ -80,7 +76,7 @@ pub fn wmemset(mut dest: *mut u8, c: u16, n: uint) {
     if (n % 2) == 1 {
         unsafe {
             *(dest as *mut u16) = c;
-            dest = mut_offset(dest, 2);
+            dest = dest.offset(2);
         }
     }
 
@@ -128,7 +124,7 @@ pub fn memmove(dest: *mut u8, src: *u8, n: uint) {
     unsafe {
         if src < dest as *u8 {
             asm!("std")
-            memcpy(mut_offset(dest, n as int), offset(src, n as int), n);
+            memcpy(dest.offset(n as int), src.offset(n as int), n);
             asm!("cld")
         }
         else {
@@ -142,8 +138,8 @@ pub fn memmove(dest: *mut u8, src: *u8, n: uint) {
 pub unsafe fn memcmp(s1: *u8, s2: *u8, n: uint) -> i32 {
     let mut i = 0;
     while i < n {
-        let a = *offset(s1, i as int);
-        let b = *offset(s2, i as int);
+        let a = *s1.offset(i as int);
+        let b = *s2.offset(i as int);
         if a != b {
             return (a - b) as i32
         }
