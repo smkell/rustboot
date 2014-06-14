@@ -94,7 +94,7 @@ fn flush_tlb<T>(addr: T) {
 
 impl Page {
     fn new<T>(addr: Phys<T>, flags: Flags) -> Page {
-        Page(addr.offset()) | flags
+        Page(addr.to_uint()) | flags
     }
 
     fn at_frame(i: uint, flags: Flags) -> Page {

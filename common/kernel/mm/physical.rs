@@ -1,4 +1,6 @@
 use core::mem::transmute;
+use core::ptr::RawPtr;
+use core::option::Option;
 
 use kernel::heap;
 use kernel::mm;
@@ -31,11 +33,27 @@ impl<T> Phys<T> {
             Phys { ptr: p } => p
         }
     }
+}
 
-    pub fn offset(&self) -> uint {
-        unsafe {
-            transmute(*self)
-        }
+impl<T> RawPtr<T> for Phys<T> {
+    fn null() -> Phys<T> {
+        Phys { ptr: RawPtr::null() }
+    }
+
+    fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+
+    fn to_uint(&self) -> uint {
+        self.ptr.to_uint()
+    }
+
+    unsafe fn to_option(&self) -> Option<&T> {
+        self.ptr.to_option()
+    }
+
+    unsafe fn offset(self, n: int) -> Phys<T> {
+        Phys { ptr: self.ptr.offset(n) }
     }
 }
 
@@ -61,5 +79,5 @@ pub unsafe fn zero_alloc_frames<T = Frame>(count: uint) -> Phys<T> {
 
 #[inline]
 pub unsafe fn free_frames<T>(ptr: Phys<T>) {
-    frames.free(ptr.offset() as *mut u8);
+    frames.free(ptr.to_uint() as *mut u8);
 }
