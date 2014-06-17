@@ -35,7 +35,7 @@ struct VMemLayout {
     dir: PageDirectory                       // @ 0xFFFFF000
 }
 
-static VMEM: *mut VMemLayout = 0xFF7FF000 as *mut VMemLayout;
+static VMEM: *mut VMemLayout = 0xFF7FF000u as *mut VMemLayout;
 
 // U: underlying element type
 #[packed]
@@ -211,7 +211,7 @@ impl Table<Table<Page>> {
             temp1.map_self(dir_phys);
 
             let cnt = 0xC0000000 / (ENTRIES * PAGE_SIZE);
-            copy_nonoverlapping_memory(&mut temp1.entries as *mut Page, &self.entries as *Page, cnt);
+            copy_nonoverlapping_memory(&mut temp1.entries[0] as *mut Page, &self.entries as *Page, cnt);
 
             dir_phys
         }

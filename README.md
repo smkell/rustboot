@@ -26,14 +26,11 @@ You need a few things to run rustboot:
   * gdb
   * tmux
 
-Clone this repository and update rust-core.
+Clone this repository.
 
 ```bash
 $ git clone https://github.com/pczarn/rustboot.git
 $ cd rustboot
-$ git submodule update --init
-# you can also pull latest rust-core:
-$ git submodule foreach git pull origin master
 ```
 
 To get edge Rust going, grab it from git:
@@ -41,8 +38,18 @@ To get edge Rust going, grab it from git:
 ```bash
 $ git clone https://github.com/mozilla/rust
 $ cd rust
-$ ./configure
+$ ./configure --target=i686-unknown-linux-gnu
 $ make && make install
+```
+
+You can considerably minimize build time:
+```bash
+$ ./configure --target=i686-unknown-linux-gnu --llvm-root=/usr
+$ make rustc-stage1
+```
+Then use the `rust/*/stage1/bin/rustc` binary to compile rustboot:
+```bash
+$ echo "RUST_ROOT:=$(pwd)/x86_64-unknown-linux-gnu/stage1/bin" > rustboot/config.mk
 ```
 
 ### Arch Linux

@@ -2,7 +2,8 @@
 
 arch           ?= x86
 
-DEBUG          ?= 1
+# can make the compiler fail. Disable for now
+DEBUG          ?=
 
 RUST_ROOT      ?= /usr
 LLVM_ROOT      ?= /usr
