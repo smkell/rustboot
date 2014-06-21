@@ -39,3 +39,9 @@ mod platform {
     pub mod io;
     pub mod drivers;
 }
+
+mod std {
+    // macros refer to absolute paths
+    pub use core::fmt;
+    pub use core::option;
+}

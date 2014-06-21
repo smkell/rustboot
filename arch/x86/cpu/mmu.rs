@@ -1,5 +1,6 @@
 use core::mem::size_of;
 use core::ptr::copy_nonoverlapping_memory;
+use core::fmt;
 use core::prelude::*;
 use core;
 
@@ -126,6 +127,20 @@ impl core::ops::BitAnd<Flags, bool> for Page {
         match (self, other) {
             (&Page(p), &Flags(f)) => p & f != 0
         }
+    }
+}
+
+impl fmt::Show for Page {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let &Page(p) = self;
+        let page = p & 0xFFFFF000;
+        let (p, r, u, a) = (
+            if self & PRESENT  { 'P' } else { ' ' },
+            if self & RW       { 'R' } else { ' ' },
+            if self & USER     { 'U' } else { ' ' },
+            if self & ACCESSED { 'A' } else { ' ' }
+        );
+        write!(fmt, "0x{:x}({}{}{}{})", page, p, r, u, a)
     }
 }
 

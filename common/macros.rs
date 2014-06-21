@@ -158,3 +158,11 @@ macro_rules! impl_ops (
         }
     )
 )
+
+macro_rules! print(
+    ($($arg:tt)*) => (format_args!(::platform::io::print_args, $($arg)*))
+)
+
+macro_rules! println(
+    ($($arg:tt)*) => (format_args!(::platform::io::println_args, $($arg)*))
+)

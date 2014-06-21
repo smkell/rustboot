@@ -4,6 +4,7 @@ use core::failure;
 use core::fmt;
 
 use platform::io;
+use platform::cpu::mmu::Page;
 use cpu::Context;
 
 #[repr(u8)]
@@ -77,7 +78,13 @@ pub unsafe fn exception_handler() -> unsafe extern "C" fn() {
     // Points to the data on the stack
     let stack_ptr = Context::save();
 
-    if stack_ptr.int_no as u8 == transmute(Breakpoint) {
+    if stack_ptr.int_no as u8 == PageFault as u8 {
+        let mut cr2: Page;
+        asm!("mov %cr2, $0" : "=r"(cr2));
+        println!("Accessed {} from {}", cr2, stack_ptr.call_stack.eip);
+    }
+
+    if stack_ptr.int_no as u8 == Breakpoint as u8 {
         asm!("debug:" :::: "volatile")
     }
     else {
