@@ -16,7 +16,7 @@ pub fn remap() {
 
 pub fn enable(irq: u8) {
     let port: u16 = if (irq & 0b1000) == 0 { 0x21 } else { 0xa1 };
-    let mask: u8 = !(1u8 << (irq & 0b111));
+    let mask: u8 = !(1u8 << (irq & 0b111) as uint);
 
     io::out(port, io::inb(port) & mask);
 }
