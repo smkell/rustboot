@@ -1,3 +1,5 @@
+//! The Interrupt Table and Isr (Interrupt Service Routine) classes.
+
 use core::mem::transmute;
 use core::ptr::RawPtr;
 

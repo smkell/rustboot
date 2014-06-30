@@ -7,7 +7,7 @@ use platform::io;
 
 static VIC_INT_ENABLE: *mut u32 = (0x10140000 + 0x010) as *mut u32;
 static UART0_IRQ: u8 = 12;
-static VT: *u32 = 0 as *u32;
+static VT: *mut u32 = 0 as *mut u32; // WARNING verify should be mutable.
 
 #[repr(u8)]
 pub enum Int {

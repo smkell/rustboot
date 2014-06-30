@@ -1,1 +1,7 @@
 config.mk
+
+# Sublime Text
+*.sublime-*
+
+# Upstream
+common/libcore

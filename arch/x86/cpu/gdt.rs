@@ -72,7 +72,7 @@ impl GdtEntry {
 }
 
 pub struct Gdt {
-    reg: *GdtReg,
+    reg: *mut GdtReg, // WARNING verify should be mutable.
     table: *mut GdtEntry
 }
 

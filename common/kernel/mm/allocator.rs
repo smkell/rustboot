@@ -27,7 +27,7 @@ pub trait Allocator {
     fn realloc(&mut self, src: *mut u8, size: uint) -> (*mut u8, uint) {
         self.free(src);
         let (ptr, sz) = self.alloc(size);
-        unsafe { copy_memory(ptr, src as *u8, sz); }
+        unsafe { copy_memory(ptr, src as *const u8, sz); }
         (ptr, sz)
     }
 

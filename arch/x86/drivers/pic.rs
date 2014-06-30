@@ -1,17 +1,19 @@
+//! Programmable interrupt controller
+
 use cpu::io;
 
 pub fn remap() {
-    io::out(0x20, 0x11);
-    io::out(0xA0, 0x11);
+    io::out(0x20, 0x11u16); // WARNING verify should be u16
+    io::out(0xA0, 0x11u16);
 
-    io::out(0x21, 0x20);
-    io::out(0xA1, 0x28);
+    io::out(0x21, 0x20u16);
+    io::out(0xA1, 0x28u16);
 
-    io::out(0x21, 4);
-    io::out(0xA1, 2);
+    io::out(0x21, 4u16);
+    io::out(0xA1, 2u16);
 
-    io::out(0x21, 1);
-    io::out(0xA1, 1);
+    io::out(0x21, 1u16);
+    io::out(0xA1, 1u16);
 }
 
 pub fn enable(irq: u8) {
