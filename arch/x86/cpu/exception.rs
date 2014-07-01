@@ -81,7 +81,7 @@ pub unsafe fn exception_handler() -> unsafe extern "C" fn() {
     if stack_ptr.int_no as u8 == PageFault as u8 {
         let cr2: uint;
         asm!("mov %cr2, %eax" : "={eax}"(cr2));
-        println!("Accessed {} from {}", cr2, stack_ptr.call_stack.eip);
+        println!("Accessed {0:x} from {1:x}", cr2, stack_ptr.call_stack.eip);
     }
 
     if stack_ptr.int_no as u8 == Breakpoint as u8 {
