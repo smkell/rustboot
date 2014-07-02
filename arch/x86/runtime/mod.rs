@@ -1,5 +1,5 @@
 use core::ptr::RawPtr;
-use rust_core::c_types::c_int;
+// use rust_core::c_types::c_int;
 
 mod stack;
 
@@ -92,7 +92,7 @@ fn dmemset(s: *mut u8, c: u32, n: uint) {
 }
 
 #[no_mangle]
-pub fn memset(s: *mut u8, c: c_int, n: int) {
+pub fn memset(s: *mut u8, c: i32, n: int) {
     memset_nonzero(s, (c & 0xFF) as u8, n as uint);
 }
 
