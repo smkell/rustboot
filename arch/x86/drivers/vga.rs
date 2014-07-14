@@ -47,8 +47,8 @@ pub fn clear_screen(bg: Color) {
 }
 
 pub fn cursor_at(pos: uint) {
-    io::out(0x3D4, 15);
+    io::out(0x3D4, 15u16); // WARNING verify should be u16
     io::out(0x3D5, pos as u8);
-    io::out(0x3D4, 14);
+    io::out(0x3D4, 14u16);
     io::out(0x3D5, (pos >> 8) as u8);
 }

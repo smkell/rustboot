@@ -79,9 +79,9 @@ pub unsafe fn exception_handler() -> unsafe extern "C" fn() {
     let stack_ptr = Context::save();
 
     if stack_ptr.int_no as u8 == PageFault as u8 {
-        let mut cr2: Page;
-        asm!("mov %cr2, $0" : "=r"(cr2));
-        println!("Accessed {} from {}", cr2, stack_ptr.call_stack.eip);
+        let cr2: uint;
+        asm!("mov %cr2, %eax" : "={eax}"(cr2));
+        println!("Accessed {0:x} from {1:x}", cr2, stack_ptr.call_stack.eip);
     }
 
     if stack_ptr.int_no as u8 == Breakpoint as u8 {

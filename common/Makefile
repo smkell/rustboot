@@ -25,9 +25,9 @@ LLC            ?= $(LLVM_ROOT)/bin/llc
 
 # AS is probably defined
 AS              = $(GCC_PREFIX_2)as
-LD             ?= $(GCC_PREFIX_2)ld
-GDB            ?= $(GCC_PREFIX_2)gdbtui
-OBJCOPY        ?= $(GCC_PREFIX_2)objcopy
+LD              = $(GCC_PREFIX_2)ld
+GDB             = $(GCC_PREFIX_2)gdbtui
+OBJCOPY         = $(GCC_PREFIX_2)objcopy
 
 BDIR           ?= ./boot
 
@@ -37,7 +37,8 @@ DEP_SCRIPT     ?= 's~\($(DEP_KEEP)\)~\n\1~g;s~ \S*$(DEP_RM)\S*~~g;s~\n\($(DEP_KE
 # Compile rustboot. Produce dependency info
 $(BDIR)/main.bc: ../../common/lib.rs
 	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --out-dir $(BDIR) --dep-info --emit=bc $<
-	@sed -i $(DEP_SCRIPT) $(BDIR)/main.d
+	@sed -e $(DEP_SCRIPT) $(BDIR)/main.d > $(BDIR)/main.d.tmp
+	@mv $(BDIR)/main.d.tmp $(BDIR)/main.d		# SED to tmp file for OS X compatibility
 
 # initram
 

@@ -11,12 +11,13 @@
 │   ├── gdt.rs    Global descriptor table
 │   ├── idt.rs    Interrupt descriptor table
 │   ├── io.rs     CPU IO: inb, outb
+│   ├── mmu.rs
 │   └── paging.rs
 ├── drivers
 │   ├── keyboard.rs
 │   ├── mod.rs  Initializes drivers
 │   ├── pic.rs  Programmable interrupt controller
-│   ├── pit.rs  Programmable interval timer 
+│   ├── pit.rs  Programmable interval timer
 │   └── vga.rs  Text display
 ├── io
 │   └── mod.rs  Input/output interface

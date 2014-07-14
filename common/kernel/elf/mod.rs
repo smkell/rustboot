@@ -52,14 +52,14 @@ impl self::Ehdr {
     pub unsafe fn spawn_process(&self) -> Process {
         let mut task = Process::new();
         //TODO: Verify file integrity
-        let buffer: *u8 = transmute(self);
+        let buffer: *const u8 = transmute(self);
         let ph_size = self.e_phentsize as int;
         let ph_base = buffer.offset(self.e_phoff as int);
 
         let mut stack_flags = mm::RW;
 
         for i in range(0, self.e_phnum) {
-            let pheader = ph_base.offset(ph_size * i as int) as *Phdr;
+            let pheader = ph_base.offset(ph_size * i as int) as *const Phdr;
 
             match (*pheader).p_type {
                 PT_NULL => {}
@@ -84,11 +84,11 @@ impl self::Ehdr {
         let auxv_ptr = argv_ptr.offset(1) as *mut Auxv;
         let str_ptr = (stack_bottom as *mut u8).offset(-(4 + 5));
 
-        *argv_ptr.offset(1) = transmute(0);
-        *envp_ptr = transmute(0);
+        *argv_ptr.offset(1) = transmute(0u);
+        *envp_ptr = transmute(0u);
         *auxv_ptr = Auxv { a_type: AT_NULL, a_un: AuxvValue { data: 0 } };
 
-        let (strs, len): (*u8, uint) = transmute("test\0");
+        let (strs, len): (*const u8, uint) = transmute("test\0");
         copy_nonoverlapping_memory(str_ptr, strs, len);
         *argv_ptr = str_ptr;
 
@@ -100,7 +100,7 @@ impl self::Ehdr {
 }
 
 impl self::Phdr {
-    unsafe fn load(&self, task: &Process, buffer: *u8) {
+    unsafe fn load(&self, task: &Process, buffer: *const u8) {
         let vaddr = self.p_vaddr as *mut u8;
         let mem_size = self.p_memsz as uint;
         let file_pos = self.p_offset as int;
@@ -123,7 +123,7 @@ impl ELFIdent {
     unsafe fn load(&self) -> Option<&Ehdr> {
         // TODO: check endianness
         static MAGIC_STRING : &'static str = "\u007fELF";
-        if *(MAGIC_STRING.as_ptr() as *u32) != transmute(self.ei_mag) {
+        if *(MAGIC_STRING.as_ptr() as *const u32) != transmute(self.ei_mag) {
             return None;
         }
 
@@ -137,7 +137,7 @@ impl ELFIdent {
     }
 }
 
-pub fn exec(buffer: *u8) {
+pub fn exec(buffer: *const u8) {
     unsafe {
         let ident: &ELFIdent = transmute(buffer);
         ident.load().map(|e| { e.spawn_process().enter() });

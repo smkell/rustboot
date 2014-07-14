@@ -1,5 +1,5 @@
 use core::ptr::RawPtr;
-use rust_core::c_types::c_int;
+// use rust_core::c_types::c_int;
 
 mod stack;
 
@@ -92,13 +92,13 @@ fn dmemset(s: *mut u8, c: u32, n: uint) {
 }
 
 #[no_mangle]
-pub fn memset(s: *mut u8, c: c_int, n: int) {
+pub fn memset(s: *mut u8, c: i32, n: int) {
     memset_nonzero(s, (c & 0xFF) as u8, n as uint);
 }
 
 #[allow(dead_assignment)]
 #[no_mangle]
-pub fn memcpy(dest: *mut u8, src: *u8, mut n: uint) {
+pub fn memcpy(dest: *mut u8, src: *const u8, mut n: uint) {
     if unlikely!(n == 0) {
         return;
     }
@@ -112,7 +112,7 @@ pub fn memcpy(dest: *mut u8, src: *u8, mut n: uint) {
         n -= offset;
 
         let mut pd: *mut u8;
-        let mut ps: *u8;
+        let mut ps: *const u8;
         asm!("rep movsb" : "={edi}"(pd), "={esi}"(ps) : "{edi}"(dest), "{esi}"(src), "{ecx}"(offset))
         asm!("rep movsl" : "={edi}"(pd), "={esi}"(ps) : "{edi}"(pd), "{esi}"(ps), "{ecx}"(n >> 2))
         asm!("rep movsb" :: "{edi}"(pd), "{esi}"(ps), "{ecx}"(n % 4))
@@ -120,9 +120,9 @@ pub fn memcpy(dest: *mut u8, src: *u8, mut n: uint) {
 }
 
 #[no_mangle]
-pub fn memmove(dest: *mut u8, src: *u8, n: uint) {
+pub fn memmove(dest: *mut u8, src: *const u8, n: uint) {
     unsafe {
-        if src < dest as *u8 {
+        if src < dest as *const u8 {
             asm!("std")
             memcpy(dest.offset(n as int), src.offset(n as int), n);
             asm!("cld")
@@ -135,7 +135,7 @@ pub fn memmove(dest: *mut u8, src: *u8, n: uint) {
 }
 
 #[no_mangle]
-pub unsafe fn memcmp(s1: *u8, s2: *u8, n: uint) -> i32 {
+pub unsafe fn memcmp(s1: *const u8, s2: *const u8, n: uint) -> i32 {
     let mut i = 0;
     while i < n {
         let a = *s1.offset(i as int);

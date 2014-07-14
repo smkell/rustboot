@@ -1,6 +1,9 @@
 rustboot
 ================================================================================
-A small kernel written in Rust.
+A small kernel written in Rust. For a detailed overview and roadmap, [see the Wiki!](https://github.com/alexchandel/rustboot/wiki)
+
+Pictures
+--------------------------------------------------------------------------------
 
 It paints the screen bright red and then displays some information. You can
 write. That's it:
