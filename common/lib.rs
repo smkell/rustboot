@@ -3,6 +3,8 @@
 #![no_std]
 #![feature(asm, macro_rules, default_type_params, phase, globs, lang_items, intrinsics)]
 
+// The plugin phase imports compiler plugins, including regular macros.
+
 #[phase(plugin, link)]
 extern crate core;
 
@@ -16,10 +18,9 @@ pub use kernel::util;
 
 mod macros;
 
-pub mod kernel;
-
-#[macro_escape]
 mod rust_core;
+
+pub mod kernel;
 
 #[allow(dead_code)]
 #[cfg(target_arch = "x86")]
@@ -42,6 +43,7 @@ mod platform {
 
 mod std {
     // macros refer to absolute paths
+    pub use core::{cmp, clone};
     pub use core::fmt;
     pub use core::option;
 }

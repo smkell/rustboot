@@ -32,9 +32,9 @@ macro_rules! cpuid(
     );
 )
 
-define_flags!(Eflags: u32 {
-    CF,
-    IF = 1 << 9
+bitflags!(flags Eflags: u32 {
+    static CF = 1 << 0,
+    static IF = 1 << 9
 })
 
 impl Eflags {
@@ -42,13 +42,14 @@ impl Eflags {
         unsafe {
             let mut flags: u32;
             asm!("pushf; pop $0;" : "=r"(flags) ::: "volatile")
-            Eflags(flags)
+            Eflags::from_bits_truncate(flags)
         }
     }
 }
 
-define_flags!(CR0Flags: u32 {
-    CR0_PG = 1 << 31
+bitflags!(flags CR0Flags: u32 {
+    // TODO: all flags
+    static CR0_PG = 1 << 31
 })
 
 struct CR0;
@@ -60,16 +61,14 @@ impl CR0 {
         unsafe {
             let flags;
             asm!("mov $0, cr0" : "=r"(flags) ::: "intel");
-            CR0Flags(flags)
+            CR0Flags { bits: flags }
         }
     }
 
     #[inline]
     fn write(f: CR0Flags) {
-        match f {
-            CR0Flags(val) => unsafe {
-                asm!("mov cr0, $0" :: "r"(val) :: "volatile", "intel");
-            }
+        unsafe {
+            asm!("mov cr0, $0" :: "r"(f.bits) :: "volatile", "intel");
         }
     }
 }
@@ -77,9 +76,7 @@ impl CR0 {
 impl core::ops::BitOr<CR0Flags, CR0Flags> for CR0 {
     #[inline(always)]
     fn bitor(&self, other: &CR0Flags) -> CR0Flags {
-        match (CR0::read(), other) {
-            (CR0Flags(flags1), &CR0Flags(flags2)) => CR0Flags(flags1 | flags2)
-        }
+        CR0Flags { bits: CR0::read().bits | other.bits }
     }
 }
 

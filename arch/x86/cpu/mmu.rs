@@ -15,12 +15,12 @@ use kernel;
 
 pub type Frame = [u8, ..PAGE_SIZE];
 
-define_flags!(Flags: uint {
-    PRESENT  = 1 << 0,
-    RW       = 1 << 1,
-    USER     = 1 << 2,
-    ACCESSED = 1 << 5,
-    HUGE     = 1 << 7
+bitflags!(flags Flags: uint {
+    static PRESENT  = 1 << 0,
+    static RW       = 1 << 1,
+    static USER     = 1 << 2,
+    static ACCESSED = 1 << 5,
+    static HUGE     = 1 << 7
 })
 
 #[packed]
@@ -111,26 +111,21 @@ impl Page {
         Phys::at(p & 0xFFFFF000)
     }
 
-    fn present(self) -> bool {
-        self & PRESENT
+    fn is_present(self) -> bool {
+        self.contains(PRESENT)
+    }
+
+    fn contains(&self, flags: Flags) -> bool {
+        let &Page(bits) = self;
+        (bits & flags.bits) == flags.bits
     }
 }
 
 impl core::ops::BitOr<Flags, Page> for Page {
     #[inline(always)]
     fn bitor(&self, other: &Flags) -> Page {
-        match (self, other) {
-            (&Page(p), &Flags(f)) => Page(p | f)
-        }
-    }
-}
-
-impl core::ops::BitAnd<Flags, bool> for Page {
-    #[inline(always)]
-    fn bitand(&self, other: &Flags) -> bool {
-        match (self, other) {
-            (&Page(p), &Flags(f)) => p & f != 0
-        }
+        let &Page(bits) = self;
+        Page(bits | other.bits)
     }
 }
 
@@ -139,10 +134,10 @@ impl fmt::Show for Page {
         let &Page(p) = self;
         let page = p & 0xFFFFF000;
         let (p, r, u, a) = (
-            if self & PRESENT  { 'P' } else { ' ' },
-            if self & RW       { 'R' } else { ' ' },
-            if self & USER     { 'U' } else { ' ' },
-            if self & ACCESSED { 'A' } else { ' ' }
+            if self.contains(PRESENT)  { 'P' } else { ' ' },
+            if self.contains(RW)       { 'R' } else { ' ' },
+            if self.contains(USER)     { 'U' } else { ' ' },
+            if self.contains(ACCESSED) { 'A' } else { ' ' }
         );
         write!(fmt, "0x{:x}({}{}{}{})", page, p, r, u, a)
     }
@@ -181,7 +176,7 @@ impl Table<Page> {
 impl Table<Table<Page>> {
     fn fetch_table<T>(&mut self, vptr: *mut T, flags: Flags) -> *mut PageTable {
         match self.get(vptr as uint) {
-            table @ Page(_) if table.present() => {
+            table @ Page(_) if table.is_present() => {
                 table.physical().as_ptr()
             }
             _ => unsafe { // allocate table

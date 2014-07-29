@@ -33,6 +33,6 @@ pub struct TssEntry {
 
 impl TssEntry {
     pub fn gdt_entry(&mut self) -> GdtEntry {
-        GdtEntry::seg(self as *mut TssEntry, CODE | ACCESSED, GdtFlags::zero())
+        GdtEntry::seg(self as *mut TssEntry, CODE | ACCESSED, GdtFlags::empty())
     }
 }

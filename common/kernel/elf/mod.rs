@@ -31,10 +31,10 @@ enum HeaderType {
     PT_HIPROC = 0x7fffffff
 }
 
-define_flags!(HeaderFlags: u32 {
-    PT_X = 1,
-    PT_R = 2,
-    PT_W = 4
+bitflags!(flags HeaderFlags: u32 {
+    static PT_X = 1,
+    static PT_R = 2,
+    static PT_W = 4
 })
 
 #[packed]
@@ -66,9 +66,9 @@ impl self::Ehdr {
                 PT_LOAD => (*pheader).load(&task, buffer),
                 PT_DYNAMIC => (*pheader).load(&task, buffer),
                 PT_GNU_STACK => {
-                    if !((*pheader).p_flags & !PT_X).is_zero() {
+                    if (*pheader).p_flags.contains(PT_X) {
                         // We don't need an executable stack
-                        stack_flags = mm::Flags::zero();
+                        stack_flags = mm::Flags::empty();
                     }
                 },
                 _ => {}
@@ -106,10 +106,10 @@ impl self::Phdr {
         let file_pos = self.p_offset as int;
         let file_size = self.p_filesz as uint;
 
-        let flags = if !(self.p_flags & PT_W).is_zero() {
+        let flags = if self.p_flags.contains(PT_W) {
             mm::RW
         } else {
-            mm::Flags::zero()
+            mm::Flags::empty()
         };
 
         task.mmap(vaddr, mem_size, flags);

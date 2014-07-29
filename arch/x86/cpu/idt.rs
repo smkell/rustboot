@@ -2,10 +2,10 @@ use core;
 
 use super::DtReg;
 
-define_flags!(IdtFlags: u8 {
-    INTR_GATE = 0b1110,
-    TRAP_GATE = 0b1111,
-    PRESENT = 1 << 7
+bitflags!(flags IdtFlags: u8 {
+    static INTR_GATE = 0b1110,
+    static TRAP_GATE = 0b1111,
+    static PRESENT = 1 << 7
 })
 
 pub type IdtReg = DtReg<IdtEntry>;
