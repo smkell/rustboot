@@ -1,5 +1,5 @@
 use core::ptr::RawPtr;
-use core::mem::{size_of, transmute};
+use core::mem::{size_of, transmute, uninitialized};
 use core;
 
 use cpu::DtReg;
@@ -112,7 +112,15 @@ impl Gdt {
                   mov gs, $1"
                 :: "r"(data), "r"(local)
                 :: "volatile", "intel");
-            asm!("jmp $0, $$.flush; .flush:" :: "Ir"(code) :: "volatile")
+
+            // A far jump updates the code segment.
+            // Put the full address on the stack to `jmp far m16:32`.
+            let address48: (u32, u16) = (uninitialized(), code);
+            asm!("movl $$.flush, ($0)
+                  ljmp *($0)
+                  .flush:"
+                :: "r"(&address48)
+                :: "volatile");
         }
     }
 }
