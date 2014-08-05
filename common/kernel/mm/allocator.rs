@@ -1,9 +1,10 @@
+//! Mechanisms for the allocation of kernel objects.
+
 use core::ptr::RawPtr;
 use core::mem::transmute;
 use core::ptr::{set_memory, copy_memory};
 use core::intrinsics::offset;
 use core::intrinsics::ctlz32;
-//use core::cmp::expect;
 
 use util::bitv::Bitv;
 
@@ -15,6 +16,7 @@ enum Node {
     FULL = 3
 }
 
+/// The allocator interface. Based on an unfinished RFC.
 pub trait Allocator {
     fn alloc(&mut self, size: uint) -> (*mut u8, uint);
 
@@ -34,6 +36,14 @@ pub trait Allocator {
     fn free(&mut self, ptr: *mut u8);
 }
 
+/// The [buddy memory allocation\[1\]][1] system is implemented with the use of a binary tree.
+/// It can be augmented with the use of linked lists[[2]].
+///
+/// 1. [Buddy memory allocation - Wikipedia](http://en.wikipedia.org/wiki/Buddy_memory_allocation)
+/// 2. [52.206 Operating Systems. Heap memory allocation](http://dysphoria.net/OperatingSystems1/4_allocation_buddy_system.html)
+///
+/// [1]: http://en.wikipedia.org/wiki/Buddy_memory_allocation
+/// [2]: http://dysphoria.net/OperatingSystems1/4_allocation_buddy_system.html
 pub struct BuddyAlloc {
     pub order: uint,
     pub tree: Bitv

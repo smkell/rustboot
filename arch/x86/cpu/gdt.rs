@@ -1,3 +1,5 @@
+//! Global descriptor table
+
 use core::ptr::RawPtr;
 use core::mem::{size_of, transmute, uninitialized};
 use core;

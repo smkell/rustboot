@@ -4,6 +4,17 @@ global start
 
 extern main
 
+; Assembly code in this file is used to set up the image in memory.
+; The directive `use16` marks the beginning of 16-bit code[1]. Label `start`
+; is defined to specify an entry point.
+;
+; [1]: http://www.nasm.us/doc/nasmdoc6.html#section-6.1.1 "6.1.1 USE16 & USE32: Aliases for BITS"
+; [2]: http://en.wikipedia.org/wiki/INT_13H#INT_13h_AH.3D02h:_Read_Sectors_From_Drive "INT 13h AH=02h: Read Sectors From Drive"
+; [3]: http://faydoc.tripod.com/cpu/cli.htm "CLI - Clear Interrupt Flag"
+; [4]: http://en.wikipedia.org/wiki/Control_register#CR0
+; [5]: http://www.c-jump.com/CIS77/ASM/Memory/M77_0290_segment_registers_protected.htm "Segment Registers in Protected Mode"
+; [6]: http://stackoverflow.com/questions/9113310/segment-selector-in-ia-32 "Segment Selector in IA-32"
+
 section .boot
 use16
 
@@ -14,7 +25,9 @@ start:
     mov ds, ax
     mov es, ax
 
-    ; load Rust code into 0x10000...0x1ffff so we can jump to it later
+    ; BIOS interrupt 0x13 provides disk services. When given parameter ah=2,
+    ; it reads sectors from drive[2].
+    ; Load Rust code into 0x10000...0x1ffff so we can jump to it later
     mov si, 2  ; starting with sector 67
     xor di, di ; and memory segment in di
 .loop:
@@ -41,10 +54,16 @@ start:
     cli         ; disable interrupts by clearing a flag [3]
     lgdt [gdtr]
     lidt [idtr]
-    ; set protected mode bit of cr0 [4]
+    ; Register `cr0` controls the operation of the processor. General purpose
+    ; register is used to modify its value since most instructions can't access
+    ; control and segment registers.
+    ; Set protected mode bit of cr0 [4]
     mov eax, cr0
     or eax, 1
     mov cr0, eax
+    ; After protected mode is enabled, a far jump to 32-bit code is necessary
+    ; to start executing 32-bit code and simultaneously load 32-bit **segment
+    ; selector** to CS.
     ; far jump to load CS with 32-bit segment 1 (code) [5][6]
     jmp (1 << 3):protected_mode
 

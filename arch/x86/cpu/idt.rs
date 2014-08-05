@@ -1,3 +1,5 @@
+//! Interrupt descriptor table
+
 use core;
 
 use super::DtReg;

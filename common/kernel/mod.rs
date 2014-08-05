@@ -17,6 +17,15 @@ mod elf;
 
 pub static mut int_table: Option<Table> = None;
 
+/// Called at the end of the bootloader. Starts in protected mode
+/// with the following memory layout:
+///
+/// | Physical memory ranges | Size     | Description |
+/// | ---------------------- | -------- | ----------- |
+/// | 0x0000 ... 0x7BFF      | 31 KiB   | Stack       |
+/// | 0x7C00 ... 0x7DFF      | 0.5 KiB  | Bootloader  |
+/// | 0x07E00 ... 0x0FFFF    | 32.5 KiB | _unused_    |
+/// | 0x10000 ... 0x1FFFF    | 64 KiB   | Kernel      |
 #[lang="start"]
 #[no_mangle]
 pub fn main() {

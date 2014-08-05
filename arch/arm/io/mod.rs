@@ -1,3 +1,5 @@
+//! UART read/write
+
 use core::intrinsics::volatile_store;
 
 pub static UART0: *mut u32 = 0x101f1000 as *mut u32;

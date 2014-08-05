@@ -1,8 +1,11 @@
+//! Higher-level input/output interface.
+
 use core::fmt;
 use core::prelude::*;
 
 use super::drivers::vga;
 
+/// A format writer that writes out to the VGA screen.
 struct Stdout;
 
 impl Stdout {

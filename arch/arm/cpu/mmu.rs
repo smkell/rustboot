@@ -1,3 +1,5 @@
+//! Memory management unit.
+
 use core;
 
 use kernel::mm::physical;

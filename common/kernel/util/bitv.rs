@@ -1,8 +1,8 @@
-use core::ptr::RawPtr;
-use core::mem::transmute;
-use core::ptr::set_memory;
+use core::ptr::{RawPtr, set_memory};
 
-// vector of 2-bit
+// TODO: make an actual bitmap.
+
+/// A vector of 2-bit values.
 pub struct Bitv {
     pub storage: *mut u32
 }
@@ -13,7 +13,7 @@ impl Bitv {
         let w = (i / 16) as int;
         let b = (i % 16) * 2;
         unsafe {
-            transmute((*self.storage.offset(w) as uint >> b) as u8 & 3)
+            (*self.storage.offset(w) as uint >> b) as u8 & 3
         }
     }
 

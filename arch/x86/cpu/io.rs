@@ -1,3 +1,5 @@
+//! Low-level CPU IO: inb, outb instructions.
+
 #[inline(always)]
 pub fn out<T>(port: u16, val: T) {
     unsafe {

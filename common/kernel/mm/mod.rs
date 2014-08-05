@@ -1,3 +1,5 @@
+//! The memory management.
+
 pub use self::allocator::{
 	Allocator,
 	BuddyAlloc,
