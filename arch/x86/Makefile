@@ -59,8 +59,9 @@ run: all
 
 debug: $(BDIR)/kernel.elf $(BDIR)/floppy.img
 ifeq ($(strip $(TMUX)),)
-	tmux new-session -d -s rustboot "$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S"
-	tmux new-window -t rustboot:1 "$(GDB)"
+	tmux new-session -d -s rustboot
+	tmux new-window -t rustboot:1 "$(QEMU) -fda $(BDIR)/floppy.img -m 32 -s -S"
+	tmux new-window -t rustboot:2 "$(GDB)"
 	tmux a -t rustboot
 	tmux kill-session -t rustboot
 else
