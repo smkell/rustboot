@@ -34,7 +34,7 @@ bitflags!(flags GdtFlags: u8 {
 
 pub type GdtReg = DtReg<GdtEntry>;
 
-#[packed]
+#[repr(packed)]
 pub struct GdtEntry {
     limit_lo: u16,
     base_lo: u16,
@@ -127,11 +127,9 @@ impl Gdt {
     }
 }
 
-impl super::DtReg<GdtEntry> {
+impl super::Load for GdtEntry {
     #[inline]
-    pub fn load(&self) {
-        unsafe {
-            asm!("lgdt [$0]" :: "r"(self) :: "intel");
-        }
+    unsafe fn load(reg: &super::DtReg<GdtEntry>) {
+        asm!("lgdt [$0]" :: "r"(reg) :: "intel");
     }
 }

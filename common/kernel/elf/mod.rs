@@ -37,7 +37,7 @@ bitflags!(flags HeaderFlags: u32 {
     static PT_W = 4
 })
 
-#[packed]
+#[repr(packed)]
 struct ELFIdent {
     ei_mag: [u8, ..4],
     ei_class: u8,
@@ -48,8 +48,16 @@ struct ELFIdent {
     ei_pad: [u8, ..7]
 }
 
-impl self::Ehdr {
-    pub unsafe fn spawn_process(&self) -> Process {
+trait EhdrT {
+    unsafe fn spawn_process(&self) -> Process;
+}
+
+trait PhdrT {
+    unsafe fn load(&self, task: &Process, buffer: *const u8);
+}
+
+impl EhdrT for self::Ehdr {
+    unsafe fn spawn_process(&self) -> Process {
         let mut task = Process::new();
         //TODO: Verify file integrity
         let buffer: *const u8 = transmute(self);
@@ -99,7 +107,7 @@ impl self::Ehdr {
     }
 }
 
-impl self::Phdr {
+impl PhdrT for self::Phdr {
     unsafe fn load(&self, task: &Process, buffer: *const u8) {
         let vaddr = self.p_vaddr as *mut u8;
         let mem_size = self.p_memsz as uint;

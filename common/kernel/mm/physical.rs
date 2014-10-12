@@ -48,8 +48,8 @@ impl<T> RawPtr<T> for Phys<T> {
         self.ptr.to_uint()
     }
 
-    unsafe fn to_option(&self) -> Option<&T> {
-        self.ptr.to_option()
+    unsafe fn as_ref<'a>(&self) -> Option<&'a T> {
+        self.ptr.as_ref()
     }
 
     unsafe fn offset(self, n: int) -> Phys<T> {

@@ -10,7 +10,7 @@ MAYBE_DEBUG    ?= -g
 endif
 
 ifndef DEBUG
-MAYBE_RUSTC_OPTIMIZE ?= --opt-level=2 -Z lto
+MAYBE_RUSTC_OPTIMIZE ?= --opt-level=2 -C lto
 MAYBE_CLANG_OPTIMIZE ?= -O2
 endif
 

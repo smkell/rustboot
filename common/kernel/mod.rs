@@ -33,8 +33,8 @@ pub fn main() {
     mm::physical::init();
 
     let table = interrupt::Table::new();
-    table.load();
     unsafe {
+        table.load();
         int_table = Some(table);
         drivers::keydown = Some(io::putc);
     }

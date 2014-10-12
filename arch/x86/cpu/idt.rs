@@ -12,7 +12,7 @@ bitflags!(flags IdtFlags: u8 {
 
 pub type IdtReg = DtReg<IdtEntry>;
 
-#[packed]
+#[repr(packed)]
 pub struct IdtEntry {
     addr_lo: u16,
     sel: u16,
@@ -38,11 +38,9 @@ impl IdtEntry {
     }
 }
 
-impl super::DtReg<IdtEntry> {
+impl super::Load for IdtEntry {
     #[inline]
-    pub fn load(&self) {
-        unsafe {
-            asm!("lidt [$0]" :: "A"(self) :: "intel");
-        }
+    unsafe fn load(reg: &super::DtReg<IdtEntry>) {
+        asm!("lidt [$0]" :: "A"(reg as *const super::DtReg<IdtEntry>) :: "intel");
     }
 }

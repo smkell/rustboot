@@ -20,16 +20,16 @@ define_flags!(Flags: u32 {
     CLIENT_ACCESS
 })
 
-#[packed]
+#[repr(packed)]
 pub struct Descriptor(u32);
 
-#[packed]
+#[repr(packed)]
 struct PageTableCoarse {
     pages: [Descriptor, ..256]
 }
 
 #[allow(visible_private_types)]
-#[packed]
+#[repr(packed)]
 pub struct PageDirectory {
     entries: [Descriptor, ..4096]
 }

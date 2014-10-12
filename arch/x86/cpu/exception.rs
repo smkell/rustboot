@@ -60,6 +60,13 @@ unsafe extern "C" fn begin_unwind(fmt: &fmt::Arguments, file: &str, line: uint) 
     loop { }; // for divergence check
 }
 
+#[lang = "fail_fmt"]
+pub extern fn rust_begin_unwind(msg: &fmt::Arguments,
+                                file: &'static str, line: uint) -> ! {
+    unsafe { asm!("hlt"); }
+    loop { }; // for divergence check
+}
+
 #[no_split_stack]
 #[inline(never)]
 unsafe fn blue_screen(stack: &Context) {

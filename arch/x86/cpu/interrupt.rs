@@ -12,7 +12,7 @@ use kernel::heap;
 // TODO for Rust: nested C-like enums
 // #[repr(u8)]
 pub enum Int {
-    Fault(Fault)
+    FaultInt(Fault)
 }
 
 pub struct Table {
@@ -48,14 +48,15 @@ impl Table {
 
     #[allow(visible_private_types)]
     pub unsafe fn set_isr(&mut self, val: Fault, code: bool, handler: unsafe extern "C" fn()) {
-        *self.table.offset(val as int) = Isr::new(Fault(val), code).idt_entry(handler);
+        *self.table.offset(val as int) = Isr::new(FaultInt(val), code).idt_entry(handler);
     }
 
-    pub fn load(&self) {
+    pub unsafe fn load(&self) {
         self.reg.load();
         pic::remap();
         pic::mask(self.mask);
         enable();
+        // loop {} // faults here?
     }
 }
 
@@ -84,7 +85,7 @@ fn enable() {
 /// [1]: http://wiki.osdev.org/Exceptions "Exceptions - OSDev Wiki"
 /// [2]: http://www.srcf.ucam.org/piipkernel/git_repository/kernel/src/isr.asm
 /// [3]: http://www.xxeo.com/single-byte-or-small-x86-opcodes
-#[packed]
+#[repr(packed)]
 pub struct Isr {
     push_dummy: u8, // push eax  // (only for exceptions without error codes)
     push: u8,       // push byte <imm>  // save int. number

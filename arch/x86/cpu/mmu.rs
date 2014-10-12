@@ -23,7 +23,7 @@ bitflags!(flags Flags: uint {
     static HUGE     = 1 << 7
 })
 
-#[packed]
+#[repr(packed)]
 pub struct Page(uint);
 
 static PAGE_SIZE: uint = 0x1000;
@@ -43,12 +43,12 @@ struct VMemLayout {
 static VMEM: *mut VMemLayout = 0xFF7FF000u as *mut VMemLayout;
 
 // U: underlying element type
-#[packed]
+#[repr(packed)]
 struct Table<U> {
     entries: [Page, ..ENTRIES]
 }
 
-#[packed]
+#[repr(packed)]
 struct Directory<U = PageTable> {
     entries: [U, ..ENTRIES]
 }

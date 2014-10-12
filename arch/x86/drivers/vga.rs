@@ -23,7 +23,7 @@ pub enum Color {
     White       = 15,
 }
 
-#[packed]
+#[repr(packed)]
 struct Char {
     pub char: u8,
     attr: u8,

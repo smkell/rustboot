@@ -18,7 +18,7 @@ pub type Elf32_Symndx = c_uint;
 type c_uchar = u8;
 type c_void = uint;
 
-#[packed]
+#[repr(packed)]
 pub struct Ehdr {
     pub e_ident: [c_uchar, ..16u],
     pub e_type: Elf32_Half,
@@ -36,7 +36,7 @@ pub struct Ehdr {
     pub e_shstrndx: Elf32_Half,
 }
 
-#[packed]
+#[repr(packed)]
 pub struct Phdr {
     pub p_type: super::HeaderType,
     pub p_offset: Elf32_Off,
@@ -48,7 +48,7 @@ pub struct Phdr {
     pub p_align: Elf32_Word,
 }
 
-#[packed]
+#[repr(packed)]
 pub struct Elf32_Shdr {
     sh_name: Elf32_Word,
     sh_type: Elf32_Word,

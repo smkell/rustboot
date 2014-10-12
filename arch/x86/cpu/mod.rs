@@ -101,7 +101,11 @@ impl CR3 {
     }
 }
 
-#[packed]
+pub trait Load {
+    unsafe fn load(reg: &DtReg<Self>);
+}
+
+#[repr(packed)]
 struct DtReg<T> {
     size: u16,
     addr: *mut T,
@@ -113,6 +117,13 @@ impl<T> DtReg<T> {
             size: (capacity * size_of::<T>()) as u16,
             addr: descriptor_table,
         }
+    }
+}
+
+impl<T: Load> DtReg<T> {
+    #[inline]
+    pub unsafe fn load(&self) {
+        Load::load(self)
     }
 }
 
