@@ -11,13 +11,13 @@ static PAGE_SIZE: uint = 0x1000;
 static PAGE_SIZE_LOG2: uint = 12;
 
 // kinda clever
-define_flags!(Flags: u32 {
-    SECTION = 0b10010,
+bitflags!(flags Flags: u32 {
+    static SECTION = 0b10010,
 
-    BUFFER = 1 << 2,
-    CACHE,
-    RW     = 1 << 10,
-    CLIENT_ACCESS
+    static BUFFER = 1 << 2,
+    static CACHE  = 1 << 3,
+    static RW     = 1 << 10,
+    static CLIENT_ACCESS = 1 << 11
 })
 
 #[repr(packed)]
@@ -57,12 +57,12 @@ define_reg!(CR, CRFlags: uint {
 
 // Each of the 16 domains can be either allowed full access (manager)
 // to a region of memory or restricted access to some pages in that region (client).
-define_flags!(DomainTypeMask: uint {
-    KERNEL = 0b11 << 0,
-    USER   = 0b11 << 2,
-    NOACCESS = 0,
-    CLIENT   = 0b01 * 0x55555555,
-    MANAGER  = 0b11 * 0x55555555
+bitflags!(flags DomainTypeMask: uint {
+    static KERNEL = 0b11 << 0,
+    static USER   = 0b11 << 2,
+    static NOACCESS = 0,
+    static CLIENT   = 0b01 * 0x55555555,
+    static MANAGER  = 0b11 * 0x55555555
 })
 
 impl CR {
