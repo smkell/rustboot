@@ -1,6 +1,7 @@
 rustboot
 ================================================================================
-A small kernel written in Rust. For a detailed overview and roadmap, [see the Wiki!](https://github.com/alexchandel/rustboot/wiki)
+A small kernel with basic functionality written in Rust. Currently only parts
+of memory management and the keyboard driver are any interesting.
 
 Pictures
 --------------------------------------------------------------------------------
