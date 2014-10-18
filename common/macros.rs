@@ -6,7 +6,7 @@ macro_rules! define_reg (
             $($flag:ident $(= $v:expr)*),*
         }
     ) => (
-        bitflags!(flags $flags: $T { $( static $flag $(= $v)* ),* })
+        bitflags!(flags $flags: $T { $( const $flag $(= $v)* ),* })
 
         pub struct $Reg;
 

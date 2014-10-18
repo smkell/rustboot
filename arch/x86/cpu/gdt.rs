@@ -8,28 +8,28 @@ use cpu::DtReg;
 use kernel::heap;
 
 bitflags!(flags GdtAccess: u8 {
-    static ACCESSED = 1 << 0,
-    static EXTEND   = 1 << 1,
-    static CONFORM  = 1 << 2,
-    static CODE     = 1 << 3,
-    static STORAGE  = 1 << 4, // not TSS
+    const ACCESSED = 1 << 0,
+    const EXTEND   = 1 << 1,
+    const CONFORM  = 1 << 2,
+    const CODE     = 1 << 3,
+    const STORAGE  = 1 << 4, // not TSS
 
-    static DPL0 = 0 << 5,
-    static DPL1 = 1 << 5,
-    static DPL2 = 2 << 5,
-    static DPL3 = 3 << 5,
+    const DPL0 = 0 << 5,
+    const DPL1 = 1 << 5,
+    const DPL2 = 2 << 5,
+    const DPL3 = 3 << 5,
 
-    static PRESENT  = 1 << 7,
+    const PRESENT  = 1 << 7,
 
-    static DATA_WRITE = EXTEND.bits,
-    static CODE_READ  = CODE.bits
+    const DATA_WRITE = EXTEND.bits,
+    const CODE_READ  = CODE.bits
                       | EXTEND.bits,
-    static TSS        = 0b1001
+    const TSS        = 0b1001
 })
 
 bitflags!(flags GdtFlags: u8 {
-    static SIZE_32  = 1 << 6,
-    static PAGES    = 1 << 7
+    const SIZE_32  = 1 << 6,
+    const PAGES    = 1 << 7
 })
 
 pub type GdtReg = DtReg<GdtEntry>;

@@ -5,9 +5,9 @@ use core;
 use super::DtReg;
 
 bitflags!(flags IdtFlags: u8 {
-    static INTR_GATE = 0b1110,
-    static TRAP_GATE = 0b1111,
-    static PRESENT = 1 << 7
+    const INTR_GATE = 0b1110,
+    const TRAP_GATE = 0b1111,
+    const PRESENT = 1 << 7
 })
 
 pub type IdtReg = DtReg<IdtEntry>;

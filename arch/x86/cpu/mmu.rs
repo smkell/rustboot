@@ -16,21 +16,21 @@ use kernel;
 pub type Frame = [u8, ..PAGE_SIZE];
 
 bitflags!(flags Flags: uint {
-    static PRESENT  = 1 << 0,
-    static RW       = 1 << 1,
-    static USER     = 1 << 2,
-    static ACCESSED = 1 << 5,
-    static HUGE     = 1 << 7
+    const PRESENT  = 1 << 0,
+    const RW       = 1 << 1,
+    const USER     = 1 << 2,
+    const ACCESSED = 1 << 5,
+    const HUGE     = 1 << 7
 })
 
 #[repr(packed)]
 pub struct Page(uint);
 
-static PAGE_SIZE: uint = 0x1000;
-static PAGE_SIZE_LOG2: uint = 12;
-static ENTRIES:   uint = 1024;
+const PAGE_SIZE: uint = 0x1000;
+const PAGE_SIZE_LOG2: uint = 12;
+const ENTRIES:   uint = 1024;
 
-static DIR_VADDR: uint = 0xFFFFF000;
+const DIR_VADDR: uint = 0xFFFFF000;
 
 struct VMemLayout {
     temp1: PageDirectory,                    // @ 0xFF7FF000
