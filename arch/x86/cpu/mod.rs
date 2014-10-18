@@ -33,8 +33,8 @@ macro_rules! cpuid(
 )
 
 bitflags!(flags Eflags: u32 {
-    static CF = 1 << 0,
-    static IF = 1 << 9
+    const CF = 1 << 0,
+    const IF = 1 << 9
 })
 
 impl Eflags {
@@ -49,7 +49,7 @@ impl Eflags {
 
 bitflags!(flags CR0Flags: u32 {
     // TODO: all flags
-    static CR0_PG = 1 << 31
+    const CR0_PG = 1 << 31
 })
 
 struct CR0;

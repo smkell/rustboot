@@ -32,9 +32,9 @@ enum HeaderType {
 }
 
 bitflags!(flags HeaderFlags: u32 {
-    static PT_X = 1,
-    static PT_R = 2,
-    static PT_W = 4
+    const PT_X = 1,
+    const PT_R = 2,
+    const PT_W = 4
 })
 
 #[repr(packed)]
@@ -130,13 +130,13 @@ impl PhdrT for self::Phdr {
 impl ELFIdent {
     unsafe fn load(&self) -> Option<&Ehdr> {
         // TODO: check endianness
-        static MAGIC_STRING : &'static str = "\u007fELF";
+        const MAGIC_STRING : &'static str = "\u007fELF";
         if *(MAGIC_STRING.as_ptr() as *const u32) != transmute(self.ei_mag) {
             return None;
         }
 
-        #[cfg(target_word_size = "32")] static CLASS: u8 = 1;
-        #[cfg(target_word_size = "64")] static CLASS: u8 = 2;
+        #[cfg(target_word_size = "32")] const CLASS: u8 = 1;
+        #[cfg(target_word_size = "64")] const CLASS: u8 = 2;
 
         match self.ei_class {
             CLASS => return Some(transmute(self)),
