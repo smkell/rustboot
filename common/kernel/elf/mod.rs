@@ -8,8 +8,8 @@ use kernel::process::Process;
 use kernel::mm;
 use platform::io;
 
-#[cfg(target_word_size = "32")] pub use self::elf32::{Ehdr, Phdr, Auxv, AuxvValue, AT_NULL};
-#[cfg(target_word_size = "64")] pub use self::elf64::{Ehdr, Phdr, Auxv, AuxvValue, AT_NULL};
+#[cfg(target_word_size = "32")] pub use self::elf32::{Ehdr, Phdr, Auxv, AuxvValue, AuxvType};
+#[cfg(target_word_size = "64")] pub use self::elf64::{Ehdr, Phdr, Auxv, AuxvValue, AuxvType};
 #[cfg(target_word_size = "32")] mod elf32;
 #[cfg(target_word_size = "64")] mod elf64;
 
@@ -70,10 +70,10 @@ impl EhdrT for self::Ehdr {
             let pheader = ph_base.offset(ph_size * i as int) as *const Phdr;
 
             match (*pheader).p_type {
-                PT_NULL => {}
-                PT_LOAD => (*pheader).load(&task, buffer),
-                PT_DYNAMIC => (*pheader).load(&task, buffer),
-                PT_GNU_STACK => {
+                HeaderType::PT_NULL => {}
+                HeaderType::PT_LOAD => (*pheader).load(&task, buffer),
+                HeaderType::PT_DYNAMIC => (*pheader).load(&task, buffer),
+                HeaderType::PT_GNU_STACK => {
                     if (*pheader).p_flags.contains(PT_X) {
                         // We don't need an executable stack
                         stack_flags = mm::Flags::empty();
@@ -94,7 +94,7 @@ impl EhdrT for self::Ehdr {
 
         *argv_ptr.offset(1) = transmute(0u);
         *envp_ptr = transmute(0u);
-        *auxv_ptr = Auxv { a_type: AT_NULL, a_un: AuxvValue { data: 0 } };
+        *auxv_ptr = Auxv { a_type: AuxvType::AT_NULL, a_un: AuxvValue { data: 0 } };
 
         let (strs, len): (*const u8, uint) = transmute("test\0");
         copy_nonoverlapping_memory(str_ptr, strs, len);
@@ -130,7 +130,7 @@ impl PhdrT for self::Phdr {
 impl ELFIdent {
     unsafe fn load(&self) -> Option<&Ehdr> {
         // TODO: check endianness
-        const MAGIC_STRING : &'static str = "\u007fELF";
+        static MAGIC_STRING : &'static str = "\u007fELF";
         if *(MAGIC_STRING.as_ptr() as *const u32) != transmute(self.ei_mag) {
             return None;
         }

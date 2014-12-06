@@ -9,7 +9,7 @@ pub mod keyboard;
 pub static mut keydown: Option<fn(u8)> = None;
 
 pub fn init() {
-    vga::clear_screen(vga::LightRed);
+    vga::clear_screen(vga::Color::LightRed);
     vga::cursor_at(0);
 
     unsafe {

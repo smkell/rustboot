@@ -1,4 +1,5 @@
 use core::mem::size_of;
+use core::num::Int;
 use core::prelude::*;
 
 use kernel::mm::{Allocator, Alloc, BuddyAlloc};
@@ -42,7 +43,7 @@ pub unsafe fn free<T>(ptr: *mut T) {
 
 #[inline]
 pub unsafe fn alloc<T = u8>(count: uint) -> *mut T {
-    match count.checked_mul(&size_of::<T>()) {
+    match count.checked_mul(size_of::<T>()) {
         None => out_of_memory(),
         Some(size) => malloc_raw(size) as *mut T
     }
@@ -50,7 +51,7 @@ pub unsafe fn alloc<T = u8>(count: uint) -> *mut T {
 
 #[inline]
 pub unsafe fn zero_alloc<T = u8>(count: uint) -> *mut T {
-    match count.checked_mul(&size_of::<T>()) {
+    match count.checked_mul(size_of::<T>()) {
         None => out_of_memory(),
         Some(size) => match get(heap).zero_alloc(size) {
             (_, 0) => out_of_memory(),
@@ -61,7 +62,7 @@ pub unsafe fn zero_alloc<T = u8>(count: uint) -> *mut T {
 
 #[inline]
 pub unsafe fn realloc_raw<T>(ptr: *mut T, count: uint) -> *mut T {
-    match count.checked_mul(&size_of::<T>()) {
+    match count.checked_mul(size_of::<T>()) {
         None => out_of_memory(),
         Some(0) => {
             free(ptr as *mut u8);

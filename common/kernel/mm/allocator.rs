@@ -78,17 +78,17 @@ impl BuddyAlloc {
 
         loop {
             match (self.get(index), level == lg2_size) {
-                (UNUSED, true) => {
+                (Node::UNUSED, true) => {
                     // Found appropriate unused node
-                    self.set(index, USED); // use
+                    self.set(index, Node::USED); // use
 
                     let mut parent = index;
                     loop {
                         let buddy = parent - 1 + (parent & 1) * 2;
                         match self.get(buddy) {
-                            USED | FULL if parent > 0 => {
+                            Node::USED | Node::FULL if parent > 0 => {
                                 parent = (parent + 1) / 2 - 1;
-                                self.set(parent, FULL);
+                                self.set(parent, Node::FULL);
                             }
                             _ => break
                         }
@@ -98,15 +98,15 @@ impl BuddyAlloc {
                         1 << lg2_size
                     );
                 }
-                (UNUSED, false) => {
+                (Node::UNUSED, false) => {
                     // This large node is unused, split it!
-                    self.set(index, SPLIT);
-                    self.set(index*2 + 1, UNUSED);
-                    self.set(index*2 + 2, UNUSED);
+                    self.set(index, Node::SPLIT);
+                    self.set(index*2 + 1, Node::UNUSED);
+                    self.set(index*2 + 2, Node::UNUSED);
                     index = index * 2 + 1; // left child
                     level -= 1;
                 }
-                (SPLIT, false) => {
+                (Node::SPLIT, false) => {
                     // Traverse children
                     index = index * 2 + 1; // left child
                     level -= 1;
@@ -140,23 +140,23 @@ impl BuddyAlloc {
 
         loop {
             match self.get(index) {
-                UNUSED => return,
-                USED => loop {
+                Node::UNUSED => return,
+                Node::USED => loop {
                     if index == 0 {
-                        self.set(0, UNUSED);
+                        self.set(0, Node::UNUSED);
                         return;
                     }
 
                     let buddy = index - 1 + (index & 1) * 2;
                     match self.get(buddy) {
-                        UNUSED => {}
+                        Node::UNUSED => {}
                         _ => {
-                            self.set(index, UNUSED);
+                            self.set(index, Node::UNUSED);
                             loop {
                                 let parent = (index + 1) / 2 - 1; // parent
                                 match self.get(parent) {
-                                    FULL if index > 0 => {
-                                        self.set(parent, SPLIT);
+                                    Node::FULL if index > 0 => {
+                                        self.set(parent, Node::SPLIT);
                                     }
                                     _ => return
                                 }

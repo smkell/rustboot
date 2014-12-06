@@ -1,6 +1,5 @@
 use core::mem::transmute;
 
-use core::failure;
 use core::fmt;
 
 use platform::io;
@@ -60,7 +59,7 @@ unsafe extern "C" fn begin_unwind(fmt: &fmt::Arguments, file: &str, line: uint) 
     loop { }; // for divergence check
 }
 
-#[lang = "fail_fmt"]
+#[lang = "panic_fmt"]
 pub extern fn rust_begin_unwind(msg: &fmt::Arguments,
                                 file: &'static str, line: uint) -> ! {
     unsafe { asm!("hlt"); }
@@ -85,13 +84,13 @@ pub unsafe fn exception_handler() -> unsafe extern "C" fn() {
     // Points to the data on the stack
     let stack_ptr = Context::save();
 
-    if stack_ptr.int_no as u8 == PageFault as u8 {
+    if stack_ptr.int_no as u8 == Fault::PageFault as u8 {
         let cr2: uint;
         asm!("mov %cr2, %eax" : "={eax}"(cr2));
         println!("Accessed {0:x} from {1:x}", cr2, stack_ptr.call_stack.eip);
     }
 
-    if stack_ptr.int_no as u8 == Breakpoint as u8 {
+    if stack_ptr.int_no as u8 == Fault::Breakpoint as u8 {
         asm!("debug:" :::: "volatile")
     }
     else {

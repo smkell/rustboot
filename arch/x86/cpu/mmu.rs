@@ -68,8 +68,8 @@ pub unsafe fn init() {
     (*dir.as_ptr()).map_self(dir);
 
     kernel::int_table.map(|mut t| {
-        use super::exception::{PageFault, exception_handler};
-        t.set_isr(PageFault, true, exception_handler());
+        use super::exception::{Fault, exception_handler};
+        t.set_isr(Fault::PageFault, true, exception_handler());
     });
 
     switch_directory(dir);

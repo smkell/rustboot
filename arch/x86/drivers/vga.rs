@@ -42,7 +42,7 @@ pub static SCREEN: *mut Screen = 0xb8000 as *mut Screen;
 
 pub fn clear_screen(bg: Color) {
     unsafe {
-        wmemset(SCREEN as *mut u8, transmute(Char::new(' ', Black, bg)), SCREEN_SIZE);
+        wmemset(SCREEN as *mut u8, transmute(Char::new(' ', Color::Black, bg)), SCREEN_SIZE);
     }
 }
 

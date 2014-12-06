@@ -212,8 +212,8 @@ pub fn init() {
         desc_table = Some(t);
 
         kernel::int_table.map(|mut t| {
-            use cpu::exception::{Breakpoint, exception_handler};
-            t.set_isr(Breakpoint, false, exception_handler());
+            use cpu::exception::{Fault, exception_handler};
+            t.set_isr(Fault::Breakpoint, false, exception_handler());
         });
 
         mmu::init();

@@ -24,11 +24,11 @@ impl fmt::FormatWriter for Stdout {
 }
 
 pub fn print_args(fmt: &fmt::Arguments) {
-    write!(Stdout, "{}", fmt);
+    write!(&mut Stdout, "{}", fmt);
 }
 
 pub fn println_args(fmt: &fmt::Arguments) {
-    writeln!(Stdout, "{}", fmt);
+    writeln!(&mut Stdout, "{}", fmt);
 }
 
 static mut pos: int = 0;

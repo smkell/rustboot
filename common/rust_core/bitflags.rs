@@ -8,110 +8,110 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! A typesafe bitmask flag generator.
-
-//! The `bitflags!` macro generates a `struct` that holds a set of C-style
-//! bitmask flags. It is useful for creating typesafe wrappers for C APIs.
-//!
-//! The flags should only be defined for integer types, otherwise unexpected
-//! type errors may occur at compile time.
-//!
-//! # Example
-//!
-//! ```{.rust}
-//! bitflags! {
-//!     flags Flags: u32 {
-//!         const FLAG_A       = 0x00000001,
-//!         const FLAG_B       = 0x00000010,
-//!         const FLAG_C       = 0x00000100,
-//!         const FLAG_ABC     = FLAG_A.bits
-//!                            | FLAG_B.bits
-//!                            | FLAG_C.bits,
-//!     }
-//! }
-//!
-//! fn main() {
-//!     let e1 = FLAG_A | FLAG_C;
-//!     let e2 = FLAG_B | FLAG_C;
-//!     assert!((e1 | e2) == FLAG_ABC);   // union
-//!     assert!((e1 & e2) == FLAG_C);     // intersection
-//!     assert!((e1 - e2) == FLAG_A);     // set difference
-//!     assert!(!e2 == FLAG_A);           // set complement
-//! }
-//! ```
-//!
-//! The generated `struct`s can also be extended with type and trait implementations:
-//!
-//! ```{.rust}
-//! use std::fmt;
-//!
-//! bitflags! {
-//!     flags Flags: u32 {
-//!         const FLAG_A   = 0x00000001,
-//!         const FLAG_B   = 0x00000010,
-//!     }
-//! }
-//!
-//! impl Flags {
-//!     pub fn clear(&mut self) {
-//!         self.bits = 0;  // The `bits` field can be accessed from within the
-//!                         // same module where the `bitflags!` macro was invoked.
-//!     }
-//! }
-//!
-//! impl fmt::Show for Flags {
-//!     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//!         write!(f, "hi!")
-//!     }
-//! }
-//!
-//! fn main() {
-//!     let mut flags = FLAG_A | FLAG_B;
-//!     flags.clear();
-//!     assert!(flags.is_empty());
-//!     assert_eq!(format!("{}", flags).as_slice(), "hi!");
-//! }
-//! ```
-//!
-//! # Attributes
-//!
-//! Attributes can be attached to the generated `struct` by placing them
-//! before the `flags` keyword.
-//!
-//! # Derived traits
-//!
-//! The `PartialEq` and `Clone` traits are automatically derived for the `struct` using
-//! the `deriving` attribute. Additional traits can be derived by providing an
-//! explicit `deriving` attribute on `flags`.
-//!
-//! # Operators
-//!
-//! The following operator traits are implemented for the generated `struct`:
-//!
-//! - `BitOr`: union
-//! - `BitAnd`: intersection
-//! - `BitXor`: toggle
-//! - `Sub`: set difference
-//! - `Not`: set complement
-//!
-//! # Methods
-//!
-//! The following methods are defined for the generated `struct`:
-//!
-//! - `empty`: an empty set of flags
-//! - `all`: the set of all flags
-//! - `bits`: the raw value of the flags currently stored
-//! - `is_empty`: `true` if no flags are currently stored
-//! - `is_all`: `true` if all flags are currently set
-//! - `intersects`: `true` if there are flags common to both `self` and `other`
-//! - `contains`: `true` all of the flags in `other` are contained within `self`
-//! - `insert`: inserts the specified flags in-place
-//! - `remove`: removes the specified flags in-place
-//! - `toggle`: the specified flags will be inserted if not present, and removed
-//!             if they are.
 #![experimental]
 #![macro_escape]
 
+//! A typesafe bitmask flag generator.
+
+/// The `bitflags!` macro generates a `struct` that holds a set of C-style
+/// bitmask flags. It is useful for creating typesafe wrappers for C APIs.
+///
+/// The flags should only be defined for integer types, otherwise unexpected
+/// type errors may occur at compile time.
+///
+/// # Example
+///
+/// ```{.rust}
+/// bitflags! {
+///     flags Flags: u32 {
+///         const FLAG_A       = 0x00000001,
+///         const FLAG_B       = 0x00000010,
+///         const FLAG_C       = 0x00000100,
+///         const FLAG_ABC     = FLAG_A.bits
+///                            | FLAG_B.bits
+///                            | FLAG_C.bits,
+///     }
+/// }
+///
+/// fn main() {
+///     let e1 = FLAG_A | FLAG_C;
+///     let e2 = FLAG_B | FLAG_C;
+///     assert!((e1 | e2) == FLAG_ABC);   // union
+///     assert!((e1 & e2) == FLAG_C);     // intersection
+///     assert!((e1 - e2) == FLAG_A);     // set difference
+///     assert!(!e2 == FLAG_A);           // set complement
+/// }
+/// ```
+///
+/// The generated `struct`s can also be extended with type and trait implementations:
+///
+/// ```{.rust}
+/// use std::fmt;
+///
+/// bitflags! {
+///     flags Flags: u32 {
+///         const FLAG_A   = 0x00000001,
+///         const FLAG_B   = 0x00000010,
+///     }
+/// }
+///
+/// impl Flags {
+///     pub fn clear(&mut self) {
+///         self.bits = 0;  // The `bits` field can be accessed from within the
+///                         // same module where the `bitflags!` macro was invoked.
+///     }
+/// }
+///
+/// impl fmt::Show for Flags {
+///     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+///         write!(f, "hi!")
+///     }
+/// }
+///
+/// fn main() {
+///     let mut flags = FLAG_A | FLAG_B;
+///     flags.clear();
+///     assert!(flags.is_empty());
+///     assert_eq!(format!("{}", flags).as_slice(), "hi!");
+/// }
+/// ```
+///
+/// # Attributes
+///
+/// Attributes can be attached to the generated `struct` by placing them
+/// before the `flags` keyword.
+///
+/// # Derived traits
+///
+/// The `PartialEq` and `Clone` traits are automatically derived for the `struct` using
+/// the `deriving` attribute. Additional traits can be derived by providing an
+/// explicit `deriving` attribute on `flags`.
+///
+/// # Operators
+///
+/// The following operator traits are implemented for the generated `struct`:
+///
+/// - `BitOr`: union
+/// - `BitAnd`: intersection
+/// - `BitXor`: toggle
+/// - `Sub`: set difference
+/// - `Not`: set complement
+///
+/// # Methods
+///
+/// The following methods are defined for the generated `struct`:
+///
+/// - `empty`: an empty set of flags
+/// - `all`: the set of all flags
+/// - `bits`: the raw value of the flags currently stored
+/// - `is_empty`: `true` if no flags are currently stored
+/// - `is_all`: `true` if all flags are currently set
+/// - `intersects`: `true` if there are flags common to both `self` and `other`
+/// - `contains`: `true` all of the flags in `other` are contained within `self`
+/// - `insert`: inserts the specified flags in-place
+/// - `remove`: removes the specified flags in-place
+/// - `toggle`: the specified flags will be inserted if not present, and removed
+///             if they are.
 #[macro_export]
 macro_rules! bitflags {
     ($(#[$attr:meta])* flags $BitFlags:ident: $T:ty {
@@ -127,22 +127,26 @@ macro_rules! bitflags {
 
         impl $BitFlags {
             /// Returns an empty set of flags.
+            #[inline]
             pub fn empty() -> $BitFlags {
                 $BitFlags { bits: 0 }
             }
 
             /// Returns the set containing all flags.
+            #[inline]
             pub fn all() -> $BitFlags {
                 $BitFlags { bits: $($value)|+ }
             }
 
             /// Returns the raw value of the flags currently stored.
+            #[inline]
             pub fn bits(&self) -> $T {
                 self.bits
             }
 
             /// Convert from underlying bit representation, unless that
             /// representation contains bits that do not correspond to a flag.
+            #[inline]
             pub fn from_bits(bits: $T) -> ::std::option::Option<$BitFlags> {
                 if (bits & !$BitFlags::all().bits()) != 0 {
                     ::std::option::None
@@ -153,42 +157,49 @@ macro_rules! bitflags {
 
             /// Convert from underlying bit representation, dropping any bits
             /// that do not correspond to flags.
+            #[inline]
             pub fn from_bits_truncate(bits: $T) -> $BitFlags {
                 $BitFlags { bits: bits } & $BitFlags::all()
             }
 
             /// Returns `true` if no flags are currently stored.
+            #[inline]
             pub fn is_empty(&self) -> bool {
                 *self == $BitFlags::empty()
             }
 
             /// Returns `true` if all flags are currently set.
+            #[inline]
             pub fn is_all(&self) -> bool {
                 *self == $BitFlags::all()
             }
 
             /// Returns `true` if there are flags common to both `self` and `other`.
+            #[inline]
             pub fn intersects(&self, other: $BitFlags) -> bool {
-                !(self & other).is_empty()
+                !(*self & other).is_empty()
             }
 
             /// Returns `true` all of the flags in `other` are contained within `self`.
             #[inline]
             pub fn contains(&self, other: $BitFlags) -> bool {
-                (self & other) == other
+                (*self & other) == other
             }
 
             /// Inserts the specified flags in-place.
+            #[inline]
             pub fn insert(&mut self, other: $BitFlags) {
                 self.bits |= other.bits;
             }
 
             /// Removes the specified flags in-place.
+            #[inline]
             pub fn remove(&mut self, other: $BitFlags) {
                 self.bits &= !other.bits;
             }
 
             /// Toggles the specified flags in-place.
+            #[inline]
             pub fn toggle(&mut self, other: $BitFlags) {
                 self.bits ^= other.bits;
             }

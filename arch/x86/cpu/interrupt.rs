@@ -48,7 +48,7 @@ impl Table {
 
     #[allow(visible_private_types)]
     pub unsafe fn set_isr(&mut self, val: Fault, code: bool, handler: unsafe extern "C" fn()) {
-        *self.table.offset(val as int) = Isr::new(FaultInt(val), code).idt_entry(handler);
+        *self.table.offset(val as int) = Isr::new(Int::FaultInt(val), code).idt_entry(handler);
     }
 
     pub unsafe fn load(&self) {
