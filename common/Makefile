@@ -10,7 +10,7 @@ MAYBE_DEBUG    ?= -g
 endif
 
 ifndef DEBUG
-MAYBE_RUSTC_OPTIMIZE ?= --opt-level=2 -C lto
+MAYBE_RUSTC_OPTIMIZE ?= -C opt-level=2 -C lto
 MAYBE_CLANG_OPTIMIZE ?= -O2
 endif
 
@@ -36,7 +36,7 @@ DEP_SCRIPT     ?= 's~\($(DEP_KEEP)\)~\n\1~g;s~ \S*$(DEP_RM)\S*~~g;s~\n\($(DEP_KE
 
 # Compile rustboot. Produce dependency info
 $(BDIR)/main.bc: ../../common/lib.rs
-	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --out-dir $(BDIR) --dep-info --emit=bc $<
+	$(RUSTC) $(RUSTCFLAGS) -L $(BDIR) --out-dir $(BDIR) --emit=dep-info,llvm-bc $<
 	@sed -e $(DEP_SCRIPT) $(BDIR)/main.d > $(BDIR)/main.d.tmp
 	@mv $(BDIR)/main.d.tmp $(BDIR)/main.d		# SED to tmp file for OS X compatibility
 
