@@ -66,7 +66,12 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
-    sudo apt-get install -y build-essential qemu
+    sudo apt-get install -y build-essential qemu nasm imagemagick
     curl -sSf https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly -y
+    wget https://static.rust-lang.org/dist/rust-nightly-i686-unknown-linux-gnu.tar.gz
+    tar xzf rust-nightly-i686-unknown-linux-gnu.tar.gz
+    cp -R rust-nightly-i686-unknown-linux-gnu/rust-std-i686-unknown-linux-gnu/lib/rustlib/i686-unknown-linux-gnu /usr/local/lib/rustlib/.
+    rm -rf rust-nightly-i686-unknown-linux-gnu
+    rm -f rust-nightly-i686-unknown-linux-gnu.tar.gz
   SHELL
 end

@@ -1,5 +1,6 @@
+#![feature(no_std)]
+
 #![no_std]
-#![allow(ctypes)]
 
 enum Color {
     Black      = 0,
@@ -20,20 +21,17 @@ enum Color {
     White      = 15,
 }
 
-fn clear_screen(background: Color) {
-    let mut i = 0u16;
+fn clear_screen(background: u16) {
     let max = 80 * 25;
 
-    while i < max {
+    for i in 0..max {
         unsafe {
             *((0xb8000 + i * 2) as *mut u16) = (background as u16) << 12;
         }
-        i = i + 1;
     }
 }
 
 #[no_mangle]
-#[no_split_stack]
 pub fn main() {
-    clear_screen(LightRed);
+    clear_screen(Color::LightCyan as u16);
 }
