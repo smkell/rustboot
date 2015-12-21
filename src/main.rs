@@ -1,4 +1,3 @@
-#![feature(no_std)]
 #![no_std]
 
 mod vga;
