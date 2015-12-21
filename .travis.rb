@@ -53,9 +53,9 @@ end
 if system "convert screen.ppm screen.png"
   begin
     Timeout.timeout(5) do
-      # response = `curl -X POST -F name=screen.png -F 'fileinput[0]=@screen.png' http://cubeupload.com/upload_json.php`
-      # filename = JSON.parse(response)["file_name"]
-      # $stderr.puts "Screenshot available at: http://i.cubeupload.com/#{filename}"
+      response = `curl -X POST -F name=screen.png -F 'fileinput[0]=@screen.png' http://cubeupload.com/upload_json.php`
+      filename = JSON.parse(response)["file_name"]
+      $stderr.puts "Screenshot available at: http://i.cubeupload.com/#{filename}"
     end
   rescue Timeout::Error
     $stderr.puts "could not upload screenshot to cubeupload"
