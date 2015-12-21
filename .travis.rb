@@ -53,9 +53,9 @@ end
 if system "convert screen.ppm screen.png"
   begin
     Timeout.timeout(5) do
-      response = `curl -X POST -F name=screen.png -F 'fileinput[0]=@screen.png' http://cubeupload.com/upload_json.php`
-      filename = JSON.parse(response)["file_name"]
-      $stderr.puts "Screenshot available at: http://i.cubeupload.com/#{filename}"
+      # response = `curl -X POST -F name=screen.png -F 'fileinput[0]=@screen.png' http://cubeupload.com/upload_json.php`
+      # filename = JSON.parse(response)["file_name"]
+      # $stderr.puts "Screenshot available at: http://i.cubeupload.com/#{filename}"
     end
   rescue Timeout::Error
     $stderr.puts "could not upload screenshot to cubeupload"
@@ -79,10 +79,10 @@ end
 data.bytes.each_slice(720 * 3).each_with_index do |row, y|
   row.each_slice(3).each_with_index do |pix, x|
     expected_colour =
-      if (0..8).include?(x) && (62..63).include?(y) # cursor
+      if (0..8).include?(x) && (93..94).include?(y) # cursor
         [0, 0, 0]
       else
-        [0xff, 0x57, 0x57]
+        [0x57, 0xFF, 0xFF]
       end
 
     unless pix == expected_colour

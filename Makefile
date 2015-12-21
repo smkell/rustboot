@@ -7,7 +7,7 @@ all: floppy.img
 
 .SUFFIXES: .o .rs .asm
 
-.PHONY: clean run
+.PHONY: clean run test
 
 .asm.o:
 	$(NASM) -f elf32 -o $@ $<
@@ -16,7 +16,7 @@ floppy.img: loader.bin main.bin
 	dd if=/dev/zero of=$@ bs=512 count=2 &>/dev/null
 	cat $^ | dd if=/dev/stdin of=$@ conv=notrunc &>/dev/null
 
-loader.bin: loader.asm
+loader.bin: src/arch/i686/loader.asm
 	$(NASM) -o $@ -f bin $<
 
 main.bin: linker.ld main.o
@@ -30,3 +30,6 @@ run: floppy.img
 
 clean:
 	rm -f *.bin *.o *.img
+
+test: floppy.img
+	ruby .travis.rb
