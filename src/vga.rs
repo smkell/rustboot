@@ -1,7 +1,5 @@
-#![no_std]
-#![allow(ctypes)]
-
-enum Color {
+#[allow(dead_code)]
+pub enum Color {
     Black      = 0,
     Blue       = 1,
     Green      = 2,
@@ -20,20 +18,12 @@ enum Color {
     White      = 15,
 }
 
-fn clear_screen(background: Color) {
-    let mut i = 0u16;
+pub fn clear_screen(background: u16) {
     let max = 80 * 25;
 
-    while i < max {
+    for i in 0..max {
         unsafe {
             *((0xb8000 + i * 2) as *mut u16) = (background as u16) << 12;
         }
-        i = i + 1;
     }
-}
-
-#[no_mangle]
-#[no_split_stack]
-pub fn main() {
-    clear_screen(LightRed);
 }
