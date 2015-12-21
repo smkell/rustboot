@@ -2,6 +2,8 @@ LD=ld
 RUSTC=rustc
 NASM=nasm
 QEMU=qemu-system-i386
+ARCH=i686
+SRC=src
 
 all: floppy.img
 
@@ -16,10 +18,10 @@ floppy.img: loader.bin main.bin
 	dd if=/dev/zero of=$@ bs=512 count=2 &>/dev/null
 	cat $^ | dd if=/dev/stdin of=$@ conv=notrunc &>/dev/null
 
-loader.bin: src/arch/i686/loader.asm
+loader.bin: $(SRC)/arch/$(ARCH)/loader.asm
 	$(NASM) -o $@ -f bin $<
 
-main.bin: linker.ld main.o
+main.bin: $(SRC)/arch/$(ARCH)/linker.ld main.o
 	$(LD) -m elf_i386 -o $@ -T $^
 
 main.o: src/main.rs
