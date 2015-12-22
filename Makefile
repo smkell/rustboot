@@ -5,7 +5,13 @@ QEMU=qemu-system-i386
 ARCH=i686
 SRC=src
 
-all: floppy.img
+RUSTC_FLAGS := -O 								# Optimize to opt-level=2
+RUSTC_FLAGS += --target i686-unknown-linux-gnu 	# Set the target triple
+RUSTC_FLAGS += --crate-type lib					# Output a library crate (don't link)
+RUSTC_FLAGS += --emit obj 						# Emit object files 
+RUSTC_FLAGS += -C relocation-model=static		# Don't add a global offset table
+
+all: floppy.img doc
 
 .SUFFIXES: .o .rs .asm
 
@@ -21,20 +27,24 @@ floppy.img: loader.bin main.bin
 loader.bin: $(SRC)/arch/$(ARCH)/loader.asm
 	$(NASM) -o $@ -f bin $<
 
-main.bin: $(SRC)/arch/$(ARCH)/linker.ld main.o
+main.bin: $(SRC)/arch/$(ARCH)/linker.ld nepheliad.o
 	$(LD) -m elf_i386 -o $@ -T $^
 
-main.o: src/*.rs
-	$(RUSTC) -O --target i686-unknown-linux-gnu --crate-type lib -o $@ --emit obj src/main.rs
+nepheliad.o: src/*.rs
+	$(RUSTC) $(RUSTC_FLAGS) -o $@ src/nepheliad.rs
 
 run: floppy.img
 	$(QEMU) -fda $<
 
-doc: src/*.rs
-	rustdoc src/main.rs
+doc/nepheliad/index.html: src/*.rs
+	rustdoc src/nepheliad.rs
+	
+doc: doc/nepheliad/index.html
+	
 
 clean:
 	rm -f *.bin *.o *.img *.png *.ppm
+	rm -rf doc
 
 test: floppy.img
 	ruby .travis.rb

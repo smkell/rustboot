@@ -19,13 +19,19 @@ pub enum Color {
     White      = 15,
 }
 
+const SCREEN_WIDTH: usize = 80;
+const SCREEN_HEIGHT: usize = 25;
+
+static mut x_pos: usize = 0;
+static mut y_pos: usize = 0;
+
 /// Clears the screen to the given background color.
 ///
 /// # Parameters
 ///
 /// * background - The color to clear the screen to.
 pub fn clear_screen(background: u16) {
-    let max = 80 * 25;
+    let max = SCREEN_WIDTH * SCREEN_HEIGHT;
 
     for i in 0..max {
         unsafe {
@@ -39,16 +45,48 @@ pub fn clear_screen(background: u16) {
 /// # Parameters
 /// 
 /// * c - The character to write.
-/// * x - The x position to write at.
-/// * y - The y position to write at.
-pub fn write_char(c: char, x: usize, y: usize) {
-    // Get the current state of the entry.
-    let mut entry = get_entry(x, y);
+pub fn write_char(c: char) {
+    unsafe {
 
-    // Update the character data.
-    entry.data = c as u8;
+        // Handle newlines
+        if c == '\n' {
+            x_pos = 0;
+            y_pos = y_pos + 1;
+            if y_pos > SCREEN_HEIGHT {
+                y_pos = 0;
+            }
+            return
+        }
 
-    write_entry(entry, x, y);
+        // Get the current state of the entry.
+        let mut entry = get_entry(x_pos, y_pos);
+
+        // Update the character data.
+        entry.data = c as u8;
+
+        write_entry(entry, x_pos, y_pos);
+
+        x_pos = x_pos + 1;
+        if x_pos > SCREEN_WIDTH {
+            x_pos = 0;
+            y_pos = y_pos + 1;
+
+            if y_pos > SCREEN_HEIGHT {
+                y_pos = 0;
+            }
+        }
+    }
+}
+
+/// Writes a string to the terminal.
+///
+/// # Parameters
+///
+/// * s - The string to write.
+pub fn write_str(s: &str) {
+    for c in s.chars() {
+        write_char(c);
+    }
 }
 
 struct Entry {
