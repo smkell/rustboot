@@ -1,3 +1,4 @@
+/// Enumerates the colors available in VGA text mode.
 #[allow(dead_code)]
 pub enum Color {
     Black      = 0,
@@ -18,6 +19,11 @@ pub enum Color {
     White      = 15,
 }
 
+/// Clears the screen to the given background color.
+///
+/// # Parameters
+///
+/// * background - The color to clear the screen to.
 pub fn clear_screen(background: u16) {
     let max = 80 * 25;
 
@@ -26,6 +32,23 @@ pub fn clear_screen(background: u16) {
             *((0xb8000 + i * 2) as *mut u16) = (background as u16) << 12;
         }
     }
+}
+
+/// Writes a character at the given position.
+///
+/// # Parameters
+/// 
+/// * c - The character to write.
+/// * x - The x position to write at.
+/// * y - The y position to write at.
+pub fn write_char(c: char, x: usize, y: usize) {
+    // Get the current state of the entry.
+    let mut entry = get_entry(x, y);
+
+    // Update the character data.
+    entry.data = c as u8;
+
+    write_entry(entry, x, y);
 }
 
 struct Entry {
@@ -68,15 +91,6 @@ fn entry_from_raw_test() {
     assert_eq!(0xB0, entry.attrib);
 }
 
-pub fn write_char(c: char, x: usize, y: usize) {
-    // Get the current state of the entry.
-    let mut entry = get_entry(x, y);
-
-    // Update the character data.
-    entry.data = c as u8;
-
-    write_entry(entry, x, y);
-}
 
 fn write_entry(entry: Entry, x: usize, y: usize) {
     let pos = x + y * 80;

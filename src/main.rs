@@ -1,6 +1,6 @@
 #![no_std]
 
-mod vga;
+pub mod vga;
 
 #[no_mangle]
 pub fn main() {

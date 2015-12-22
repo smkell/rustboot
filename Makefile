@@ -9,7 +9,7 @@ all: floppy.img
 
 .SUFFIXES: .o .rs .asm
 
-.PHONY: clean run test
+.PHONY: clean run test doc
 
 .asm.o:
 	$(NASM) -f elf32 -o $@ $<
@@ -24,14 +24,17 @@ loader.bin: $(SRC)/arch/$(ARCH)/loader.asm
 main.bin: $(SRC)/arch/$(ARCH)/linker.ld main.o
 	$(LD) -m elf_i386 -o $@ -T $^
 
-main.o: src/main.rs
-	$(RUSTC) -O --target i686-unknown-linux-gnu --crate-type lib -o $@ --emit obj $<
+main.o: src/*.rs
+	$(RUSTC) -O --target i686-unknown-linux-gnu --crate-type lib -o $@ --emit obj src/main.rs
 
 run: floppy.img
 	$(QEMU) -fda $<
 
+doc: src/*.rs
+	rustdoc src/main.rs
+
 clean:
-	rm -f *.bin *.o *.img
+	rm -f *.bin *.o *.img *.png *.ppm
 
 test: floppy.img
 	ruby .travis.rb
